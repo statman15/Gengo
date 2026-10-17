@@ -6,6 +6,8 @@ import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
+import { friends, raceView, homeFriends } from './board.js';
+import { postStats, joinFromHash } from './group.js';
 
 document.documentElement.classList.add(os);
 
@@ -28,6 +30,7 @@ async function begin(queue, fresh = new Set()) {
 function finish(s) {
   if (s.queue.length && !dueQueue(db.cards, new Date()).length) today().cleared = true;
   save();
+  postStats();
   go('today');
 }
 
@@ -43,10 +46,11 @@ const views = {
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
       ${!due && n ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${n} new kana?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
-      <div class="friends">${[['Chris', 12, true], ['Bro', 4], ['Sam', 27]].map(([n, s, lead]) => // Task 9
-        `<div class="plate${lead ? ' lead' : ''}"><b>${s}</b>${esc(n)}</div>`).join('')}</div>
+      <div class="friends"></div>
       ${nav('today')}</div>`;
+    homeFriends($('.friends', el));
   } },
+  friends, race: raceView,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });
@@ -93,6 +97,9 @@ export function show(view, arg) {
 }
 
 $('#app').addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
-addEventListener('hashchange', () => show(location.hash.slice(1)));
-show(location.hash.slice(1) || 'today');
+const joined = () => location.hash.startsWith('#join=') ? joinFromHash().then(() => go('friends')) : 0;
+addEventListener('hashchange', () => joined() || show(location.hash.slice(1)));
+show(location.hash.startsWith('#join=') ? 'today' : location.hash.slice(1) || 'today');
+joined();
+postStats();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {}); // offline cache; optional
