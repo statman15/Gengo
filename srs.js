@@ -1,4 +1,4 @@
-import { fsrs, createEmptyCard } from './vendor/ts-fsrs.mjs';
+import { fsrs, createEmptyCard } from './vendor/ts-fsrs.js';
 
 export const TUNING = { seeAt: 3, sayAt: 10, mastered: 21, slowMs: 8000, stretch: 0.2 };
 const f = fsrs();
