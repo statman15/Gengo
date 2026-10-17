@@ -3,7 +3,13 @@ import { dayKey, streak, weekReviews } from './streak.js';
 import { isMastered } from './srs.js';
 
 export const WORKER_URL = 'https://gengo.REPLACE.workers.dev';
-const override = globalThis.location && new URLSearchParams(location.search).get('worker'); // ?worker=<url> for local testing
+const LOCAL = h => h === 'localhost' || h === '127.0.0.1';
+// ?worker=<url> is for local testing only: page and override must both be local, so an invite link can't redirect stats.
+export function allowedOverride(pageHost, overrideUrl) {
+  try { return LOCAL(pageHost) && LOCAL(new URL(overrideUrl).hostname); } catch { return false; }
+}
+const ov = globalThis.location && new URLSearchParams(location.search).get('worker');
+const override = ov && allowedOverride(location.hostname, ov) ? ov : null;
 const base = () => override || WORKER_URL;
 export const configured = () => !!override || !WORKER_URL.includes('REPLACE');
 export const inviteUrl = () => `https://statman15.github.io/Gengo/#join=${db.settings.groupCode}`;
@@ -24,11 +30,21 @@ export async function postStats(f = globalThis.fetch) {
   } catch { return false; }
 }
 
+const n = x => Number.isFinite(Number(x)) && Number(x) >= 0 ? Number(x) : 0;
+// Server data is untrusted: keep only well-formed rows with plain numbers.
+function clean(list) {
+  if (!Array.isArray(list)) throw 0;
+  return list.filter(r => r && typeof r === 'object' && typeof r.name === 'string').map(r => ({
+    name: r.name, streak: n(r.streak), week: n(r.week), mastered: n(r.mastered), station: n(r.station),
+    race: r.race && typeof r.race.time === 'number' && Number.isFinite(r.race.time) && typeof r.race.day === 'string' && /^\d{4}-\d\d-\d\d$/.test(r.race.day) ? { day: r.race.day, time: r.race.time } : null,
+  }));
+}
+
 // The member records, or 'offline' on any failure.
 export async function board(f = globalThis.fetch) {
   try {
     const res = await f(`${base()}/group/${db.settings.groupCode}`);
-    return res.ok ? await res.json() : 'offline';
+    return res.ok ? clean(await res.json()) : 'offline';
   } catch { return 'offline'; }
 }
 

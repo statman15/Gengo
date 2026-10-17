@@ -42,7 +42,9 @@ export const friends = { render: el => {
     };
     postStats().then(() => board()).then(rows => {
       const today = dayKey(new Date());
-      $('.boardrows', el).innerHTML = rows === 'offline' ? plate('Offline') : byWeek(rows).map(r => row(r, today)).join('');
+      const t = $('.boardrows', el);
+      if (!t?.isConnected) return;
+      t.innerHTML = rows === 'offline' ? plate('Offline') : byWeek(rows).map(r => row(r, today)).join('');
     });
   }
 } };
