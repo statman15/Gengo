@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T00:00:00Z",
+  "title": "Design System: Gengo",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Washi", "canonical": "#f1ece2", "tonalRamp": ["#2a2823", "#4a4640", "#6e6960", "#948e83", "#b8b2a5", "#d4cebf", "#e6dfd1", "#f1ece2"] },
+      "paper-2": { "role": "neutral", "displayName": "Washi Shadow", "canonical": "#e6dfd1", "tonalRamp": ["#28261f", "#47433a", "#6a6558", "#8f8979", "#b3ac9b", "#cdc6b4", "#e6dfd1", "#f1ece2"] },
+      "ink": { "role": "neutral", "displayName": "Sumi", "canonical": "#1c1a17", "tonalRamp": ["#0e0d0b", "#1c1a17", "#34312c", "#4f4942", "#6e675e", "#8f887d", "#b1aa9e", "#d4cec3"] },
+      "ink-2": { "role": "neutral", "displayName": "Soft Sumi", "canonical": "#4f4942", "tonalRamp": ["#1c1a17", "#2f2b26", "#403b35", "#4f4942", "#6a645b", "#857f75", "#a39d92", "#c4beb3"] },
+      "seal": { "role": "primary", "displayName": "Hanko Vermilion", "canonical": "#b23a2a", "tonalRamp": ["#3a120c", "#5a1d14", "#7c281c", "#9b3224", "#b23a2a", "#c9604f", "#dd8b7d", "#eebcb2"] },
+      "seal-ink": { "role": "neutral", "displayName": "Seal Ink", "canonical": "#f6efe3", "tonalRamp": ["#4a4640", "#6e6960", "#948e83", "#b8b2a5", "#d4cebf", "#e6dfd1", "#f1ece2", "#f6efe3"] },
+      "seal-text": { "role": "primary", "displayName": "Vermilion Text", "canonical": "#a8321f", "tonalRamp": ["#35100a", "#541a10", "#732316", "#8f2b1b", "#a8321f", "#c2584a", "#d8867a", "#ecb8af"] },
+      "tint-fallback": { "role": "tertiary", "displayName": "Bero Blue (live tint fallback)", "canonical": "#2b4c7e", "tonalRamp": ["#0f1b2d", "#172a46", "#1f3860", "#2b4c7e", "#4c6c9d", "#7690b8", "#a1b3d0", "#cdd6e6"] }
+    },
+    "typographyMeta": {
+      "cartouche-title": { "displayName": "Cartouche title", "purpose": "Vertical station kanji." },
+      "kana": { "displayName": "Kana", "purpose": "The single monumental review character." },
+      "seal-count": { "displayName": "Seal count", "purpose": "Due count on the seal." },
+      "kana-choice": { "displayName": "Kana choice", "purpose": "Answer buttons showing kana." },
+      "choice": { "displayName": "Choice", "purpose": "Romaji answer buttons." },
+      "body": { "displayName": "Body", "purpose": "Prompts and copy in the platform face." },
+      "label": { "displayName": "Label", "purpose": "Cartouche romaji and nav labels." }
+    },
+    "shadows": [
+      { "name": "paper-on-print", "value": "0 8px 22px -6px #0006", "purpose": "Plates, choices, cartouche floating on the print." },
+      { "name": "seal-rest", "value": "drop-shadow(0 8px 14px #0006)", "purpose": "Seal; follows its rough mask edge." },
+      { "name": "seal-pressed", "value": "drop-shadow(0 2px 4px #0006)", "purpose": "Seal :active." },
+      { "name": "right-ring", "value": "inset 0 0 0 2px var(--seal-text), 0 8px 22px -6px #0006", "purpose": "Correct answer ring." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "All transitions; stamp, print cross-fade (1.2s filter, 1.6s next print), press (.15-.22s)." },
+      { "name": "stamp", "value": ".35s ease from rotate(-8deg) scale(1.8) opacity 0", "purpose": "The 良 mark landing on a right answer." },
+      { "name": "reduced-motion", "value": "all durations .01ms", "purpose": "prefers-reduced-motion." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Seal",
+      "kind": "custom",
+      "refersTo": "seal",
+      "description": "The one primary action per screen. Use .seal.done for the completed state.",
+      "html": "<button class=\"ds-seal\"><b>23</b><span>始</span></button>",
+      "css": ".ds-seal { position: relative; width: 7.5rem; height: 7.5rem; border: 0; background: #b23a2a; color: #f6efe3; font-family: 'Hiragino Mincho ProN','Noto Serif JP',serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transform: rotate(-3deg); border-radius: 2px; filter: drop-shadow(0 8px 14px #0006); cursor: pointer; transition: transform .22s cubic-bezier(.16,1,.3,1), filter .22s cubic-bezier(.16,1,.3,1); } .ds-seal::after { content: ''; position: absolute; inset: 9px; border: 1.5px solid #f6efe3aa; border-radius: 2px; } .ds-seal b { font-size: 3rem; font-weight: 800; line-height: 1; } .ds-seal span { font-size: 1.15rem; font-weight: 800; letter-spacing: .3em; padding-left: .3em; } .ds-seal:active { transform: rotate(-3deg) translateY(3px) scale(.96); filter: drop-shadow(0 2px 4px #0006); } .ds-seal:focus-visible { outline: 3px solid #2b4c7e; outline-offset: 3px; }"
+    },
+    {
+      "name": "Plate",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "Paper surface for any text on the print.",
+      "html": "<div class=\"ds-plate\">Which sound?</div>",
+      "css": ".ds-plate { background: #f1ece2; color: #1c1a17; border-radius: 3px; padding: 16px 20px; box-shadow: 0 8px 22px -6px #0006; font-family: -apple-system, Roboto, sans-serif; }"
+    },
+    {
+      "name": "Cartouche",
+      "kind": "custom",
+      "refersTo": "cartouche",
+      "description": "Vertical station title with vermilion double rule.",
+      "html": "<div class=\"ds-cartouche\"><b>日本橋</b><small>Nihonbashi · 1 of 55</small></div>",
+      "css": ".ds-cartouche { writing-mode: vertical-rl; display: inline-flex; gap: 10px; align-items: center; background: #f1ece2; color: #1c1a17; padding: 14px 9px; border: 1.5px solid #b23a2a; outline: 1px solid #b23a2a; outline-offset: -5px; box-shadow: 0 8px 22px -6px #0006; } .ds-cartouche b { font-family: 'Hiragino Mincho ProN','Noto Serif JP',serif; font-weight: 800; font-size: 1.9rem; letter-spacing: .12em; } .ds-cartouche small { font-size: .75rem; letter-spacing: .04em; color: #4f4942; font-family: -apple-system, Roboto, sans-serif; }"
+    },
+    {
+      "name": "Review Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One monumental kana and a prompt on paper.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-kana\" lang=\"ja\">ぬ</div><p>Which sound?</p></div>",
+      "css": ".ds-card { background: #f1ece2; color: #1c1a17; border-radius: 3px; padding: 28px 20px 20px; text-align: center; box-shadow: 0 8px 22px -6px #0006; } .ds-kana { font-family: 'Hiragino Mincho ProN','Noto Serif JP',serif; font-weight: 500; font-size: 7rem; line-height: 1.05; } .ds-card p { margin: 6px 0 0; color: #4f4942; font-family: -apple-system, Roboto, sans-serif; }"
+    },
+    {
+      "name": "Choice",
+      "kind": "button",
+      "refersTo": "choice",
+      "description": "Answer button; add right on the correct one (stamped 良), wrong on a missed pick.",
+      "html": "<button class=\"ds-choice ds-right\">nu</button>",
+      "css": ".ds-choice { position: relative; min-width: 140px; min-height: 64px; background: #f1ece2; color: #1c1a17; border: 0; border-radius: 3px; font: 600 1.4rem -apple-system, Roboto, sans-serif; box-shadow: 0 8px 22px -6px #0006; cursor: pointer; transition: transform .15s cubic-bezier(.16,1,.3,1); } .ds-choice:active { transform: scale(.97); } .ds-choice:focus-visible { outline: 3px solid #2b4c7e; outline-offset: 3px; } .ds-right { color: #a8321f; box-shadow: inset 0 0 0 2px #a8321f, 0 8px 22px -6px #0006; } .ds-right::after { content: '良'; position: absolute; right: 8px; top: 6px; width: 26px; height: 26px; line-height: 23px; font: 800 .85rem 'Hiragino Mincho ProN','Noto Serif JP',serif; color: #a8321f; border: 2px solid #a8321f; border-radius: 50%; transform: rotate(10deg); }"
+    },
+    {
+      "name": "Friends Row",
+      "kind": "custom",
+      "refersTo": "plate",
+      "description": "Small plates with streak and name; .lead turns the number vermilion text.",
+      "html": "<div class=\"ds-friends\"><div class=\"ds-fp lead\"><b>12</b>Chris</div><div class=\"ds-fp\"><b>4</b>Bro</div></div>",
+      "css": ".ds-friends { display: flex; gap: 8px; } .ds-fp { flex: 1; text-align: center; font: .8rem -apple-system, Roboto, sans-serif; padding: 8px 4px; background: #f1ece2; color: #1c1a17; border-radius: 3px; box-shadow: 0 8px 22px -6px #0006; } .ds-fp b { display: block; font-family: 'Hiragino Mincho ProN','Noto Serif JP',serif; font-weight: 800; font-size: 1.15rem; } .ds-fp.lead b { color: #a8321f; }"
+    },
+    {
+      "name": "Progress",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Session progress segments on a plate; done segments are seal red.",
+      "html": "<div class=\"ds-progress\"><i class=\"d\"></i><i class=\"d\"></i><i></i><i></i></div>",
+      "css": ".ds-progress { display: flex; gap: 4px; padding: 10px 12px; background: #f1ece2; border-radius: 3px; box-shadow: 0 8px 22px -6px #0006; } .ds-progress i { flex: 1; height: 4px; border-radius: 1px; background: rgba(28,26,23,.18); } .ds-progress i.d { background: #b23a2a; }"
+    },
+    {
+      "name": "Nav (Android)",
+      "kind": "nav",
+      "refersTo": "nav-android",
+      "description": "Material-style bottom bar on paper-2; the iOS variant is a translucent blurred tab bar.",
+      "html": "<nav class=\"ds-nav\"><a aria-current=\"page\" href=\"#today\"><span class=\"ind\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M9 12h6M12 9v6\"/></svg></span>Today</a><a href=\"#journey\"><span class=\"ind\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20c4-1 5-5 8-8s5-6 8-8\"/><path d=\"M4 8h6M7 5v6M15 16h5M17.5 13.5v5\"/></svg></span>Journey</a></nav>",
+      "css": ".ds-nav { display: flex; justify-content: space-around; height: 80px; background: #e6dfd1; font-family: Roboto, sans-serif; } .ds-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 12px; text-decoration: none; color: #4f4942; font-size: .75rem; font-weight: 500; } .ds-nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-nav .ind { width: 64px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; } .ds-nav a[aria-current] { color: #1c1a17; } .ds-nav a[aria-current] .ind { background: color-mix(in srgb, #2b4c7e 28%, #e6dfd1); } .ds-nav a:focus-visible { outline: 3px solid #2b4c7e; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Hiroshige Plate",
+    "overview": "The current station's Hiroshige print (Hoeido Tokaido, public domain) is the app's ground, full bleed behind every screen. The interface lives on it the way the print's own furniture does: a vertical title cartouche with a thin vermilion rule, washi-paper plates, and a single red hanko seal. It refuses the study-app default of white cards, progress rings and a green Continue button.\n\nThe print is alive. Its colour follows mastery (ink sketch toward full colour), its sky band is sampled into a tint that drives the OS controls, and during review it recedes (blurred, dimmed) so one huge kana can stand on paper. Chrome is platform-adaptive: iOS conventions on iPhone, Material 3 on Android, switched in CSS by html.ios / html.android, around one shared identity. Light and dark follow the phone; in dark the paper darkens and the print dims.",
+    "keyCharacteristics": [
+      "Every word sits on paper; the print never carries bare text.",
+      "One seal per screen, and it is the primary action.",
+      "Paper is cut, not rounded (3px corners), with soft ambient shadows only.",
+      "Mincho for kana and station names, platform face for everything else.",
+      "Colour is rationed: paper, ink, one vermilion, and a tint borrowed from the print."
+    ],
+    "rules": [
+      { "name": "The Paper Rule", "body": "Every word sits on paper. Text placed directly on the print is wrong, whatever the contrast.", "section": "colors" },
+      { "name": "The One Red Rule", "body": "Vermilion fills belong to the seal, cartouche rule and progress bars; vermilion text is --seal-text; tinted text is --tint-text.", "section": "colors" },
+      { "name": "The Two Faces Rule", "body": "Kana and station names are var(--mincho); everything else is var(--ui). No third face.", "section": "typography" },
+      { "name": "The Paper On Print Rule", "body": "Paper floats on the print with one soft shadow; stacking plates on plates is not needed.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put every word on a paper surface (.plate, .choice, .cartouche, dialog).",
+      "Do give each screen exactly one .seal as its primary action.",
+      "Do set kana and station names in var(--mincho) and all other text in var(--ui).",
+      "Do use --seal-text for red text and --tint-text for tint-derived text.",
+      "Do tune each print's focus so the seal and cartouche stay off faces.",
+      "Do use stage({recede:true}) on session screens and pass sketch from progress.",
+      "Do keep tap targets at --tap or larger and honour safe-area insets.",
+      "Do leave motion on --ease (cubic-bezier(.16, 1, .3, 1)); reduced motion collapses all transitions."
+    ],
+    "donts": [
+      "Don't place text on the bare print.",
+      "Don't use a second primary button, white cards, progress rings, or a green Continue.",
+      "Don't use --seal or raw --tint as text colour.",
+      "Don't round plates beyond 3px.",
+      "Don't add a third typeface or reach for system display faces for kana.",
+      "Don't draw one nav for both platforms; use the html.ios / html.android rules.",
+      "Don't copy the current build's carried defects: tiny nav and friend-name labels (0.6875 to 0.8rem), and the duplicated .friends b font rule in index.html."
+    ]
+  }
+}

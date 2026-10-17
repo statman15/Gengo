@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/1677-1792258654/content/home.html"
+        ],
+        "createdAt": "2026-10-17T17:38:18.905Z",
+        "reason": "Claude: throwaway brainstorm mockup, phone frames drawn at reduced scale"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/1677-1792258654/content/home.html"
+        ],
+        "createdAt": "2026-10-17T17:38:19.567Z",
+        "reason": "Claude: throwaway brainstorm mockup, phone frames drawn at reduced scale"
+      }
+    ]
+  }
+}

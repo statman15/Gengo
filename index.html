@@ -4,12 +4,138 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gengo">
+<meta name="theme-color" content="#2b4c7e">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/shippori-800.woff2" as="font" type="font/woff2" crossorigin>
 <title>Gengo</title>
+<style>
+/* Gengo: the current Hiroshige print is the ground; every word sits on paper. See DESIGN.md. */
+@font-face { font-family: Mincho; src: url(fonts/shippori-500.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: Mincho; src: url(fonts/shippori-800.woff2) format('woff2'); font-weight: 800; font-display: swap; }
+
+:root {
+  color-scheme: light dark;
+  --paper: #f1ece2;  --paper-2: #e6dfd1;  --ink: #1c1a17;  --ink-2: #4f4942;
+  --seal: #b23a2a;   --seal-ink: #f6efe3;  --rule: #b23a2a;  --seal-text: #a8321f;  /* seal red as text on paper */
+  --tint: #2b4c7e;   /* replaced live by the print's sky colour (ui.js tintFrom) */
+  --print-dim: 0;     /* darkens the print under dark mode */
+  --sketch: 0;        /* 1 = ink sketch, 0 = full colour; set from journey progress */
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, "Noto Sans JP", "Hiragino Sans", sans-serif;
+  --mincho: Mincho, "Hiragino Mincho ProN", "Noto Serif JP", "Yu Mincho", serif;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --r: 3px;  /* paper is cut, not rounded */
+  --tap: 48px;
+  --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+  --tint-text: color-mix(in srgb, var(--tint), #000 30%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #23211d; --paper-2: #2e2b26; --ink: #ede6da; --ink-2: #b9b0a2; --seal-text: #ec8a75; --tint-text: color-mix(in srgb, var(--tint), #fff 60%); --print-dim: .28; }
+}
+:root[data-theme="dark"] { --paper: #23211d; --paper-2: #2e2b26; --ink: #ede6da; --ink-2: #b9b0a2; --seal-text: #ec8a75; --tint-text: color-mix(in srgb, var(--tint), #fff 60%); --print-dim: .28; }
+html.ios { font: -apple-system-body; --tap: 44px; }   /* Dynamic Type on iPhone */
+html.android { font-size: 100%; }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--ui); color: var(--ink); background: #1c1a17; overscroll-behavior: none; }
+::selection { background: var(--seal); color: var(--seal-ink); }
+:focus-visible { outline: 3px solid var(--tint); outline-offset: 3px; border-radius: 6px; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; min-height: var(--tap); }
+dialog { border: 0; border-radius: var(--r) var(--r) 0 0; background: var(--paper); color: var(--ink); width: 100%; max-width: 560px; margin: auto auto 0; padding: 20px 20px calc(20px + var(--safe-b)); }
+dialog::backdrop { background: #0008; }
+
+/* The stage: one print, full bleed, behind everything */
+.stage { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--tint); }
+.stage img { width: 100%; height: 100%; object-fit: cover; object-position: var(--focus, 50% 50%);
+  filter: grayscale(var(--sketch)) sepia(calc(var(--sketch) * .35)) brightness(calc(1 - var(--print-dim)));
+  transition: filter 1.2s var(--ease), transform 1.2s var(--ease); }
+.stage.recede img { filter: blur(7px) saturate(.7) brightness(calc(.72 - var(--print-dim) / 2)); transform: scale(1.06); }
+.stage .next { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s var(--ease); }
+.stage .next.in { opacity: 1; }
+
+.screen { min-height: 100dvh; display: flex; flex-direction: column; padding: calc(var(--safe-t) + 12px) 16px 0; }
+
+/* Paper: every word lives on a plate */
+.plate, .choice, .cartouche, dialog { background: var(--paper) url(paper.svg); }
+.plate { color: var(--ink); border-radius: var(--r); box-shadow: 0 8px 22px -6px #0006; }
+.muted { color: var(--ink-2); }
+.grow { flex: 1; }
+
+/* The title cartouche: vertical, like the print's own */
+.cartouche { align-self: flex-end; writing-mode: vertical-rl; color: var(--ink); padding: 14px 9px;
+  border: 1.5px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px; box-shadow: 0 8px 22px -6px #0006; display: flex; gap: 10px; align-items: center; }
+.cartouche b { font-family: var(--mincho); font-weight: 800; font-size: 1.9rem; letter-spacing: .12em; }
+.cartouche small { font-size: .75rem; letter-spacing: .04em; color: var(--ink-2); }
+
+/* The seal: the one primary action */
+/* An inked hanko: rough edge and uneven ink come from seal.svg as a mask; the shadow is a drop-shadow so it follows that edge */
+.seal { align-self: center; width: 7.5rem; height: 7.5rem; position: relative; color: var(--seal-ink); font-family: var(--mincho);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transform: rotate(-3deg);
+  filter: drop-shadow(0 8px 14px #0006); transition: transform .22s var(--ease), filter .22s var(--ease); }
+.seal::before { content: ""; position: absolute; inset: 0; background: var(--seal); -webkit-mask: url(seal.svg) center / 100% 100%; mask: url(seal.svg) center / 100% 100%; z-index: -1; }
+.seal::after { content: ""; position: absolute; inset: 9px; border: 1.5px solid #f6efe3aa; border-radius: 2px; }
+.seal b { font-size: 3rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.seal span { font-size: 1.15rem; font-weight: 800; letter-spacing: .3em; padding-left: .3em; }
+.seal:active { transform: rotate(-3deg) translateY(3px) scale(.96); filter: drop-shadow(0 2px 4px #0006); }
+.seal.done { color: var(--seal-text); }
+.seal.done::before { background: var(--paper); }
+.seal.done::after { border-color: var(--seal-text); }
+.seal:disabled { opacity: .5; }
+
+/* Friends: small plates along the bottom of the print */
+.friends { display: flex; gap: 8px; margin: 0 0 12px; }
+.friends .plate { flex: 1; text-align: center; font-size: .8rem; padding: 8px 4px; }
+.friends .lead b { color: var(--seal-text); }
+.friends b { display: block; font-family: var(--mincho); font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
+/* Review: the print recedes, one kana stands on paper */
+.progress { display: flex; gap: 4px; margin: 4px 0 0; padding: 10px 12px; }
+.progress i { flex: 1; height: 4px; border-radius: 1px; background: color-mix(in srgb, var(--ink) 18%, transparent); }
+.progress i.d { background: var(--seal); }
+.card { margin: auto 0 0; padding: 28px 20px 20px; text-align: center; }
+.kana { font-family: var(--mincho); font-weight: 500; font-size: clamp(7rem, 38vw, 11rem); line-height: 1.05; }
+.prompt { margin: 6px 0 0; color: var(--ink-2); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 calc(var(--safe-b) + 16px); }
+.choice { color: var(--ink); border-radius: var(--r); min-height: 64px; font-size: 1.4rem; font-weight: 600;
+  position: relative; box-shadow: 0 8px 22px -6px #0006; transition: transform .15s var(--ease); }
+.choice.kana-choice { font-family: var(--mincho); font-size: 2rem; font-weight: 500; }
+.choice:active { transform: scale(.97); }
+.choice.right { box-shadow: inset 0 0 0 2px var(--seal-text), 0 8px 22px -6px #0006; color: var(--seal-text); }
+.choice.wrong { opacity: .45; }
+.choice.right::after { content: "良"; font-family: var(--mincho); font-weight: 800; position: absolute; right: 8px; top: 6px;
+  width: 26px; height: 26px; line-height: 23px; font-size: .85rem; color: var(--seal-text); border: 2px solid var(--seal-text); border-radius: 50%;
+  transform: rotate(10deg); animation: stamp .35s var(--ease) both; }
+@keyframes stamp { from { transform: rotate(-8deg) scale(1.8); opacity: 0; } to { transform: rotate(10deg) scale(1); opacity: 1; } }
+.icon-btn { min-width: var(--tap); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+/* Navigation: native per OS */
+.nav { position: sticky; bottom: 0; margin: auto -16px 0; display: flex; justify-content: space-around; }
+.nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--ink-2); font-size: .7rem; padding-top: 8px; }
+.nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+html.ios .nav { padding-bottom: var(--safe-b); background: color-mix(in srgb, var(--paper) 72%, transparent); backdrop-filter: saturate(1.6) blur(20px); -webkit-backdrop-filter: saturate(1.6) blur(20px); border-top: .5px solid #0002; }
+html.ios .nav a { min-height: 49px; font-size: .6875rem; color: color-mix(in srgb, var(--ink-2) 80%, transparent); }
+html.ios .nav a[aria-current] { color: var(--tint-text); font-weight: 600; }
+html.android .nav { height: calc(80px + var(--safe-b)); padding-bottom: var(--safe-b); background: var(--paper-2); }
+html.android .nav a { font-size: .75rem; font-weight: 500; padding-top: 12px; }
+html.android .nav a span.ind { width: 64px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+html.android .nav a[aria-current] { color: var(--ink); }
+html.android .nav a[aria-current] span.ind { background: color-mix(in srgb, var(--tint) 28%, var(--paper-2)); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.plate, .choice, .cartouche, dialog) { background: linear-gradient(#23211dc0, #23211dc0), var(--paper) url(paper.svg); }
+}
+:root[data-theme="dark"] :is(.plate, .choice, .cartouche, dialog) { background: linear-gradient(#23211dc0, #23211dc0), var(--paper) url(paper.svg); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+</style>
 </head>
 <body>
+<div class="stage"><img id="print" src="prints/00.jpg" alt=""></div>
 <div id="app"></div>
 <dialog id="sheet"><div id="sheetBody"></div></dialog>
 <script type="module" src="app.js"></script>

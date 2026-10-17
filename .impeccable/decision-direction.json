@@ -1,0 +1,110 @@
+{
+  "title": "Gengo: choose the visual world",
+  "question": "The roll assigned the Tōkaidō Stamp Book. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Tōkaidō Stamp Book",
+      "kicker": "THE ROLL",
+      "lineage": "Japanese eki stamp books and Edo travel passes, with Hiroshige's prints",
+      "thesis": "Your study is a walk along the Tōkaidō: each station you reach gets a vermilion stamp in your travel book, beside its Hiroshige print.",
+      "palette": ["#1d3557", "#c8331f", "#16161a", "#e9e4d8", "#5f7f63"],
+      "materials": ["woodblock print", "vermilion stamp ink", "accordion-fold travel book"],
+      "viewport": "Top: the current station's print, with its title in a cartouche. Middle: one vermilion stamp-shaped button, '23 due'. Bottom: three small seals along the road for the three of you. Bars, sheets and buttons follow each phone's OS.",
+      "risk": "Ukiyo-e can tip into souvenir-shop kitsch if the prints get scroll frames and fake brush fonts around them.",
+      "raised": [
+        {"from": "challenger-emission-rail", "raise": "State shows in how the stamp is printed, not in extra colours: a crisp impression is mastered, a faint one is fading, a half one is learning."},
+        {"from": "challenger-gate-board", "raise": "The group board reorders rows in place, and a row that changed stays vermilion until you've seen it."},
+        {"from": "challenger-terminal-yellow", "raise": "During a session, only the next decision is on screen, with the kana at monumental size."},
+        {"from": "challenger-metro", "raise": "The kana is the interface: huge, with no chrome around it."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Living Hiroshige Plate",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Hiroshige's Hōeidō Tōkaidō series",
+      "thesis": "The current station's print is the whole background, and the UI sits on it as the print's own title cartouches and seal labels.",
+      "palette": ["#2b4c7e", "#d9a441", "#b23a2a", "#f1ece2", "#1a1a1a"],
+      "materials": ["full-bleed woodblock print", "cartouche labels", "bokashi colour gradation"],
+      "viewport": "The print fills the screen. A vertical cartouche at the top right names the station; the due count is a red seal near the bottom.",
+      "risk": "It's the obvious reading of the brief, and text over a busy print fights for legibility on small phones."
+    },
+    {
+      "id": "challenger-gate-board",
+      "label": "Boarding Pass and Gate Board",
+      "verdict": "competitive",
+      "lineage": "airline boarding passes and departure boards",
+      "thesis": "Today's session is a boarding pass, and the group is a live departure board that reorders as people study.",
+      "palette": ["#111418", "#f2f2ee", "#ffb000"],
+      "materials": ["segmented pass", "tabular figures", "split-flap rows"],
+      "viewport": "A pass for today's session (due, new, streak in labelled segments) above the board of the three of you.",
+      "case": "Fits the journey and the shared board well, but it's an airport, not the Tōkaidō, so it fights the pinned prints.",
+      "risk": "Generic travel-app look, with no link to Japanese."
+    },
+    {
+      "id": "challenger-emission-rail",
+      "label": "Emission-Line Rail",
+      "verdict": "declined",
+      "lineage": "glass spectrograms",
+      "palette": ["#2a2b2e", "#e8e4da", "#f2c230"],
+      "materials": ["hairline emission lines", "charcoal continuum"],
+      "thesis": "State shown as line form on one rail.",
+      "viewport": "One rail with every item a tick on it.",
+      "risk": "Cold and scientific, the opposite of a warm journey.",
+      "case": "Loses on both: learners don't see themselves in a lab plate.",
+      "kept": "State carried by form (how the stamp is printed) instead of extra colours."
+    },
+    {
+      "id": "challenger-terminal-yellow",
+      "label": "Terminal Yellow Wayfinding",
+      "verdict": "declined",
+      "lineage": "airport sign systems",
+      "palette": ["#ffcc00", "#111111", "#ffffff"],
+      "materials": ["overhead sign bands", "pictograms"],
+      "thesis": "One next decision, signed at monumental scale.",
+      "viewport": "A yellow band naming the next thing to do.",
+      "risk": "Shouty, and it ignores the prints.",
+      "case": "Loses on both: an airport, not Japan, and not the journey.",
+      "kept": "Only the next decision on screen, at monumental scale."
+    },
+    {
+      "id": "challenger-metro",
+      "label": "Metro Typographic Tiles",
+      "verdict": "declined",
+      "lineage": "Windows Phone Metro",
+      "palette": ["#000000", "#00aba9", "#ffffff"],
+      "materials": ["flat tiles", "giant lowercase"],
+      "thesis": "Type is the interface.",
+      "viewport": "A panorama of tiles.",
+      "risk": "Dated, and it fights both OS conventions.",
+      "case": "Loses on both: it conflicts with the native-per-OS decision.",
+      "kept": "The kana is the interface: huge, chrome deleted."
+    },
+    {
+      "id": "challenger-star-atlas",
+      "label": "Star Atlas",
+      "verdict": "declined",
+      "lineage": "celestial charts",
+      "palette": ["#0e1a33", "#f4f1e6", "#d4442f"],
+      "materials": ["magnitude dots", "chart plates"],
+      "thesis": "Mastery as star magnitude.",
+      "viewport": "A night chart of your kana.",
+      "risk": "A second metaphor competing with the journey.",
+      "case": "Loses on both: the brief already pins the Tōkaidō journey.",
+      "kept": "Nothing new; the stamp's impression already ranks strength."
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code"},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A clean language-app look like Duolingo or Renshuu, done well.",
+    "palette": ["#ffffff", "#1f2937", "#22a06b"],
+    "materials": ["white cards", "system font", "progress rings"],
+    "viewport": "A greeting, a progress ring and a big green Continue button, with the prints on a separate tab.",
+    "risk": "Looks like every other study app, which is the clutter Chris left."
+  },
+  "steer": true
+}

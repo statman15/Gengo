@@ -37,7 +37,7 @@ try {
 
   step = 'load app';
   await page.goto(origin + '/', { waitUntil: 'networkidle0' });
-  await page.waitForFunction(() => document.querySelector('#app')?.textContent.includes('Gengo'));
+  await page.waitForFunction(() => document.querySelector('#app .seal'));
 } catch (e) {
   errors.push(`step "${step}" failed: ${e.message}`);
 } finally {
