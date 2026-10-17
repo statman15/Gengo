@@ -35,13 +35,13 @@ function finish(s) {
 const views = {
   today: { render: el => {
     stage({ src: 'prints/00.jpg', focus: '40% 50%', sketch: 0.35 });
-    const due = dueQueue(db.cards, new Date()).length, n = db.settings.newBatch;
+    const due = dueQueue(db.cards, new Date()).length, n = nextNew(db.cards, db.settings.newBatch).length;
     el.innerHTML = `<div class="screen">
       <div class="cartouche"><b>日本橋</b><small>Nihonbashi · 1 of 55</small></div>
       <div class="grow"></div>
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
-      ${nextNew(db.cards, n).length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${n} new kana?</button>` : ''}
+      ${!due && n ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${n} new kana?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="friends">${[['Chris', 12, true], ['Bro', 4], ['Sam', 27]].map(([n, s, lead]) => // Task 9
         `<div class="plate${lead ? ' lead' : ''}"><b>${s}</b>${esc(n)}</div>`).join('')}</div>
