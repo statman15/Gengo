@@ -20,7 +20,7 @@ for (let i = 0; i < 55; i++) {
   const r = await fetch(`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(best.title.slice(5))}?width=1600`, { headers: UA });
   if (!r.ok) { missing.push(STATIONS[i].name); continue; }
   writeFileSync(out, Buffer.from(await r.arrayBuffer()));
-  const k = Math.min(1, 1600 / best.width); best.height = Math.round(best.height * k); best.width = Math.round(best.width * k);
+  // ponytail: row sizes below are the originals; CREDITS.md was patched from the saved JPEGs (thumbnailer snaps 1600 up to 1920)
   rows.push(`| ${out.slice(7)} | ${STATIONS[i].name} | ${best.title} (${best.width}×${best.height}) |`);
   console.log(out, best.title, best.width);
 }
