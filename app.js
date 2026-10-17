@@ -8,6 +8,7 @@ import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
+import { settings, backupDue } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
 
 document.documentElement.classList.add(os);
@@ -48,6 +49,14 @@ function arrive(i) {
   sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
 }
 
+// Small paper notes above the friends row: the backup nag, and (web only, once) how to add a Japanese voice on iPhone.
+async function tips(el) {
+  if (backupDue()) el.innerHTML = '<button class="plate tip" data-go="settings">Back up your progress</button>';
+  if (db.settings.voiceTipShown || globalThis.Capacitor?.isNativePlatform?.() || await canHear() || !el.isConnected) return;
+  db.settings.voiceTipShown = true; save();
+  el.insertAdjacentHTML('beforeend', '<p class="plate tip">Add a Japanese voice so Gengo can speak: Settings → Accessibility → Spoken Content → Voices → Japanese.</p>');
+}
+
 // Views are modules exporting render(el, arg). Friends and nav targets other than today are Tasks 9-11.
 const views = {
   today: { render: el => {
@@ -61,9 +70,11 @@ const views = {
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
       ${!due && n ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${n} new kana?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
+      <div class="tips"></div>
       <div class="friends"></div>
       ${nav('today')}</div>`;
     homeFriends($('.friends', el));
+    tips($('.tips', el));
     if (arriving) arrive(station);
   } },
   journey: { render: el => {
@@ -76,7 +87,7 @@ const views = {
       <div class="plate credit muted">Utagawa Hiroshige, Wikimedia Commons</div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
   } },
-  friends, race: raceView,
+  friends, race: raceView, settings,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });

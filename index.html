@@ -126,6 +126,27 @@ button.plate:not(.card) { align-self: center; padding: 12px 22px; font-weight: 6
 @keyframes stamp { from { transform: rotate(-8deg) scale(1.8); opacity: 0; } to { transform: rotate(10deg) scale(1); opacity: 1; } }
 .icon-btn { min-width: var(--tap); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
 
+/* Settings: rows on paper, controls in each OS's grammar */
+.setlist .plate { margin-top: 10px; padding: 12px 16px; }
+.setlist h1 { font: 800 1.4rem var(--mincho); margin: 0; }
+.set { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.set input:not([type=file]) { flex: 1; min-width: 0; text-align: right; font: inherit; color: inherit; background: none; border: 0; padding: 8px 0; }
+.set .acts { display: flex; flex-direction: column; align-items: flex-end; }
+.set .acts button, .set .btn { color: var(--tint-text); font-weight: 600; min-height: var(--tap); display: inline-flex; align-items: center; cursor: pointer; }
+.set .code { font-family: var(--mincho); letter-spacing: .08em; }
+.opts { display: flex; }
+.opts button { min-width: 44px; font-weight: 600; }
+html.ios .opts { background: #7676801f; border-radius: 9px; padding: 2px; }
+html.ios .opts button { min-height: 32px; border-radius: 7px; }
+html.ios .opts [aria-pressed=true] { background: var(--paper); box-shadow: 0 1px 3px #0004; }
+html.android .opts { gap: 8px; }
+html.android .opts button { min-height: 36px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); }
+html.android .opts [aria-pressed=true] { background: color-mix(in srgb, var(--tint) 28%, var(--paper)); border-color: transparent; }
+.about { font-size: .8rem; line-height: 1.5; } .about p { margin: 0 0 6px; }
+.tips { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.tip { font-size: .8rem; padding: 8px 12px; margin: 0; text-align: center; }
+button.plate.tip:not(.card) { padding: 8px 12px; align-self: stretch; min-height: 0; }
+
 /* Navigation: native per OS */
 .nav { position: sticky; bottom: 0; margin: auto -16px 0; display: flex; justify-content: space-around; }
 .nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--ink-2); font-size: .7rem; padding-top: 8px; }

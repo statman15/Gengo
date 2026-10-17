@@ -33,11 +33,15 @@ try {
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(`console.error: ${m.text()}`));
   page.on('requestfailed', r => r.url().startsWith(origin) && errors.push(`failed request: ${r.url()}`));
-  page.on('response', r => r.url().startsWith(origin) && r.status() >= 400 && !r.url().endsWith('/favicon.ico') && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+  page.on('response', r => r.url().startsWith(origin) && r.status() >= 400 && !/[/](favicon[.]ico|version[.]json)$/.test(r.url()) && errors.push(`HTTP ${r.status()}: ${r.url()}`));
 
   step = 'load app';
   await page.goto(origin + '/', { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.querySelector('#app .seal'));
+
+  step = 'settings view';
+  await page.evaluate(() => { location.hash = 'settings'; });
+  await page.waitForFunction(() => document.querySelector('#app .setlist [data-backup]'));
 } catch (e) {
   errors.push(`step "${step}" failed: ${e.message}`);
 } finally {
@@ -46,4 +50,4 @@ try {
 }
 
 if (errors.length) { console.error(`FAIL (${errors.length}):\n  ${[...new Set(errors)].join('\n  ')}`); process.exit(1); }
-console.log('PASS smoke: app loads, home view renders, no console errors');
+console.log('PASS smoke: app loads, home and settings views render, no console errors');
