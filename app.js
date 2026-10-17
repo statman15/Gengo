@@ -1,4 +1,4 @@
-import { $, esc, os, stage, nav } from './ui.js';
+import { $, esc, os, stage, nav, sheet } from './ui.js';
 import { KANA } from './kana.js';
 import { newCard, review, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
@@ -6,8 +6,9 @@ import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
-import { friends, raceView, homeFriends } from './board.js';
-import { postStats, joinFromHash } from './group.js';
+import { friends, raceView, homeFriends, stageHere } from './board.js';
+import { postStats, joinFromHash, here } from './group.js';
+import { STATIONS, printSrc, stationCost } from './journey.js';
 
 document.documentElement.classList.add(os);
 
@@ -34,13 +35,27 @@ function finish(s) {
   go('today');
 }
 
+const cartouche = i => `<div class="cartouche"><b>${STATIONS[i].jp}</b><small>${STATIONS[i].name} · ${i + 1} of 55</small></div>`;
+
+// One-time "You reached <name>": the new print fades in over the old one, and a paper sheet names it.
+function arrive(i) {
+  const st = STATIONS[i], img = Object.assign(document.createElement('img'), { className: 'next', alt: '', src: printSrc(i) });
+  db.settings.lastStation = i; save();
+  img.style.objectPosition = st.focus;
+  $('.stage').append(img);
+  requestAnimationFrame(() => requestAnimationFrame(() => img.classList.add('in')));
+  img.addEventListener('transitionend', () => { img.remove(); if (!$('.stage').classList.contains('recede')) stageHere(); }, { once: true });
+  sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
+}
+
 // Views are modules exporting render(el, arg). Friends and nav targets other than today are Tasks 9-11.
 const views = {
   today: { render: el => {
-    stage({ src: 'prints/00.jpg', focus: '40% 50%', sketch: 0.35 });
+    const { station } = here(), last = Math.min(db.settings.lastStation, station), arriving = station > db.settings.lastStation;
+    if (arriving) stage({ src: printSrc(last), focus: STATIONS[last].focus }); else stageHere();
     const due = dueQueue(db.cards, new Date()).length, n = nextNew(db.cards, db.settings.newBatch).length;
     el.innerHTML = `<div class="screen">
-      <div class="cartouche"><b>日本橋</b><small>Nihonbashi · 1 of 55</small></div>
+      ${cartouche(station)}
       <div class="grow"></div>
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
@@ -49,6 +64,16 @@ const views = {
       <div class="friends"></div>
       ${nav('today')}</div>`;
     homeFriends($('.friends', el));
+    if (arriving) arrive(station);
+  } },
+  journey: { render: el => {
+    const { station, progress } = here(), nxt = STATIONS[station + 1], left = nxt && Math.round((1 - progress) * (stationCost(station + 1) - stationCost(station)));
+    stageHere();
+    el.innerHTML = `<div class="screen">${cartouche(station)}<div class="grow"></div>
+      <div class="plate" style="max-height:38dvh;overflow:auto">${STATIONS.slice(0, station + 1).reverse().map(s => `<p><b lang="ja" style="font-family:var(--mincho)">${s.jp}</b> ${s.name}</p>`).join('')}</div>
+      <div class="plate" style="margin-top:8px">${nxt ? `Next: <b lang="ja" style="font-family:var(--mincho)">${nxt.jp}</b> ${nxt.name}<br><span class="muted">${left} more kana mastered</span>` : 'You reached Kyōto'}</div>
+      <div class="plate muted" style="margin-top:8px;font-size:.75rem">Utagawa Hiroshige, Wikimedia Commons</div>
+      <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
   } },
   friends, race: raceView,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.

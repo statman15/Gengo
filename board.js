@@ -4,8 +4,11 @@ import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { choices } from './session.js';
 import { raceItems, raceTime } from './race.js';
-import { board, configured, createGroup, inviteUrl, postStats } from './group.js';
+import { board, configured, createGroup, inviteUrl, postStats, here } from './group.js';
+import { STATIONS, printSrc } from './journey.js';
 
+// The current station's print, filling in from sketch toward colour as the next station nears.
+export const stageHere = (o = {}) => { const { station, progress } = here(); stage({ src: printSrc(station), focus: STATIONS[station].focus, sketch: 1 - progress, ...o }); };
 const secs = ms => (ms / 1000).toFixed(1) + 's';
 const byWeek = rows => [...rows].sort((a, b) => b.week - a.week);
 const raced = () => db.race[dayKey(new Date())];
@@ -19,10 +22,11 @@ export async function homeFriends(el) {
     : byWeek(rows).slice(0, 3).map((r, i) => `<div class="plate${i ? '' : ' lead'}"><b>${r.streak}</b>${esc(r.name)}</div>`).join('');
 }
 
-const row = (r, today) => `<div class="plate row"><span class="who">${esc(r.name)}</span><b>🔥${r.streak}</b><span>${r.week} wk</span><span>${r.race?.day === today ? secs(r.race.time) : '–'}</span></div>`;
+const stationName = i => STATIONS[Math.min(Math.floor(i), STATIONS.length - 1)].name;
+const row = (r, today) => `<div class="plate row"><span class="who">${esc(r.name)}<br><small class="muted">${stationName(r.station)}</small></span><b>🔥${r.streak}</b><span>${r.week} wk</span><span>${r.race?.day === today ? secs(r.race.time) : '–'}</span></div>`;
 
 export const friends = { render: el => {
-  stage({ src: 'prints/00.jpg', focus: '40% 50%', sketch: 0.35 });
+  stageHere();
   const code = db.settings.groupCode, r = raced();
   if (!configured()) return void (el.innerHTML = `<div class="screen"><div class="grow"></div>${plate("Group sync isn't set up yet")}<div class="grow"></div>${nav('friends')}</div>`);
   const seal = !code ? '<button class="seal" data-create aria-label="Create group"><b>＋</b><span>作</span></button>'
