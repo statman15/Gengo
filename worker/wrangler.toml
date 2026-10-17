@@ -1,0 +1,7 @@
+name = "gengo"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "GENGO"
+id = "REPLACE_WITH_KV_ID" # replace with the id from `npx wrangler kv namespace create GENGO`
