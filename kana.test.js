@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { KANA } from './kana.js';
+assert.equal(KANA.length, 142);
+assert.equal(new Set(KANA.map(k => k.id)).size, 142);
+const s = Object.fromEntries(KANA.filter(k => k.script === 'hira').map(k => [k.kana, k.sound]));
+assert.deepEqual([s['し'], s['ち'], s['つ'], s['ふ'], s['を'], s['ん'], s['ぢ'], s['づ']], ['shi','chi','tsu','fu','wo','n','ji','zu']);
+assert.equal(KANA.find(k => k.id === 'k-a').kana, 'ア');
+assert.equal(KANA.find(k => k.id === 'h-ji2').kana, 'ぢ');
+assert.equal(KANA.find(k => k.id === 'k-zu2').kana, 'ヅ');
+assert.equal(KANA.find(k => k.id === 'k-n').kana, 'ン');

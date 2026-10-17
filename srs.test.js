@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { newCard, review, isDue, isMastered, rungFor, pickRung, ratingFor } from './srs.js';
+const now = new Date('2026-10-17T10:00:00');
+const c = newCard(now);
+assert.equal(isDue(c, now), true);
+assert.equal(rungFor(c, {canHear: true, canSay: true}), 'hear');
+assert.equal(rungFor({...c, stability: 5}, {canHear: true, canSay: true}), 'see');
+assert.equal(rungFor({...c, stability: 12}, {canHear: true, canSay: true}), 'say');
+assert.equal(rungFor({...c, stability: 12}, {canHear: true, canSay: false}), 'see');
+assert.equal(rungFor(c, {canHear: false, canSay: false}), 'see');
+assert.equal(isMastered({...c, stability: 21}), true);
+assert.equal(isMastered({...c, stability: 20.9}), false);
+assert.equal(ratingFor({correct: false, ms: 1000}), 1);
+assert.equal(ratingFor({correct: true, ms: 9000}), 2);
+assert.equal(ratingFor({correct: true, ms: 1000, hinted: true}), 2);
+assert.equal(ratingFor({correct: true, ms: 1000, speechFallback: true}), 2);
+assert.equal(ratingFor({correct: true, ms: 1000, stretch: true}), 4);
+assert.equal(ratingFor({correct: true, ms: 1000}), 3);
+const next = review(c, 3, now);
+assert.ok(next.due > now && next.reps === 1);
+assert.deepEqual(pickRung({...c, stability: 5}, {canHear: true, canSay: true}, () => 0.1), {rung: 'say', stretch: true});
+assert.deepEqual(pickRung({...c, stability: 5}, {canHear: true, canSay: false}, () => 0.1), {rung: 'see', stretch: false});
+assert.deepEqual(pickRung({...c, stability: 5}, {canHear: true, canSay: true}, () => 0.9), {rung: 'see', stretch: false});
+// cards survive JSON (Task 3 revives dates)
+assert.equal(JSON.parse(JSON.stringify(next)).reps, 1);
