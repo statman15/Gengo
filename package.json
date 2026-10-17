@@ -1,0 +1,23 @@
+{
+  "name": "gengo",
+  "private": true,
+  "type": "module",
+  "description": "npm is only for the Capacitor Android shell; the web app itself has no build step.",
+  "scripts": {
+    "test": "node -e \"\"",
+    "smoke": "node smoke.mjs",
+    "www": "node copy-web.js",
+    "sync": "node copy-web.js && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "puppeteer-core": "25.13.0"
+  }
+}
