@@ -29,6 +29,8 @@ export function revive(raw) {
     const v = r.settings?.[k];
     settings[k] = typeof v === type && (type !== 'number' || Number.isFinite(v)) ? v : def;
   }
+  const ls = settings.lastStation; // a station index: integer 0..54
+  if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
   return {
     settings,
     cards: Object.fromEntries(ent(r.cards).filter(([id]) => knownId(id)).map(([id, c]) => [id, card(c)]).filter(([, c]) => c)),

@@ -69,10 +69,11 @@ const views = {
   journey: { render: el => {
     const { station, progress } = here(), nxt = STATIONS[station + 1], left = nxt && Math.round((1 - progress) * (stationCost(station + 1) - stationCost(station)));
     stageHere();
-    el.innerHTML = `<div class="screen">${cartouche(station)}<div class="grow"></div>
-      <div class="plate" style="max-height:38dvh;overflow:auto">${STATIONS.slice(0, station + 1).reverse().map(s => `<p><b lang="ja" style="font-family:var(--mincho)">${s.jp}</b> ${s.name}</p>`).join('')}</div>
-      <div class="plate" style="margin-top:8px">${nxt ? `Next: <b lang="ja" style="font-family:var(--mincho)">${nxt.jp}</b> ${nxt.name}<br><span class="muted">${left} more kana mastered</span>` : 'You reached Kyōto'}</div>
-      <div class="plate muted" style="margin-top:8px;font-size:.75rem">Utagawa Hiroshige, Wikimedia Commons</div>
+    const jp = s => `<b lang="ja">${s.jp}</b> ${s.name}`;
+    el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
+      <div class="plate reached">${STATIONS.slice(0, station + 1).reverse().map(s => `<p>${jp(s)}</p>`).join('')}</div>
+      <div class="plate">${nxt ? `Next: ${jp(nxt)}<br><span class="muted">${left} more kana mastered</span>` : 'You reached Kyōto'}</div>
+      <div class="plate credit muted">Utagawa Hiroshige, Wikimedia Commons</div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
   } },
   friends, race: raceView,

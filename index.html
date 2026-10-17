@@ -62,6 +62,12 @@ dialog::backdrop { background: #0008; }
 .plate, .choice, .cartouche, dialog { background: var(--paper) url(paper.svg); }
 .plate { color: var(--ink); border-radius: var(--r); box-shadow: 0 8px 22px -6px #0006; }
 .muted { color: var(--ink-2); }
+.journey .plate { padding: 14px 16px; margin-top: 10px; line-height: 1.5; }
+.journey .plate b { font-family: var(--mincho); font-weight: 800; }
+.journey .reached { max-height: 38dvh; overflow: auto; }
+.journey p { margin: 0; }
+.journey .reached p + p { margin-top: 8px; }
+.journey .credit { font-size: .75rem; }
 .grow { flex: 1; }
 
 /* The title cartouche: vertical, like the print's own */
