@@ -128,12 +128,13 @@ button.plate:not(.card) { align-self: center; padding: 12px 22px; font-weight: 6
 
 /* Settings: rows on paper, controls in each OS's grammar */
 .setlist .plate { margin-top: 10px; padding: 12px 16px; }
-.setlist h1 { font: 800 1.4rem var(--mincho); margin: 0; }
+.setlist h1 { font: 800 1.4rem var(--ui); margin: 0; }
 .set { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .set input:not([type=file]) { flex: 1; min-width: 0; text-align: right; font: inherit; color: inherit; background: none; border: 0; padding: 8px 0; }
 .set .acts { display: flex; flex-direction: column; align-items: flex-end; }
-.set .acts button, .set .btn { color: var(--tint-text); font-weight: 600; min-height: var(--tap); display: inline-flex; align-items: center; cursor: pointer; }
-.set .code { font-family: var(--mincho); letter-spacing: .08em; }
+.set .acts button { color: var(--tint-text); font-weight: 600; min-height: var(--tap); display: inline-flex; align-items: center; cursor: pointer; }
+.set .code { font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .opts { display: flex; }
 .opts button { min-width: 44px; font-weight: 600; }
 html.ios .opts { background: #7676801f; border-radius: 9px; padding: 2px; }

@@ -46,7 +46,7 @@ export const settings = { render: el => {
       : configured() ? '<button data-create>Create Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
     <div class="plate set"><span>New kana per batch</span><div class="opts" role="group" aria-label="New kana per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
-    <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><label class="btn">Restore Backup<input type="file" accept=".json,application/json" hidden></label></span></div>
+    <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
     <div class="plate about muted"><p>Gengo <span class="ver">dev</span></p>
       <p>Prints by Utagawa Hiroshige, via Wikimedia Commons. Shippori Mincho B1 under the SIL Open Font License.</p>
       <p>Your study data stays on this phone.</p></div>
@@ -62,6 +62,7 @@ export const settings = { render: el => {
   el.querySelectorAll('[data-batch]').forEach(b => b.onclick = () => { db.settings.newBatch = +b.dataset.batch; save(); again(); });
   $('[data-backup]', el).onclick = async () => { if (await saveBackup()) ok('Backup saved'); };
   const file = $('input[type=file]', el);
+  $('[data-restore]', el).onclick = () => file.click();
   file.onchange = async () => {
     const f = file.files[0]; file.value = '';
     if (!f) return;
