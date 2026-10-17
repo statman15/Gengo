@@ -4,12 +4,14 @@
   "type": "module",
   "description": "npm is only for the Capacitor Android shell; the web app itself has no build step.",
   "scripts": {
-    "test": "node kana.test.js && node srs.test.js && node store.test.js && node streak.test.js",
+    "test": "node kana.test.js && node srs.test.js && node store.test.js && node streak.test.js && node speech.test.js",
     "smoke": "node smoke.mjs",
     "www": "node copy-web.js",
     "sync": "node copy-web.js && cap sync android"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "7.0.1",
+    "@capacitor-community/text-to-speech": "8.0.2",
     "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
