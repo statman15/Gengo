@@ -1,6 +1,7 @@
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, PUT, OPTIONS', 'access-control-allow-headers': 'Content-Type' };
 const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
 const reply = (body, status = 200) => new Response(body === undefined ? null : JSON.stringify(body), { status, headers: CORS });
+const DAY = 86400, MEMBER_TTL = { expirationTtl: 90 * DAY }, GROUP_TTL = { expirationTtl: 365 * DAY }, MAX_MEMBERS = 20;
 const num = v => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 
 // Returns the whitelisted record, or null if the body is invalid.
@@ -19,7 +20,7 @@ export async function handle(req, env) {
   if (root !== 'group') return reply(undefined, 404);
   if (req.method === 'POST' && !code) {
     const id = [...crypto.getRandomValues(new Uint8Array(10))].map(n => ALPHA[n % ALPHA.length]).join('');
-    await env.GENGO.put('g:' + id, '1');
+    await env.GENGO.put('g:' + id, '1', GROUP_TTL);
     return reply({ code: id });
   }
   if (!code || !(await env.GENGO.get('g:' + code))) return reply(undefined, 404);
@@ -32,7 +33,11 @@ export async function handle(req, env) {
     let rec;
     try { rec = text.length <= 1024 && clean(JSON.parse(text)); } catch {}
     if (!rec) return reply(undefined, 400);
-    await env.GENGO.put(`m:${code}:${dev}`, JSON.stringify({ ...rec, t: Date.now() }));
+    const key = `m:${code}:${dev}`;
+    const { keys } = await env.GENGO.list({ prefix: `m:${code}:` });
+    if (keys.length >= MAX_MEMBERS && !keys.some(k => k.name === key)) return reply(undefined, 403);
+    await env.GENGO.put(key, JSON.stringify({ ...rec, t: Date.now() }), MEMBER_TTL);
+    await env.GENGO.put('g:' + code, '1', GROUP_TTL);
     return reply(undefined, 204);
   }
   return reply(undefined, dev || req.method === 'PUT' ? 400 : 404);

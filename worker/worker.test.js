@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { handle } from './index.js';
 
-const kv = new Map();
+const kv = new Map(), opts = new Map();
 const env = { GENGO: {
   get: async k => kv.get(k) ?? null,
-  put: async (k, v) => void kv.set(k, v),
+  put: async (k, v, o) => { kv.set(k, v); opts.set(k, o); },
   list: async ({ prefix }) => ({ keys: [...kv.keys()].filter(k => k.startsWith(prefix)).map(name => ({ name })) }),
 } };
 const call = (method, path, body) => handle(new Request('http://x' + path, { method, body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body) }), env);
@@ -30,6 +30,12 @@ for (const bad of [stats({ name: '' }), stats({ name: 'x'.repeat(21) }), stats({
   assert.equal((await call('PUT', `/group/${code}/device-aaa1`, bad)).status, 400, JSON.stringify(bad).slice(0, 60));
 assert.equal((await call('PUT', `/group/${code}/bad_id`, stats())).status, 400);
 assert.equal((await call('PUT', `/group/${code}/short`, stats())).status, 400);
+
+assert.equal(opts.get('g:' + code).expirationTtl, 365 * 86400);
+assert.equal(opts.get(`m:${code}:device-aaa1`).expirationTtl, 90 * 86400);
+for (let i = 2; i < 20; i++) assert.equal((await call('PUT', `/group/${code}/device-${String(i).padStart(4, '0')}`, stats())).status, 204);
+assert.equal((await call('PUT', `/group/${code}/device-extra1`, stats())).status, 403);
+assert.equal((await call('PUT', `/group/${code}/device-aaa1`, stats({ streak: 9 }))).status, 204);
 
 const pre = await call('OPTIONS', '/group');
 assert.equal(pre.status, 204);
