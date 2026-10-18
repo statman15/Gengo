@@ -5,7 +5,7 @@ import { journey } from './journey.js';
 
 // Where the mastered kana have taken you along the Tōkaidō.
 export const here = () => journey(Object.values(db.cards).filter(isMastered).length);
-export const WORKER_URL = 'https://gengo.REPLACE.workers.dev';
+export const WORKER_URL = 'https://gengo.ressler-chris.workers.dev';
 const LOCAL = h => h === 'localhost' || h === '127.0.0.1';
 // ?worker=<url> is for local testing only: page and override must both be local, so an invite link can't redirect stats.
 export function allowedOverride(pageHost, overrideUrl) {
