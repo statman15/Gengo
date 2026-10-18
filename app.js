@@ -10,6 +10,7 @@ import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings, backupDue } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
+import { checkUpdate } from './update.js';
 
 document.documentElement.classList.add(os);
 
@@ -140,3 +141,5 @@ show(location.hash.startsWith('#join=') ? 'today' : location.hash.slice(1) || 't
 joined();
 postStats();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {}); // offline cache; optional
+checkUpdate();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });

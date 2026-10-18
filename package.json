@@ -4,7 +4,7 @@
   "type": "module",
   "description": "npm is only for the Capacitor Android shell; the web app itself has no build step.",
   "scripts": {
-    "test": "node kana.test.js && node srs.test.js && node store.test.js && node streak.test.js && node speech.test.js && node session.test.js && node race.test.js && node journey.test.js && node worker/worker.test.js",
+    "test": "node kana.test.js && node srs.test.js && node store.test.js && node streak.test.js && node speech.test.js && node session.test.js && node race.test.js && node journey.test.js && node update.test.js && node worker/worker.test.js",
     "smoke": "node smoke.mjs",
     "www": "node copy-web.js",
     "sync": "node copy-web.js && cap sync android"
@@ -16,7 +16,8 @@
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
     "@capacitor/filesystem": "^8.1.4",
-    "@capacitor/share": "^8.0.3"
+    "@capacitor/share": "^8.0.3",
+    "@capacitor-community/file-opener": "8.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",

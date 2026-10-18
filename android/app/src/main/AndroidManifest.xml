@@ -40,4 +40,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Speaking drills: speech recognition listens to the microphone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- In-app updater: opens the downloaded APK in the system installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 </manifest>
