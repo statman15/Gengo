@@ -21,9 +21,10 @@ export async function checkUpdate() {
     go.onclick = async () => {
       const { Filesystem, FileOpener } = Capacitor.Plugins;
       go.disabled = true;
-      const prog = await Filesystem.addListener('progress', p => { if (p.contentLength) text.textContent = `Downloading ${latest}… ${Math.round(100 * p.bytes / p.contentLength)}%`; });
       text.textContent = `Downloading ${latest}…`;
+      let prog;
       try {
+        prog = await Filesystem.addListener('progress', p => { if (p.contentLength) text.textContent = `Downloading ${latest}… ${Math.round(100 * p.bytes / p.contentLength)}%`; });
         const r = await Filesystem.downloadFile({ url: apk, path: `Gengo-${latest}.apk`, directory: 'CACHE', progress: true, recursive: true });
         await FileOpener.open({ filePath: r.path, contentType: 'application/vnd.android.package-archive', openWithDefault: true });
         text.textContent = 'Follow the installer to update';
@@ -31,10 +32,10 @@ export async function checkUpdate() {
         text.textContent = "Couldn't download the update. Opening the release page…";
         location.href = `${REL}latest`;
       }
-      prog.remove();
+      prog?.remove();
       go.disabled = false;
     };
     $('#updateSkip').onclick = () => { localStorage.setItem('skipUpdate', latest); $('#update').hidden = true; };
     $('#update').hidden = false;
-  } catch {} // offline or rate-limited: try again next time
+  } catch { checkedAt = 0; } // offline or rate-limited: try again next time
 }
