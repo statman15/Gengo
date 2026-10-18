@@ -46,7 +46,7 @@ What Renshuu doesn't have and Gengo will: stories made from your own due words, 
 | KanjiVG | Stroke order and tracing (M4) | CC BY-SA 3.0 |
 | Tatoeba | Example sentences for reading in context (M2), pre-matched to words by a prep script | CC BY 2.0 FR |
 | Hiroshige, *Tōkaidō* (Met Open Access or Wikimedia scans) | The journey | Public domain |
-| JLPT level lists (community-made, e.g. from Jonathan Waller's lists) | Ordering and coverage | Check the licence in M2 |
+| JLPT level lists (Jonathan Waller's, via open-anki-jlpt-decks) | Ordering and coverage | CC BY |
 
 Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, and are run by hand. They're not part of a build.
 
@@ -98,6 +98,18 @@ Kana alone isn't reading. Grammar points are taught and reviewed alongside words
 - The iPhone PWA has no speaking, and its Japanese TTS voice depends on what's installed on the phone.
 - The full JMdict is ~100 MB; the common subset must stay small enough to load on a phone (aim for under 5 MB gzipped).
 - Hiroshige scans are large; ship resized WebP copies.
+
+## M2 decisions (2026-10-18, plan grilling)
+
+Plan: `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`.
+
+| Area | Decision |
+|---|---|
+| NHK Easy | **Not used.** Since NHK moved it to news.web.nhk, the article list and articles need an NHK login token (401 without one), so neither the browser nor the Worker can fetch it cleanly. The reading milestone becomes **"You can read X% of Gengo's sentences"**: the share of the shipped Tatoeba sentences whose every word you know. |
+| Kanji before M4 | **Kanji with furigana** (`<ruby>`) wherever a word or sentence has kanji; kana-only words stay kana. TTS speaks the reading. |
+| Kana and words | **Mixed batches:** while kana remain, half of "Learn new?" is the next kana and half is words you can already spell. |
+| Own words not in the dictionary | The person types the reading and meaning; it becomes a normal card without example sentences. |
+| JLPT lists | Jonathan Waller's lists (CC BY) via open-anki-jlpt-decks (MIT). |
 
 ## Status (2026-10-18)
 
