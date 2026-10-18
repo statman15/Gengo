@@ -18,11 +18,12 @@ const VERB = {
 const ADJ = { adj: 'です', 'adj-neg': 'くないです', 'adj-past': 'かったです', 'adj-past-neg': 'くなかったです' };
 
 export function conjugate(word, pos, form) {
-  if (!(form in FORMS)) return null;
+  if (!Object.hasOwn(FORMS, form)) return null;
   if (pos === 'adj-i' || pos === 'adj-ix') {
     if (!ADJ[form]) return null;
+    if (form === 'adj') return word + 'です';
     const stem = pos === 'adj-ix' && word.endsWith('いい') ? word.slice(0, -2) + 'よ' : word.slice(0, -1);
-    return stem + (form === 'adj' ? 'い' : '') + ADJ[form];
+    return stem + ADJ[form];
   }
   if (ADJ[form]) return null;
   if (form === 'dict') return /^(v1|v5|vk|vs-i)/.test(pos) ? word : null;

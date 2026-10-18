@@ -14,6 +14,8 @@ t('くる', 'vk', 'masu', 'きます'); t('くる', 'vk', 'nai', 'こない'); t
 t('たかい', 'adj-i', 'adj-neg', 'たかくないです'); t('たかい', 'adj-i', 'adj-past', 'たかかったです');
 t('いい', 'adj-ix', 'adj-neg', 'よくないです'); t('たかい', 'adj-i', 'masu', null); t('ねこ', 'n', 'te', null);
 t('たかい', 'adj-i', 'adj', 'たかいです'); t('たかい', 'adj-i', 'adj-past-neg', 'たかくなかったです');
+t('いい', 'adj-ix', 'adj', 'いいです'); t('良い', 'adj-ix', 'adj', '良いです'); t('いい', 'adj-ix', 'adj-past', 'よかったです');
+t('いい', 'adj-ix', 'adj-past-neg', 'よくなかったです'); t('たべる', 'v1', 'toString', null);
 t('たべる', 'v1', 'dict', 'たべる'); t('する', 'vs-i', 'nai', 'しない');
 
 // every form id used by grammar.js exists
