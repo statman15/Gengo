@@ -54,11 +54,10 @@ Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, an
 
 1. **Kana together.** The repo, Pages, the APK workflow and the CI gate copied from HypertroPhy. Kana as FSRS cards with listening, tiles and speaking (Android). Automatic grading, open-ended sessions, the streak. The journey with its first few prints. The Worker with group code, weekly leaderboard and daily kana race. Backup.
    *Done when:* all three have learned kana for a week and can see each other on the board.
-2. **First words and sentences.** The JMdict common subset in frequency/JLPT order, "Learn new words?", typed-in personal word lists, reading in context (Tatoeba), the full activity ladder, the NHK Easy % and JLPT coverage milestones.
+2. **First words and sentences.** The JMdict common subset in frequency/JLPT order, "Learn new words?", typed-in personal word lists, reading in context (Tatoeba), the full activity ladder, the NHK Easy % and JLPT coverage milestones, plus the first ~15 grammar points with their lessons and activities (see "Grammar" below).
    *Check first:* whether the NHK Easy site can be fetched (the Worker can proxy it if CORS blocks the browser).
 3. **Stories.** Also the **Say/translate it** grammar activity (English sentence → Japanese, typed or spoken, AI-graded), since it needs the AI connection. AI connection settings (HypertroPhy's `ai.js` pattern), "Read today's story" with per-word questions that count as reviews, and hints.
 4. **Kanji.** KANJIDIC kanji cards and KanjiVG tracing as the top rung for kanji.
-   Grammar ships in this milestone too, so M2 is **"First words and sentences"**. See "Grammar" below.
 5. **AI chat.** A short conversation that has to use some of your due words, graded by the AI.
 
 ## Grammar (decided 2026-10-18, second grilling round)
