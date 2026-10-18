@@ -42,7 +42,7 @@ export const GRAMMAR = [
     forms: ['masu', 'dict', 'te', 'ta'], pos: VERB,
     explain: 'Verbs end in ます when you speak politely. The same ます form means "do" or "will do", so いきます can be "I go" or "I will go".',
     ex: [{ jp: 'まいにち コーヒー を のみます 。', en: 'I drink coffee every day.' }, { jp: 'あした がっこう へ いきます 。', en: 'I will go to school tomorrow.' }],
-    match: ts => ts.some(t => t.s === 'ます' || (t.f === '' && t.s.endsWith('ます'))) },
+    match: ts => ts.some(t => /ます$/.test(t.s)) },  // Tatoeba keeps ます on the verb token (戻ります)
 
   { id: 'g-wo', title: '〜を〜ます', en: 'を marks the object', jlpt: 5, words: 45, acts: ['fill', 'build'],
     choices: ['を', 'の', 'へ', 'か'], blank: 'を',
