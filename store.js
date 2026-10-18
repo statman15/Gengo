@@ -31,6 +31,7 @@ export function revive(raw) {
   }
   const ls = settings.lastStation; // a station index: integer 0..54
   if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
+  if (![3, 5, 8, 10].includes(settings.newBatch)) settings.newBatch = 5;
   return {
     settings,
     cards: Object.fromEntries(ent(r.cards).filter(([id]) => knownId(id)).map(([id, c]) => [id, card(c)]).filter(([, c]) => c)),
@@ -48,7 +49,8 @@ export const exportJSON = () => JSON.stringify(db);
 export function importJSON(text) {
   let raw;
   try { raw = JSON.parse(text); } catch { return { ok: false, error: 'That file is not valid JSON.' }; }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ok: false, error: 'That file is not a Gengo backup.' };
+  const obj = o => !!o && typeof o === 'object' && !Array.isArray(o);
+  if (!obj(raw) || !(obj(raw.cards) || obj(raw.settings))) return { ok: false, error: 'That file is not a Gengo backup.' };
   const next = revive(raw), { deviceId, groupCode } = db.settings;
   Object.assign(db, next, { settings: { ...next.settings, deviceId, groupCode } }); // in place: importers hold the live db
   save();

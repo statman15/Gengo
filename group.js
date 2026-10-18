@@ -79,9 +79,12 @@ export async function createGroup(f = globalThis.fetch) {
   } catch { return null; }
 }
 
+// The group code in an invite link ("...#join=<code>") or a bare code; undefined if none.
+export const joinCode = t => t.trim().match(/^(?:.*#join=)?([a-z0-9]{4,32})$/i)?.[1];
+
 // Handles #join=<code>: asks for a name, joins, and resolves true once the Worker accepts us.
 export async function joinFromHash(f = globalThis.fetch) {
-  const code = location.hash.match(/^#join=([a-z0-9]{4,32})$/i)?.[1];
+  const code = location.hash.startsWith('#join=') && joinCode(location.hash);
   if (!code) return false;
   history.replaceState(null, '', location.pathname + location.search + '#friends');
   if (!configured() || !await askName()) return false;

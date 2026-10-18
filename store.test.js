@@ -34,6 +34,7 @@ assert.equal(bad.settings.evil, undefined);
 assert.equal(bad.settings.newBatch, 5);
 assert.equal(bad.settings.name, '');
 for (const [v, want] of [[-1, 0], [2.5, 2], [99, 54], [7, 7], ['x', 0]]) assert.equal(revive({ settings: { lastStation: v } }).settings.lastStation, want, 'lastStation ' + v);
+for (const [v, want] of [[-1, 5], [0, 5], [7, 5], [8, 8], [3, 3]]) assert.equal(revive({ settings: { newBatch: v } }).settings.newBatch, want, 'newBatch ' + v);
 assert.deepEqual(revive(null).cards, {});
 assert.equal(revive(null).settings.voiceTipShown, false);
 assert.equal(revive({ settings: { voiceTipShown: true } }).settings.voiceTipShown, true);
@@ -42,6 +43,8 @@ assert.equal(revive({ settings: { voiceTipShown: 'yes' } }).settings.voiceTipSho
 const before = exportJSON();
 assert.equal(importJSON('not json').ok, false);
 assert.equal(importJSON('[1]').ok, false);
+assert.equal(importJSON('{}').ok, false);
+assert.equal(importJSON('{"foo":1}').ok, false);
 assert.equal(exportJSON(), before, 'failed import leaves db unchanged');
 
 const other = JSON.parse(before);

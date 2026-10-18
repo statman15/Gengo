@@ -1,7 +1,7 @@
 import { $, esc, sheet, nav } from './ui.js';
 import { db, save, exportJSON, importJSON } from './store.js';
 import { dayKey } from './streak.js';
-import { createGroup, configured, inviteUrl, postStats } from './group.js';
+import { createGroup, configured, inviteUrl, postStats, joinCode } from './group.js';
 import { stageHere } from './board.js';
 
 const DAY = 864e5;
@@ -43,7 +43,7 @@ export const settings = { render: el => {
     <label class="plate set">Name<input name="n" maxlength="20" value="${esc(name)}" placeholder="Your name" autocomplete="off" aria-label="Display name"></label>
     <div class="plate set"><span>Group${groupCode ? `<br><b class="code">${esc(groupCode)}</b>` : ''}</span><span class="acts">${
       groupCode ? '<button data-share>Share Invite</button><button data-leave>Leave Group</button>'
-      : configured() ? '<button data-create>Create Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
+      : configured() ? '<button data-create>Create Group</button><button data-join>Join Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
     <div class="plate set"><span>New kana per batch</span><div class="opts" role="group" aria-label="New kana per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
     <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
@@ -72,6 +72,16 @@ export const settings = { render: el => {
   };
   const create = $('[data-create]', el);
   if (create) create.onclick = async () => { if (await createGroup()) again(); };
+  const join = $('[data-join]', el);
+  if (join) join.onclick = () => {
+    const b = sheet('<form><p>Paste the invite link or code</p><input name="c" autocomplete="off" aria-label="Invite link or code"><p class="muted" data-err hidden>No group code found in that.</p><button class="plate">Join Group</button></form>');
+    $('form', b).onsubmit = e => {
+      e.preventDefault();
+      const code = joinCode(e.target.c.value);
+      if (!code) return void ($('[data-err]', b).hidden = false);
+      $('#sheet').close(); location.hash = 'join=' + code; // app.js hashchange runs the join flow
+    };
+  };
   const share = $('[data-share]', el);
   if (share) share.onclick = async () => {
     const url = inviteUrl();
