@@ -44,18 +44,25 @@ const asset = rel.assets.find(a => /^jmdict-eng-common-.*\.json\.tgz$/.test(a.na
 const dict = JSON.parse(untar(gunzipSync(await get('jmdict.tgz', asset.browser_download_url))).toString('utf8'));
 console.log('JMdict', dict.version, dict.words.length, 'entries');
 
-// JLPT: key "expression|reading" -> easiest level
-const jlpt = new Map();
+// JLPT: each CSV row tags ONE entry: kanji+reading match first, then a kana-only expression
+// (only entries with no kanji form or a sense-1 `uk` tag), then the lowest entry id. Easiest level wins.
+const jlpt = new Map(); // entry id -> level
+const byKana = new Map();
+for (const e of dict.words) for (const k of e.kana) byKana.set(k.text, [...(byKana.get(k.text) || []), e]);
+const isKana = s => /^[\p{Script=Hiragana}\p{Script=Katakana}ー]+$/u.test(s);
 for (const n of [5, 4, 3, 2, 1]) {
   const rows = csv((await get(`n${n}.csv`, `https://raw.githubusercontent.com/jamsinclair/open-anki-jlpt-decks/main/src/n${n}.csv`)).toString('utf8'));
   console.log('N' + n, rows.length, 'rows');
-  for (const [e, r] of rows) for (const x of e.split(/\s*;\s*/)) for (const y of r.split(/\s*;\s*/)) if (!jlpt.has(x + '|' + y)) jlpt.set(x + '|' + y, n);
+  for (const [e, r] of rows) {
+    let best, rank = 9;
+    for (const x of e.split(/\s*;\s*/)) for (const y of r.split(/\s*;\s*/)) for (const c of byKana.get(y) || []) {
+      const rk = c.kanji.some(k => k.text === x) ? 0
+        : isKana(x) && c.kana.some(k => k.text === x) && (!c.kanji.length || c.sense[0].misc.includes('uk')) ? 1 : 9;
+      if (rk < 9 && (rk < rank || (rk === rank && +c.id < +best.id))) [best, rank] = [c, rk];
+    }
+    if (best && !jlpt.has(best.id)) jlpt.set(best.id, n);
+  }
 }
-const level = (kanji, kana) => {
-  let best = 0;
-  for (const k of [...kanji, ...kana]) for (const r of kana) best = Math.max(best, jlpt.get(k + '|' + r) || 0);
-  return best;
-};
 
 const out = [];
 for (const e of dict.words) {
@@ -67,7 +74,7 @@ for (const e of dict.words) {
     id: 'w-' + e.id, r: rk.text, w,
     m: e.sense.slice(0, 2).map(x => x.gloss.slice(0, 3).map(g => g.text)).flat(),
     p: /^v/.test(f) ? 'v' : /^adj-(i|ix|na)$/.test(f) ? 'adj' : /^n($|-)/.test(f) ? 'n' : 'x',
-    f, j: level(e.kanji.map(k => k.text), e.kana.map(k => k.text)),
+    f, j: jlpt.get(e.id) || 0,
   });
 }
 // ponytail: JMdict-simplified drops the nfXX/news1/ichi1 tags, so within a level shorter readings come first (a proxy for basic words), then entry id.

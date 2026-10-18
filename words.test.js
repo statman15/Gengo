@@ -34,4 +34,8 @@ assert.ok(data.slice(0, 50).every(x => x.j === 5));
 assert.ok(!data.some(x => ['prt', 'cop'].includes(x.f) || x.f.startsWith('aux')));
 assert.ok(data.find(x => x.w === '学生' && x.r === 'がくせい'));
 assert.ok(data.slice(0, 300).every((x, i, a) => !i || a[i - 1].r.length <= x.r.length));
+assert.ok(!data.some(x => x.w === '喪' && x.j === 5));
+const keys = data.slice(0, 300).map(x => x.r + '|' + x.w);
+assert.equal(new Set(keys).size, keys.length);
+for (const w of ['学生', '行く', '食べる']) assert.ok(data.some(x => x.w === w && x.j === 5), w);
 console.log('words ok');
