@@ -3,6 +3,7 @@ import { STATIONS, stationCost, journey } from './journey.js';
 
 assert.equal(STATIONS.length, 55);
 assert.ok(STATIONS.every(s => s.name && s.jp && s.focus));
+assert.ok(STATIONS.every(s => typeof s.scene === 'string' && s.scene.length > 0));
 assert.equal(STATIONS[0].name, 'Nihonbashi');
 assert.equal(STATIONS[54].jp, '京都');
 assert.deepEqual(journey(0), { station: 0, progress: 0 });

@@ -1,6 +1,6 @@
 import { $, esc, os, stage, nav, sheet } from './ui.js';
 import { KANA } from './kana.js';
-import { newCard, review, rungFor, pickRung, ratingFor } from './srs.js';
+import { newCard, review, isMastered, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
@@ -79,14 +79,16 @@ const views = {
     if (arriving) arrive(station);
   } },
   journey: { render: el => {
-    const { station, progress } = here(), nxt = STATIONS[station + 1], left = nxt && Math.round((1 - progress) * (stationCost(station + 1) - stationCost(station)));
+    const { station } = here(), mastered = Object.values(db.cards).filter(isMastered).length;
     stageHere();
-    const jp = s => `<b lang="ja">${s.jp}</b> ${s.name}`;
+    const row = (s, i) => `<li${i === station ? ' class="here" aria-current="step"' : ''}><span class="no">${i + 1}</span>
+      <div class="info"><b lang="ja">${s.jp}</b> <span class="name">${s.name}</span><p class="scene">${s.scene}</p></div>
+      <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more kana`}</span></li>`;
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
-      <div class="plate reached">${STATIONS.slice(0, station + 1).reverse().map(s => `<p>${jp(s)}</p>`).join('')}</div>
-      <div class="plate">${nxt ? `Next: ${jp(nxt)}<br><span class="muted">${left} more kana mastered</span>` : 'You reached Kyōto'}</div>
-      <div class="plate credit muted">Utagawa Hiroshige, Wikimedia Commons</div>
+      <div class="plate road"><ol>${STATIONS.map(row).join('')}</ol><p class="credit muted">Utagawa Hiroshige, Wikimedia Commons</p></div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
+    const road = $('.road', el), cur = $('.here', el);
+    road.scrollTop = cur.offsetTop - (road.clientHeight - cur.offsetHeight) / 2;
   } },
   friends, race: raceView, settings,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.

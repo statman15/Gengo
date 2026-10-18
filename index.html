@@ -62,12 +62,21 @@ dialog::backdrop { background: #0008; }
 .plate, .choice, .cartouche, dialog { background: var(--paper) url(paper.svg); }
 .plate { color: var(--ink); border-radius: var(--r); box-shadow: 0 8px 22px -6px #0006; }
 .muted { color: var(--ink-2); }
-.journey .plate { padding: 14px 16px; margin-top: 10px; line-height: 1.5; }
-.journey .plate b { font-family: var(--mincho); font-weight: 800; }
-.journey .reached { max-height: 38dvh; overflow: auto; }
-.journey p { margin: 0; }
-.journey .reached p + p { margin-top: 8px; }
-.journey .credit { font-size: .75rem; }
+.journey .road { margin-top: 10px; padding: 4px 0 12px; max-height: 62dvh; overflow-y: auto; position: relative; line-height: 1.4; }
+.road ol { list-style: none; margin: 0; padding: 0; }
+.road li { display: grid; grid-template-columns: 2rem 1fr auto; gap: 10px; align-items: center; padding: 10px 14px 10px 12px; color: var(--ink-2); font-size: .875rem; }
+.road li + li { border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+.road li.here, .road li:has(.stamp) { color: var(--ink); }
+.road li.here { box-shadow: inset 2px 0 0 var(--seal-text); background: color-mix(in srgb, var(--seal-text) 8%, transparent); }
+.road .no { font-variant-numeric: tabular-nums; font-size: .75rem; text-align: right; }
+.road b { font-family: var(--mincho); font-weight: 800; font-size: 1.15rem; }
+.road .name { font-weight: 600; }
+.road .scene { margin: 2px 0 0; font-size: .8rem; color: var(--ink-2); }
+.road .state { font-size: .75rem; text-align: right; font-variant-numeric: tabular-nums; }
+.road .here .state { color: var(--seal-text); font-weight: 600; }
+.road .stamp { display: inline-block; font-style: normal; font-family: var(--mincho); font-weight: 800; width: 26px; height: 26px; line-height: 23px; text-align: center;
+  font-size: .85rem; color: var(--seal-text); border: 2px solid var(--seal-text); border-radius: 50%; transform: rotate(10deg); }
+.road .credit { margin: 8px 14px 0; font-size: .75rem; }
 .grow { flex: 1; }
 
 /* The title cartouche: vertical, like the print's own */
