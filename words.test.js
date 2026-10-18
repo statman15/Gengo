@@ -33,4 +33,5 @@ assert.equal(new Set(data.map(x => x.id)).size, data.length);
 assert.ok(data.slice(0, 50).every(x => x.j === 5));
 assert.ok(!data.some(x => ['prt', 'cop'].includes(x.f) || x.f.startsWith('aux')));
 assert.ok(data.find(x => x.w === '学生' && x.r === 'がくせい'));
+assert.ok(data.slice(0, 300).every((x, i, a) => !i || a[i - 1].r.length <= x.r.length));
 console.log('words ok');

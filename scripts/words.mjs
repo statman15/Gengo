@@ -70,8 +70,8 @@ for (const e of dict.words) {
     f, j: level(e.kanji.map(k => k.text), e.kana.map(k => k.text)),
   });
 }
-// ponytail: JMdict-simplified drops the nfXX/news1/ichi1 tags, so within a level the order is the entry id.
-out.sort((a, b) => (b.j || -1) - (a.j || -1) || +a.id.slice(2) - +b.id.slice(2));
+// ponytail: JMdict-simplified drops the nfXX/news1/ichi1 tags, so within a level shorter readings come first (a proxy for basic words), then entry id.
+out.sort((a, b) => (b.j || -1) - (a.j || -1) || a.r.length - b.r.length || +a.id.slice(2) - +b.id.slice(2));
 // 2.5 MB cap (globals): drop the tail of non-JLPT entries until it fits.
 for (let size = Buffer.byteLength(JSON.stringify(out)); size > 2.45e6; out.pop()) size -= Buffer.byteLength(JSON.stringify(out.at(-1))) + 1;
 mkdirSync('data', { recursive: true });
