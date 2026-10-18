@@ -54,11 +54,27 @@ Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, an
 
 1. **Kana together.** The repo, Pages, the APK workflow and the CI gate copied from HypertroPhy. Kana as FSRS cards with listening, tiles and speaking (Android). Automatic grading, open-ended sessions, the streak. The journey with its first few prints. The Worker with group code, weekly leaderboard and daily kana race. Backup.
    *Done when:* all three have learned kana for a week and can see each other on the board.
-2. **First words.** The JMdict common subset in frequency/JLPT order, "Learn new words?", typed-in personal word lists, reading in context (Tatoeba), the full activity ladder, the NHK Easy % and JLPT coverage milestones.
+2. **First words and sentences.** The JMdict common subset in frequency/JLPT order, "Learn new words?", typed-in personal word lists, reading in context (Tatoeba), the full activity ladder, the NHK Easy % and JLPT coverage milestones.
    *Check first:* whether the NHK Easy site can be fetched (the Worker can proxy it if CORS blocks the browser).
-3. **Stories.** AI connection settings (HypertroPhy's `ai.js` pattern), "Read today's story" with per-word questions that count as reviews, and hints.
+3. **Stories.** Also the **Say/translate it** grammar activity (English sentence → Japanese, typed or spoken, AI-graded), since it needs the AI connection. AI connection settings (HypertroPhy's `ai.js` pattern), "Read today's story" with per-word questions that count as reviews, and hints.
 4. **Kanji.** KANJIDIC kanji cards and KanjiVG tracing as the top rung for kanji.
+   Grammar ships in this milestone too, so M2 is **"First words and sentences"**. See "Grammar" below.
 5. **AI chat.** A short conversation that has to use some of your due words, graded by the AI.
+
+## Grammar (decided 2026-10-18, second grilling round)
+
+Kana alone isn't reading. Grammar points are taught and reviewed alongside words, so sentences make sense from the start.
+
+| Area | Decision |
+|---|---|
+| What counts as a grammar point | Particles (は/が/を/に/で …), verb and adjective forms (ます, past, negative, て form …) and sentence patterns (〜てもいいです, 〜たい …). Each is an FSRS review item. |
+| Explanations | **Written for Gengo:** short plain-English explanations with 2–3 example sentences each, drafted once with AI, checked, and shipped offline in the app. Genki and Living Language text is never copied. More examples come from Tatoeba. |
+| Order | **Standard beginner path** (です → は/が → を/に/で → ます verbs → past → て form …), roughly the order Genki I and Living Language use, mapped to JLPT N5 then N4. A point unlocks only once you know enough words for its examples. Each person can also add points from their textbook chapter, like chapter vocabulary. |
+| New point | **A short lesson card**, like a new kana: the pattern, a 2–3 sentence explanation and 2–3 examples (tap to hear). It's offered in the same "Learn new?" prompt as words, then goes straight into easy reviews. |
+| Activities (same easy-to-hard ladder) | **Fill the particle** (わたし__がくせいです → は/が/を/に) → **Pick the form** (たべる, past negative → たべませんでした) → **Build the sentence** (order shuffled word tiles to match an English sentence) → **Say/translate it** (AI-graded; arrives in M3). |
+| Reference | A **Grammar list** of every point you've learned, with its explanation and examples, reachable from Journey or Settings. A "why?" link on any grammar review opens its card. |
+| Journey | A mastered grammar point moves you along the Tōkaidō like a mastered word or kana. |
+| AI | Stories (M3) and chat (M5) use only grammar you know, as well as your words. |
 
 ## Claude's calls (from the builder check, not discussed with Chris; change any)
 
@@ -67,7 +83,7 @@ Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, an
 - **Kana rungs:** hear it, pick the kana → see it, pick its sound → say it (Android). Tiles start with words in M2, since one kana has nothing to build. A hint is "play the sound again"; slow means over 8 s. Both are tunable.
 - **Speaking check:** the recognised text is converted to hiragana and compared loosely (a long vowel or small-kana difference still passes). After two misses the app plays the answer and grades Hard instead of Again, so bad recognition never stalls you.
 - **Updates:** the iPhone web app updates itself on every open (network-first service worker). The Android app checks GitHub's latest release on open (at most every 6 h) and shows an Update banner that downloads and opens the installer in-app (`update.js`, ported from HypertroPhy). Releases must keep the same signing key.
-- **Prints:** all 55 prints from the Wikimedia set, resized to WebP (about 100 KB each) and bundled, so the APK works offline.
+- **Prints:** all 55 Hōeidō prints from Wikimedia Commons at 1600 px (about 32 MB), bundled so the APK works offline.
 - **iPhone:** an installed home-screen PWA is exempt from Safari's 7-day storage eviction, so setup tells the friend to install it. If no Japanese voice is found, the app shows how to add one (Settings → Accessibility → Spoken Content → Voices → Japanese).
 - **Streak week:** starts Monday, like the board. A day with nothing due counts only if you did at least one activity.
 
