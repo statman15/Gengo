@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gengo</string>
+    <string name="title_activity_main">Gengo</string>
+    <string name="package_name">com.statman15.gengo</string>
+    <string name="custom_url_scheme">com.statman15.gengo</string>
+</resources>
