@@ -66,6 +66,7 @@ Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, an
 - **Kana race:** one attempt a day. You see a kana and pick its sound from 4 choices. Each wrong answer adds 3 s. The seed is the phone's local date. Times are self-reported and not checked; that's fine for three friends.
 - **Kana rungs:** hear it, pick the kana → see it, pick its sound → say it (Android). Tiles start with words in M2, since one kana has nothing to build. A hint is "play the sound again"; slow means over 8 s. Both are tunable.
 - **Speaking check:** the recognised text is converted to hiragana and compared loosely (a long vowel or small-kana difference still passes). After two misses the app plays the answer and grades Hard instead of Again, so bad recognition never stalls you.
+- **Updates:** the iPhone web app updates itself on every open (network-first service worker). The Android app checks GitHub's latest release on open (at most every 6 h) and shows an Update banner that downloads and opens the installer in-app (`update.js`, ported from HypertroPhy). Releases must keep the same signing key.
 - **Prints:** all 55 prints from the Wikimedia set, resized to WebP (about 100 KB each) and bundled, so the APK works offline.
 - **iPhone:** an installed home-screen PWA is exempt from Safari's 7-day storage eviction, so setup tells the friend to install it. If no Japanese voice is found, the app shows how to add one (Settings → Accessibility → Spoken Content → Voices → Japanese).
 - **Streak week:** starts Monday, like the board. A day with nothing due counts only if you did at least one activity.
@@ -90,5 +91,6 @@ M1 "Kana together" is built and released: https://statman15.github.io/Gengo/ (iP
 - **Look:** "Living Hiroshige Plate" (Chris's pick). The station's print is the screen, every word sits on paper, a hanko seal is the one action; iOS and Material chrome per phone. See DESIGN.md and PRODUCT.md.
 - **Group sync:** Cloudflare Worker `gengo` at https://gengo.ressler-chris.workers.dev (KV namespace GENGO, Chris's Cloudflare account). Redeploy from `worker/` with `npx wrangler deploy` (use `npx.cmd` in PowerShell). Groups cap at 20 members; records expire after 90 days without an update.
 - **Android users join** from Settings > Join Group by pasting the invite link (the link itself opens Chrome, not the app).
+- **Updates:** the iPhone web app updates itself on every open (network-first service worker). The Android app checks GitHub's latest release on open (at most every 6 h) and shows an Update banner that downloads and opens the installer in-app (`update.js`, ported from HypertroPhy). Releases must keep the same signing key.
 - **Prints:** 55 Hōeidō scans, ~32 MB, credits in prints/CREDITS.md.
 - **Still to check on real phones (M1 done-when):** speaking and TTS on Android, the Japanese voice on iPhone, group join across all three, a week of kana.

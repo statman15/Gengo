@@ -7,7 +7,6 @@
 - **Backup to the Worker.** Each phone pushes its full data nightly so a lost phone can restore. The Export/Import file covers this for three people.
 - **Textbook chapter coverage.** "You know 80% of your Living Language chapter 3 list", built from the typed-in personal lists. Not picked as a milestone in v1.
 - **Speaking on iPhone.** Safari's speech recognition is unreliable; revisit if WebKit improves, or with a native iOS wrapper ($99/yr, see HypertroPhy's notes).
-- **Android in-app update banner.** HypertroPhy's "Update" banner (version.json vs the latest GitHub release, downloads the APK in-app). Skipped in M1; until then the brother downloads new APKs from the Releases page.
 - **Tune print focus for every station.** `focus` in journey.js is hand-tuned only for stations 0–4 and 10; the rest use 50% 50%, so the seal may cover faces on some prints. Several scans are only ~720–1000 px wide and look soft in the portrait crop.
 - **Join feedback.** Joining an unknown or full group, or with no network, is silent and just lands on Friends; show an error plate.
 - **Live board refresh.** The Friends board loads once per visit. The Worker's KV list lags ~30 s after a post anyway.
