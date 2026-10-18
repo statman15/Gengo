@@ -1,29 +1,38 @@
 import { fsrs, createEmptyCard } from './vendor/ts-fsrs.js';
 
-export const TUNING = { seeAt: 3, sayAt: 10, mastered: 21, slowMs: 8000, stretch: 0.2 };
+export const TUNING = {
+  mastered: 21, known: 3, stretch: 0.2,
+  slowMs: { default: 8000, read: 12000, tiles: 15000, fill: 12000, form: 12000, build: 25000 },
+  ladder: {
+    kana: [['hear', 0], ['see', 3], ['say', 10]],
+    word: [['hear', 0], ['see', 2], ['read', 4], ['tiles', 7], ['say', 12]],
+    grammar: [['fill', 0], ['form', 0], ['build', 5]],
+  },
+};
 const f = fsrs();
-const ORDER = ['hear', 'see', 'say'];
 
 export const newCard = now => createEmptyCard(now);
 export const review = (card, rating, now) => f.next(card, now, rating).card;
 export const isDue = (card, now) => new Date(card.due) <= now;
 export const isMastered = card => card.stability >= TUNING.mastered;
+export const isKnown = card => card.stability >= TUNING.known;
 
-export function rungFor(card, { canHear, canSay }) {
-  const s = card.stability;
-  const r = s >= TUNING.sayAt ? 'say' : s >= TUNING.seeAt ? 'see' : 'hear';
-  return (r === 'say' && !canSay) || (r === 'hear' && !canHear) ? 'see' : r;
+export function rungFor(card, ladder, can) {
+  const ok = ladder.filter(([r]) => can(r));
+  const fit = ok.filter(([, min]) => min <= card.stability);
+  return (fit.at(-1) ?? ok[0])?.[0] ?? null;
 }
 
-export function pickRung(card, caps, rand) {
-  const rung = rungFor(card, caps);
-  const up = ORDER[ORDER.indexOf(rung) + 1];
-  if (up && rand() < TUNING.stretch && (up !== 'say' || caps.canSay)) return { rung: up, stretch: true };
+export function pickRung(card, ladder, can, rand) {
+  const rung = rungFor(card, ladder, can);
+  const ok = ladder.map(([r]) => r).filter(can);
+  const up = ok[ok.indexOf(rung) + 1];
+  if (rung && up && rand() < TUNING.stretch) return { rung: up, stretch: true };
   return { rung, stretch: false };
 }
 
-export function ratingFor({ correct, ms, hinted, stretch, speechFallback }) {
+export function ratingFor({ correct, ms, hinted, stretch, speechFallback, rung }) {
   if (!correct) return 1;
-  if (hinted || speechFallback || ms >= TUNING.slowMs) return 2;
+  if (hinted || speechFallback || ms >= (TUNING.slowMs[rung] ?? TUNING.slowMs.default)) return 2;
   return stretch ? 4 : 3;
 }

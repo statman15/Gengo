@@ -1,6 +1,6 @@
 import { $, esc, os, stage, nav, sheet } from './ui.js';
 import { KANA } from './kana.js';
-import { newCard, review, isMastered, rungFor, pickRung, ratingFor } from './srs.js';
+import { newCard, review, isMastered, TUNING, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
@@ -119,11 +119,13 @@ const views = {
     const s = sess;
     if (s.i >= s.queue.length) return finish(s);
     const i = s.i, id = s.queue[i], card = db.cards[id];
-    const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, s.caps), stretch: false } : pickRung(card, s.caps, Math.random);
+    const can = r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
+    const L = TUNING.ladder.kana; // ponytail: kana only until words/grammar cards are queued
+    const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, L, can), stretch: false } : pickRung(card, L, can, Math.random);
     el.innerHTML = `<div class="screen">${bars(i, s.queue.length)}</div>`;
     acts[rung]($('.screen', el), byId[id], r => {
       if (sess !== s || s.i !== i) return; // left the session or already answered
-      db.cards[id] = review(card, ratingFor({ ...r, stretch }), new Date());
+      db.cards[id] = review(card, ratingFor({ ...r, stretch, rung }), new Date());
       today().reviews++;
       save(); // graded now, so leaving during the pause loses nothing
       setTimeout(() => { if (sess === s && s.i === i) { s.i++; show('review'); } }, r.correct && !r.speechFallback ? 600 : 1200);
