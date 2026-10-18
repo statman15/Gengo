@@ -82,3 +82,13 @@ Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, an
 - The iPhone PWA has no speaking, and its Japanese TTS voice depends on what's installed on the phone.
 - The full JMdict is ~100 MB; the common subset must stay small enough to load on a phone (aim for under 5 MB gzipped).
 - Hiroshige scans are large; ship resized WebP copies.
+
+## Status (2026-10-18)
+
+M1 "Kana together" is built and released: https://statman15.github.io/Gengo/ (iPhone, Add to Home Screen) and the signed APK on https://github.com/statman15/Gengo/releases (v1.0.2). Built subagent-driven from `docs/superpowers/plans/2026-10-17-m1-kana-together.md`, a review after every task plus a final whole-branch review.
+
+- **Look:** "Living Hiroshige Plate" (Chris's pick). The station's print is the screen, every word sits on paper, a hanko seal is the one action; iOS and Material chrome per phone. See DESIGN.md and PRODUCT.md.
+- **Group sync:** Cloudflare Worker `gengo` at https://gengo.ressler-chris.workers.dev (KV namespace GENGO, Chris's Cloudflare account). Redeploy from `worker/` with `npx wrangler deploy` (use `npx.cmd` in PowerShell). Groups cap at 20 members; records expire after 90 days without an update.
+- **Android users join** from Settings > Join Group by pasting the invite link (the link itself opens Chrome, not the app).
+- **Prints:** 55 Hōeidō scans, ~32 MB, credits in prints/CREDITS.md.
+- **Still to check on real phones (M1 done-when):** speaking and TTS on Android, the Japanese voice on iPhone, group join across all three, a week of kana.
