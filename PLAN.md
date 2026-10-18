@@ -101,7 +101,7 @@ Kana alone isn't reading. Grammar points are taught and reviewed alongside words
 
 ## M2 decisions (2026-10-18, plan grilling)
 
-Plan: `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`.
+Plan: `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md` (approved by Chris 2026-10-18; build it subagent-driven, as M1 was).
 
 | Area | Decision |
 |---|---|
