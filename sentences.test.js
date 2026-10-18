@@ -18,4 +18,5 @@ const data = JSON.parse(readFileSync('data/sentences.json', 'utf8'));
 assert.ok(statSync('data/sentences.json').size <= 3e6);
 for (const x of data.slice(0, 500)) assert.ok(x.en && x.t.length && x.t.every(([sf, , id]) => sf && typeof id === 'string'));
 for (const p of GRAMMAR) assert.ok(data.filter(x => x.g.includes(p.id)).length >= 20, p.id);
+const ni = data.filter(x => x.t.some(([sf]) => sf === 'には')); assert.ok(ni.length && ni.every(x => x.t.filter(([sf]) => sf === 'には').every(([, , id]) => id === ''))); // compound particle is grammar, not a word
 console.log('sentences.test.js ok');

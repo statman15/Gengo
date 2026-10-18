@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GRAMMAR } from '../grammar.js';
+import { isGrammar } from './grammar-parts.mjs';
 import { tokenReading } from '../sentences.js';
 
 const cache = process.argv[2] || join(tmpdir(), 'gengo-sentences');
@@ -33,7 +34,7 @@ const dict = JSON.parse(sh('tar', ['-xzOf', 'jmdict.tgz']).toString('utf8'));
 const gram = new Map(); // head text or '#entryId' -> pos
 for (const e of dict.words) {
   const f = e.sense[0]?.partOfSpeech[0] || '';
-  if (f !== 'prt' && f !== 'cop' && !f.startsWith('aux')) continue;
+  if (!isGrammar(e)) continue;
   gram.set('#' + e.id, f);
   for (const k of [...e.kanji, ...e.kana]) if (!gram.has(k.text)) gram.set(k.text, f);
 }

@@ -29,6 +29,7 @@ assert.deepEqual(await loadWords(async () => ({ ok: false })), []);
 // the shipped file
 const data = JSON.parse(readFileSync('data/words.json', 'utf8'));
 assert.ok(statSync('data/words.json').size <= 2.5e6);
+assert.ok(!data.some(w => ['には', 'ですか', 'でしょう', 'のです'].includes(w.r))); // compound grammar is never a word card
 assert.equal(new Set(data.map(x => x.id)).size, data.length);
 assert.ok(data.slice(0, 50).every(x => x.j === 5));
 assert.ok(!data.some(x => ['prt', 'cop'].includes(x.f) || x.f.startsWith('aux')));

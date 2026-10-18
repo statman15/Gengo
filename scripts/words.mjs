@@ -5,6 +5,7 @@ import { gunzipSync } from 'node:zlib';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isGrammar } from './grammar-parts.mjs';
 
 const cache = process.argv[2] || join(tmpdir(), 'gengo-words');
 mkdirSync(cache, { recursive: true });
@@ -67,7 +68,7 @@ for (const n of [5, 4, 3, 2, 1]) {
 const out = [];
 for (const e of dict.words) {
   const s = e.sense[0], f = s?.partOfSpeech[0] || '';
-  if (!s || f === 'prt' || f === 'cop' || f.startsWith('aux')) continue;
+  if (!s || isGrammar(e)) continue;
   const wk = e.kanji.find(k => k.common), w = wk?.text || '';
   const rk = e.kana.find(k => k.common && (!w || k.appliesToKanji.includes('*') || k.appliesToKanji.includes(w))) || e.kana.find(k => k.common) || e.kana[0];
   out.push({
