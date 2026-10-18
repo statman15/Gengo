@@ -1,0 +1,99 @@
+name: Check, deploy and release
+
+# Every push to main builds a signed APK and publishes it as a GitHub Release (Obtainium can track these).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The gate: unit tests, then load the real app in headless Chrome (smoke.mjs). Both deploys wait for it.
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run smoke
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+
+  # The website, deployed from here instead of "deploy from branch" so a broken build never goes live.
+  pages:
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node copy-web.js
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: www
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  android:
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 1.0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      - name: Copy the web app into the Android project
+        run: npm run sync
+
+      - name: Keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.p12" \
+            || { echo "::error::KEYSTORE_B64 is not valid base64. Paste release.p12.b64 exactly."; exit 1; }
+          keytool -list -storetype pkcs12 -keystore "$RUNNER_TEMP/release.p12" -storepass "$KEYSTORE_PASSWORD" >/dev/null \
+            || { echo "::error::KEYSTORE_B64 / KEYSTORE_PASSWORD don't match."; exit 1; }
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          cd android && ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "../Gengo-$VERSION_NAME.apk"
+          rm -f "$KEYSTORE_FILE"  # the third-party release step below never sees the signing key
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3, pinned to a commit
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          name: Gengo ${{ env.VERSION_NAME }}
+          files: Gengo-*.apk
