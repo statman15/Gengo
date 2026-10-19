@@ -78,8 +78,11 @@ for (const e of dict.words) {
     f, j: jlpt.get(e.id) || 0,
   });
 }
-// ponytail: JMdict-simplified drops the nfXX/news1/ichi1 tags, so within a level shorter readings come first (a proxy for basic words), then entry id.
-out.sort((a, b) => (b.j || -1) - (a.j || -1) || a.r.length - b.r.length || +a.id.slice(2) - +b.id.slice(2));
+// ponytail: JMdict-simplified drops the nfXX/news1/ichi1 tags, so within a level words used most in our Tatoeba sentences
+// (data/sentences.json from the last build) come first, then shorter readings, then entry id. A real corpus count would be better.
+const uses = {};
+if (existsSync('data/sentences.json')) for (const s of JSON.parse(readFileSync('data/sentences.json', 'utf8'))) for (const [, , id] of s.t) uses[id] = (uses[id] || 0) + 1;
+out.sort((a, b) => (b.j || -1) - (a.j || -1) || (uses[b.id] || 0) - (uses[a.id] || 0) || a.r.length - b.r.length || +a.id.slice(2) - +b.id.slice(2));
 // 2.5 MB cap (globals): drop the tail of non-JLPT entries until it fits.
 for (let size = Buffer.byteLength(JSON.stringify(out)); size > 2.45e6; out.pop()) size -= Buffer.byteLength(JSON.stringify(out.at(-1))) + 1;
 mkdirSync('data', { recursive: true });

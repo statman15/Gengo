@@ -1,9 +1,9 @@
 export const $ = (s, el = document) => el.querySelector(s);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
-// Furigana. Kanji words get a <ruby>; the reading is hidden by CSS unless show (the word isn't known yet) or tapped (a peek).
+// Furigana. Kanji words get a <ruby>. Not known yet (show): kana large, kanji small above. Known: kanji, reading hidden by CSS until tapped (a peek).
 const HAN = /\p{Script=Han}/u;
-export const ruby = (w, r, show) => !r || !HAN.test(w) ? esc(w || r) : `<ruby${show ? ' class="on"' : ''}>${esc(w)}<rt>${esc(r)}</rt></ruby>`;
+export const ruby = (w, r, show) => !r || !HAN.test(w) ? esc(w || r) : show ? `<ruby class="on">${esc(r)}<rt>${esc(w)}</rt></ruby>` : `<ruby>${esc(w)}<rt>${esc(r)}</rt></ruby>`;
 // s.t = [[surface, reading, id]...]; show(id) says whether a word segment shows its reading; markId's word is wrapped in <mark>.
 export const sentenceHtml = (s, markId, show) => s.t.map(([sf, r, id]) => {
   const h = id[0] === 'w' ? ruby(sf, r, show(id)) : esc(sf);

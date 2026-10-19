@@ -3,7 +3,7 @@ import { speak } from './speech.js';
 import { esc, ruby, sentenceHtml, sheet } from './ui.js';
 import { ACTS, shuffle, tileTray } from './activities.js';
 import { conjugate, FORMS } from './conjugate.js';
-import { forPoint, best } from './sentences.js';
+import { forPoint, best, readable } from './sentences.js';
 import { loadedWords } from './items.js';
 import { db } from './store.js';
 
@@ -56,7 +56,8 @@ const grammar = {
       shuffle(p.forms.map(f => conjugate(w.r, w.f, f)), rand), conjugate(w.r, w.f, target), done);
   },
   build(el, p, done, ctx) {
-    const s = sentence(p, ctx, s => s.t.filter(x => x[2] !== '.').length <= 8), segs = s.t.filter(x => x[2] !== '.'), answer = segs.map(x => x[0]).join('');
+    // only sentences whose words are all learned (else the lesson's own examples): never build a word you were never taught
+    const s = sentence(p, ctx, s => s.t.filter(x => x[2] !== '.').length <= 8 && readable(s, id => !!db.cards[id])), segs = s.t.filter(x => x[2] !== '.'), answer = segs.map(x => x[0]).join('');
     const html = new Map(segs.map(([sf, r, id]) => [sf, id[0] === 'w' ? ruby(sf, r, !ctx.known(id)) : esc(sf)]));
     el.insertAdjacentHTML('beforeend', `<div class="plate card sentence"><p class="prompt">Build the sentence</p><p class="gloss-big">${esc(s.en)}</p><div class="tray" lang="ja"></div></div>`);
     tileTray(el, shuffle(segs.map(x => x[0]), ctx.rand ?? Math.random), answer, r => {
