@@ -126,8 +126,8 @@ const views = {
     if (!s.ids.length) return go('today');
     const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r;
     const face = it.kind === 'grammar' ? `<div class="plate card">${lessonHtml(it)}</div>`
-      : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="prompt">${esc(it.sound)}</p>`
-        : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="prompt">${esc(it.m[0])}</p>`}<p class="prompt">Tap to hear it</p></button>`;
+      : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="gloss-big">${esc(it.sound)}</p>`
+        : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="gloss-big">${esc(it.m[0])}</p>${it.m.length > 1 ? `<p class="prompt">${esc(it.m.slice(1, 3).join(' · '))}</p>` : ''}`}<p class="prompt">Tap to hear it</p></button>`;
     el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}${face}
       <div class="grow"></div>
       <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
