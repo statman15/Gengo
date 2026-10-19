@@ -71,6 +71,6 @@ const grammar = {
 ACTS.grammar = Object.fromEntries(Object.entries(grammar).map(([k, run]) => [k, (el, p, done, ctx = {}) => {
   let hinted = false;
   run(el, p, r => done({ ...r, hinted }), ctx);
-  el.insertAdjacentHTML('beforeend', '<button class="hint" data-why style="align-self:center">why?</button>');
+  el.querySelector('.plate.card').insertAdjacentHTML('beforeend', '<button class="why" data-why>why?</button>');
   el.querySelector('[data-why]').onclick = () => { hinted = true; wireHear(sheet(lessonHtml(p))); };
 }]));
