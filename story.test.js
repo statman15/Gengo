@@ -15,3 +15,8 @@ assert.throws(() => parse('no json here', words));
 const p = prompt(words, { 'g-wa-desu': {} }, { jp: '日本橋', name: 'Nihonbashi', scene: 'A bridge' })[1].content;
 assert.ok(p.includes('1. たべる (食べる): to eat') && p.includes('XはYです') && p.includes('日本橋'));
 console.log('story ok');
+import { limits } from './story.js';
+await (await import('./items.js')).ready(async u => ({ ok: true, json: async () => u.includes('words') ? [{ id: 'w-9', r: 'みず', w: '水', m: ['water'] }] : [] }));
+const lim = limits({ 'w-9': {}, 'h-a': {}, 'h-i': {}, 'g-wa-desu': {} });
+assert.ok(lim.includes('みず=water') && lim.includes('Use ONLY these kana: あい.') && lim.includes('XはYです'), lim);
+console.log('limits ok');

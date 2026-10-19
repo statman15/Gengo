@@ -8,6 +8,7 @@ import { loadedWords } from './items.js';
 import { db } from './store.js';
 import { ready as aiReady, chat, json } from './ai.js';
 import { listen } from './speech.js';
+import { keypad } from './keypad.js';
 
 const plain = jp => jp.replace(/[\[\] ]/g, '');
 // A point example as a tagged sentence: tokens [surface, '', id] ('.' = punctuation), with `at` the [bracketed] one.
@@ -76,6 +77,7 @@ const grammar = {
       <div class="choices">${ctx.caps?.canSay ? '<button class="choice" data-speak>Speak</button>' : ''}<button class="choice" data-check>Check</button></div>`);
     const input = el.querySelector('.answer'), out = el.querySelector('[data-out]'), check = el.querySelector('[data-check]');
     let said = 'wrote', over = false;
+    const pad = keypad(input);
     const speakBtn = el.querySelector('[data-speak]');
     if (speakBtn) speakBtn.onclick = async () => { out.textContent = 'Listening…'; const h = (await listen())[0]; out.textContent = ''; if (h) { input.value = h; said = 'said'; } };
     input.oninput = () => { said = 'wrote'; };
@@ -86,7 +88,7 @@ const grammar = {
       try {
         const r = json(await chat(gradePrompt(p, { ...s, mine }, answer, said))), ok = r.correct === true || r.correct === 'true';
         if (!el.isConnected) return;
-        over = true; input.disabled = true;
+        over = true; input.disabled = true; pad.remove();
         out.innerHTML = `<b>${ok ? 'Correct' : 'Not quite'}</b><br><span lang="ja">${esc(r.fix || answer)}</span><br>${esc(r.note || '')}`;
         el.querySelector('.plate.card').classList.add(ok ? 'right' : 'wrong');
         done({ correct: ok, ms: Date.now() - t0 });

@@ -1,8 +1,8 @@
 // Today's chat: someone at your Tōkaidō station talks with you for TURNS replies, steering toward your due words.
 // The AI grades each word at the end; that is the word's review.
-import { GRAMMAR } from './grammar.js';
 import { item } from './items.js';
 import { chat, json } from './ai.js';
+import { limits } from './story.js';
 
 export const MIN = 3, MAX = 5, TURNS = 5;
 // Due words for the chat, preferring ones today's story didn't use.
@@ -12,17 +12,16 @@ export const chatWords = (due, avoid = []) => {
 };
 
 const list = words => words.map((w, i) => `${i + 1}. ${w.r}${w.w ? ` (${w.w})` : ''}: ${w.m[0]}`).join('\n');
-const known = cards => GRAMMAR.filter(g => cards[g.id]).map(g => `${g.title} (${g.en})`);
 
 // The whole conversation so far as chat messages: the setup, then the AI's turns (as its JSON) and the learner's replies.
 export function messages(c, words, cards) {
-  const k = known(cards);
   return [
     { role: 'system', content: `You are a character in a Japanese conversation practice app for a beginner. Reply with JSON only, no other text.
 Scene: ${c.station.jp} (${c.station.name}) on the old Tōkaidō road: ${c.station.scene}. Pick who you are from the scene (a teahouse owner, a porter, a fellow traveller...) and talk with the learner, a traveller passing through.
 Rules:
 - Write only in hiragana and katakana. No kanji at all.
-- 1-2 short sentences per turn, polite です/ます style.${k.length ? ` Grammar the learner knows: ${k.join(', ')}. Use little else.` : ' Use only the simplest grammar.'}
+- 1-2 short sentences per turn, polite です/ます style.
+${limits(cards)}
 - Over ${TURNS} replies from the learner, ask questions that invite them to use these words, one or two at a time:
 ${list(words)}
 - If the learner makes a mistake, don't correct it; just carry on naturally.

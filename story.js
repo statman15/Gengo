@@ -2,20 +2,31 @@
 import { GRAMMAR } from './grammar.js';
 import { item } from './items.js';
 import { chat, json } from './ai.js';
+import { KANA } from './kana.js';
+
+// Prompt rules that keep the AI to what the learner has learned: their words, their kana, their grammar.
+// ponytail: the list is capped at 400 words (most recent last); trim further if prompts get slow on a free key.
+export function limits(cards) {
+  const words = Object.keys(cards).map(item).filter(x => x?.kind === 'word').slice(-400).map(w => `${w.r}=${w.m[0]}`);
+  const kana = KANA.filter(k => cards[k.id]).map(k => k.kana), grammar = GRAMMAR.filter(g => cards[g.id]).map(g => `${g.title} (${g.en})`);
+  return `- Use ONLY words the learner has learned (any polite form of them), plus particles and です/ます. If you need another word, say it differently with these. Learned words: ${words.join(', ') || '(none yet)'}.
+${kana.length < KANA.length ? `- Use ONLY these kana: ${kana.join('')}.
+` : ''}- ${grammar.length ? `Grammar the learner knows: ${grammar.join(', ')}. Use nothing more advanced.` : 'Use only the simplest grammar.'}`;
+}
 
 export const MIN = 5, MAX = 8;
 // Due word ids (most overdue first) the story will use; the story card shows once there are MIN.
 export const storyWords = due => due.filter(id => item(id)?.kind === 'word').slice(0, MAX);
 
 export function prompt(words, cards, station) {
-  const known = GRAMMAR.filter(g => cards[g.id]).map(g => `${g.title} (${g.en})`);
   return [
     { role: 'system', content: 'You write very short Japanese reading practice for a beginner. Reply with JSON only, no other text.' },
     { role: 'user', content: `Write 4-6 short lines: a tiny story, or a conversation between two people, set at ${station.jp} (${station.name}) on the old Tōkaidō road. The scene: ${station.scene}.
 Rules:
 - Write only in hiragana and katakana. No kanji at all.
 - Use every word below at least once. Mark each use as 【kana|n】, where n is the word's number and kana is the form you used (it may be conjugated).
-- Short, simple sentences in polite です/ます style.${known.length ? ` Grammar the reader knows: ${known.join(', ')}. Use little else.` : ' Use only the simplest grammar.'}
+- Short, simple sentences in polite です/ます style.
+${limits(cards)}
 Words:
 ${words.map((w, i) => `${i + 1}. ${w.r}${w.w ? ` (${w.w})` : ''}: ${w.m[0]}`).join('\n')}
 Reply in this shape: {"title":"<short English title>","lines":[{"jp":"…","en":"<English translation of the line>"}]}` },

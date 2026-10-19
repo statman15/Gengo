@@ -19,6 +19,7 @@ import { GRAMMAR } from './grammar.js';
 import { MIN, storyWords, saved, keep, write } from './story.js';
 import { ready as aiReady } from './ai.js';
 import * as talk from './chat.js';
+import { keypad } from './keypad.js';
 
 document.documentElement.classList.add(os);
 
@@ -228,6 +229,7 @@ const views = {
       if (en) en.onclick = e => { e.stopPropagation(); el.querySelectorAll('.chat .en').forEach(p => p.hidden = !p.hidden); };
       const input = $('.answer', el);
       if (!input) return;
+      keypad(input);
       const send = () => { const jp = input.value.trim(); if (!jp) return; c.log.push({ me: true, jp, ...(helped && { helped }) }); helped = false; talk.keep(c); step(); };
       input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) send(); };
       $('[data-send]', el).onclick = send;
