@@ -2,7 +2,7 @@ import { $, esc, os, stage, nav, sheet, ruby } from './ui.js';
 import { newCard, review, isMastered, isKnown, isDue, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
-import { speak, canHear, canSay } from './speech.js';
+import { speak, canHear, canSay, listen } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
 import { lessonHtml, wireHear, canGrammar } from './grammar-acts.js';
@@ -18,6 +18,7 @@ import { coverage, fresh } from './coverage.js';
 import { GRAMMAR } from './grammar.js';
 import { MIN, storyWords, saved, keep, write } from './story.js';
 import { ready as aiReady } from './ai.js';
+import * as talk from './chat.js';
 
 document.documentElement.classList.add(os);
 
@@ -32,6 +33,9 @@ const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db
 const storyOffer = () => { const s = saved(dayKey(new Date()));
   return s ? storyLeft(s).length > 0 : aiReady() && storyWords(dueQueue(db.cards, new Date())).length >= MIN; };
 const storyLine = (l, markId) => l.segs.map(([t, id]) => id && (!markId || id === markId) ? `<mark>${esc(t)}</mark>` : esc(t)).join('');
+// Today's chat: offered once MIN due words are free of today's story; stays on Today until it is graded.
+const chatOffer = () => { const day = dayKey(new Date()), c = talk.saved(day);
+  return c ? !c.applied : aiReady() && talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids).length >= talk.MIN; };
 const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
 // The live session ({view:'learn'|'review', ...}); show() drops it whenever the user leaves for another view.
@@ -102,6 +106,7 @@ const views = {
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
       ${storyOffer() ? '<div class="grow" style="flex:.25"></div><button class="plate" data-go="story">Read today’s story</button>' : ''}
+      ${chatOffer() ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="chat">${talk.saved(dayKey(new Date())) ? 'Continue today’s chat' : `Chat at ${STATIONS[station].jp}`}</button>` : ''}
       ${!due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
@@ -190,6 +195,69 @@ const views = {
     };
     const a = $('[data-ask]', el);
     if (a) a.onclick = ask;
+  } },
+  // Today's chat: the AI's lines (tap to hear, Show English), your replies typed or spoken, then the AI grades each due word.
+  chat: { render: el => {
+    stage({ recede: true });
+    const day = dayKey(new Date());
+    let c = talk.saved(day);
+    if (!c) {
+      const ids = talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids), { jp, name, scene } = STATIONS[here().station];
+      if (ids.length < talk.MIN) return go('today');
+      talk.keep(c = { day, ids, station: { jp, name, scene }, log: [] });
+    }
+    const words = c.ids.map(item).filter(Boolean), aiTurn = () => !c.grade && (!c.log.length || c.log.at(-1).me);
+    let helped = false, canTalk = false;
+    const draw = () => {
+      if (location.hash !== '#chat') return;
+      const g = c.grade, mark = { right: '✓', wrong: '✗', no: '–' };
+      el.innerHTML = `<div class="screen"><div class="plate card chat">
+        <p class="prompt">At ${esc(c.station.jp)}${c.who ? ` · ${esc(c.who)}` : ''}</p>
+        <p class="prompt">Try to use: ${words.map(w => `<span lang="ja">${ruby(w.w, w.r, true)}</span> ${esc(w.m[0])}`).join(' · ')}</p>
+        ${c.log.map((l, i) => l.me ? `<p class="me" lang="ja">${esc(l.jp)}</p>` : `<p lang="ja" data-line="${i}">${esc(l.jp)}</p><p class="prompt en" hidden>${esc(l.en)}</p>`).join('')}
+        <p class="prompt" data-out role="status">${aiTurn() ? (talk.replies(c) >= talk.TURNS ? 'Checking your words…' : '…') : ''}</p>
+        ${g ? `<div class="result">${words.map(w => `<p>${mark[g.words[w.id]?.used ?? 'no']} <span lang="ja">${esc(w.r)}</span> ${esc(w.m[0])}</p>`).join('')}
+          ${g.fixes.map(f => `<p><span lang="ja">${esc(c.log.filter(l => l.me)[f.reply - 1]?.jp ?? '')}</span> → <span lang="ja">${esc(f.fix)}</span><br><small>${esc(f.why)}</small></p>`).join('')}
+          <p>${esc(g.note)}</p></div>` : ''}
+        ${c.log.length ? '<button class="hint" data-en>Show English</button>' : ''}</div>
+        ${g ? '<div class="grow"></div><button class="plate" data-go="today">Done</button>'
+        : aiTurn() ? '' : `<input class="answer" lang="ja" aria-label="Your reply in Japanese" placeholder="日本語で" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="choices">${canTalk ? '<button class="choice" data-speak>Speak</button>' : ''}<button class="choice" data-suggest>Suggest</button><button class="choice" data-send>Send</button></div>`}</div>`;
+      $('.chat', el).onclick = e => { const l = e.target.closest('[data-line]'); if (l) speak(c.log[l.dataset.line].jp); };
+      const en = $('[data-en]', el);
+      if (en) en.onclick = e => { e.stopPropagation(); el.querySelectorAll('.chat .en').forEach(p => p.hidden = !p.hidden); };
+      const input = $('.answer', el);
+      if (!input) return;
+      const send = () => { const jp = input.value.trim(); if (!jp) return; c.log.push({ me: true, jp, ...(helped && { helped }) }); helped = false; talk.keep(c); step(); };
+      input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) send(); };
+      $('[data-send]', el).onclick = send;
+      $('[data-suggest]', el).onclick = () => { const h = c.log.at(-1)?.hint; if (h) { input.value = h; helped = true; } input.focus(); };
+      const sp = $('[data-speak]', el);
+      if (sp) sp.onclick = async () => { const o = $('[data-out]', el); o.textContent = 'Listening…'; const h = (await listen())[0]; o.textContent = ''; if (h) input.value = h; };
+      input.focus(); // Android opens the keyboard; iPhone only does on a tap
+      input.scrollIntoView({ block: 'center' });
+    };
+    // The AI's next line (or the grade), then apply the grade once: each word still due gets its review.
+    const step = () => {
+      draw();
+      if (!aiTurn()) return;
+      talk.next(c, db.cards).then(() => {
+        c = talk.saved(day) ?? c; // the request may have updated the copy an earlier visit held
+        if (c.grade && !c.applied) {
+          const now = new Date();
+          for (const id of c.ids) { const r = talk.rating(c.grade.words[id], c.log), card = db.cards[id];
+            if (r && card && isDue(card, now)) { db.cards[id] = review(card, r, now); today().reviews++; } }
+          c.applied = true; talk.keep(c); save(); postStats();
+        }
+        draw();
+      }).catch(e => {
+        if (location.hash !== '#chat') return;
+        const o = $('[data-out]', el); o.innerHTML = `${esc(e.message)}<br><button class="hint" data-retry>Try again</button>`;
+        $('[data-retry]', el).onclick = step;
+      });
+    };
+    step();
+    canSay().then(ok => { if (ok && location.hash === '#chat') { canTalk = true; if (!aiTurn() && !c.grade && !$('.answer', el)?.value) draw(); } });
   } },
   review: { render: el => {
     stage({ recede: true });

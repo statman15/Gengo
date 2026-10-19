@@ -142,3 +142,12 @@ M4 "Kanji" is built (Chris skipped the questions; these are Claude's calls, chan
 - **Unlock**: a kanji becomes learnable once you have a card for a word written with it; up to a quarter of each new batch (rounded up) is kanji. The learn card shows the kanji, meanings, on and kun readings, and up to three of your words that use it.
 - **Ladder** (`kanji` in srs.js): **see** (pick the meaning) → **sound** (pick its reading: first on, else kun) at stability 3 → **trace** at 7 (`trace.js`: draw each stroke over a faint KanjiVG guide; a stroke passes when its 16 resampled points average within `TUNING.traceTolerance` = 18 of the 109-unit box, so direction counts; a miss flashes the right stroke, two misses draw it in and fail the card).
 - Not changed: the furigana fade still keys on words, not kanji. Still to check on real phones: tracing with a finger, and whether 18 is too strict or too loose.
+
+## Status (M5, 2026-10-19)
+
+M5 "AI chat" is built, decided with Chris in chat (question cards):
+- **Where:** "Chat at <station>" on Today once 3+ words are due and the AI is set up; one chat a day, cached on the phone (`gengo-chat`, not in backups), "Continue today's chat" until it is graded. It uses up to 5 due words, preferring ones today's story didn't use.
+- **The chat** (`chat.js`, `chat` view): someone at your current Tōkaidō station (the AI picks: teahouse owner, porter, traveller) speaks first, kana only, polite, known grammar only, and steers 5 of your replies toward the words, which are listed at the top. Type, or Speak on Android; Enter or Send. The reply box takes focus each turn (Android opens the keyboard; iPhone needs a tap; the page can't choose the Japanese keyboard, the phone keeps the last one used).
+- **Help:** tap a line to hear it, Show English, Suggest (fills in one possible kana reply).
+- **Grading:** after the 5th reply the AI says per word: used right (Good; Hard if that reply came from Suggest), wrong (Again), or not used (no review, stays due), plus up to 3 corrected replies and a note. 6 AI calls per chat.
+- Still to check with a real AI and on phones: whether models keep to kana, steer to the words, and grade fairly.

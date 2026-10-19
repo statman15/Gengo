@@ -95,7 +95,7 @@ const grammar = {
         out.querySelector('[data-other]').onclick = () => { el.querySelectorAll('.plate.card, .choices').forEach(n => n.remove()); grammar.build(el, p, done, ctx); };
       }
     };
-    input.onkeydown = e => { if (e.key === 'Enter') check.click(); };
+    input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) check.click(); };
   },
   build(el, p, done, ctx) {
     // only sentences whose words are all learned (else the lesson's own examples): never build a word you were never taught
