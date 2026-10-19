@@ -1,4 +1,4 @@
-// "My words" (search, paste a list, custom words) and the Grammar list.
+// "My words" (search, paste a list, custom words), the Grammar list and the kana chart.
 import { $, esc, sheet, nav, ruby } from './ui.js';
 import { db, addMine, addCustom, parseList } from './store.js';
 import { search } from './words.js';
@@ -6,6 +6,8 @@ import { item, loadedWords } from './items.js';
 import { GRAMMAR } from './grammar.js';
 import { lessonHtml, wireHear } from './grammar-acts.js';
 import { stageHere } from './board.js';
+import { KANA as CHART } from './kana.js';
+import { speak } from './speech.js';
 
 const KANA = /^[ぁ-ゖァ-ヺー]+$/;
 const mark = id => db.cards[id] ? 'Learning' : db.mine.words.includes(id) ? 'Added' : '';
@@ -63,4 +65,17 @@ export const grammar = { render: el => {
     if (o) wireHear(sheet(lessonHtml(GRAMMAR.find(p => p.id === o.dataset.open))));
     if (b) { addMine('grammar', b.dataset.pull); grammar.render(el); }
   };
+} };
+
+// Kana chart: the classic 5-column table per script (blank cells keep や/わ rows aligned). Tap a kana to hear it.
+const GAP = { yu: 1, yo: 1, wo: 3, ga: 4 }; // blanks before these sounds; 4 before が ends the ん row
+const chart = script => CHART.filter(k => k.script === script).map(k => '<i></i>'.repeat(GAP[k.sound] ?? 0) +
+  `<button class="choice" data-say="${k.kana}"><span lang="ja">${k.kana}</span><small>${k.sound}</small></button>`).join('');
+export const kana = { render: el => {
+  stageHere();
+  el.innerHTML = `<div class="screen setlist"><h1 class="plate">Kana chart</h1>
+    <h2 class="plate set">Hiragana</h2><div class="kana-grid">${chart('hira')}</div>
+    <h2 class="plate set">Katakana</h2><div class="kana-grid">${chart('kata')}</div>
+    <div class="grow"></div>${nav('')}</div>`;
+  el.onclick = e => { const b = e.target.closest('[data-say]'); if (b) speak(b.dataset.say); };
 } };

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { newCard, review } from './srs.js';
-const { db, save, exportJSON, importJSON, revive, addMine, addCustom, parseList } = await import('./store.js');
+const { db, save, exportJSON, importJSON, revive, addMine, addCustom, parseList, reset } = await import('./store.js');
 
 const now = new Date('2026-10-17T10:00:00');
 const id0 = db.settings.deviceId;
@@ -97,4 +97,6 @@ assert.equal(big.found.length, 500);
 const cc = Object.keys(db.custom).length, again = parseList('ぷりん', []);
 assert.deepEqual([again.found.map(x => x.id), again.unknown], [['c-1'], []], 'custom words match on paste');
 assert.equal(Object.keys(db.custom).length, cc);
+db.settings.name = 'Chris'; const dev = db.settings.deviceId; reset();
+assert.deepEqual([Object.keys(db.cards).length, Object.keys(db.custom).length, db.mine.words.length, db.settings.name, db.settings.deviceId], [0, 0, 0, 'Chris', dev], 'reset clears progress, keeps who you are');
 console.log('store ok');

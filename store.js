@@ -70,6 +70,13 @@ export function importJSON(text) {
   return { ok: true };
 }
 
+// Start over: a fresh db that keeps only who this is (name, device, group).
+export function reset() {
+  const { name, deviceId, groupCode } = db.settings;
+  Object.assign(db, revive({ settings: { name, deviceId, groupCode } }));
+  save();
+}
+
 // false when already listed or already learning.
 export function addMine(kind, id) {
   if (db.mine[kind].includes(id) || Object.hasOwn(db.cards, id)) return false;

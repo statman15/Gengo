@@ -1,5 +1,5 @@
 import { $, esc, sheet, nav } from './ui.js';
-import { db, save, exportJSON, importJSON } from './store.js';
+import { db, save, exportJSON, importJSON, reset } from './store.js';
 import { dayKey } from './streak.js';
 import { createGroup, configured, inviteUrl, postStats, joinCode } from './group.js';
 import { stageHere } from './board.js';
@@ -46,9 +46,11 @@ export const settings = { render: el => {
       : configured() ? '<button data-create>Create Group</button><button data-join>Join Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
     <div class="plate set"><span>New per batch</span><div class="opts" role="group" aria-label="New per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
-    <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
+    <div class="plate set"><span>Backup${backupDue() ? `<br><small class="muted">${db.settings.lastBackup == null ? 'Not backed up yet' : 'Last backup over 14 days ago'}</small>` : ''}</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
     <div class="plate set"><span>My words</span><span class="acts"><button data-go="words">Open</button></span></div>
     <div class="plate set"><span>Grammar</span><span class="acts"><button data-go="grammar">Open</button></span></div>
+    <div class="plate set"><span>Kana chart</span><span class="acts"><button data-go="kana">Open</button></span></div>
+    <div class="plate set"><span>Start over<br><small class="muted">Erase all progress on this phone</small></span><span class="acts"><button data-reset>Start Over</button></span></div>
     <div class="plate about muted"><p>Gengo <span class="ver">dev</span></p>
       <p>Prints by Utagawa Hiroshige, via Wikimedia Commons. Shippori Mincho B1 under the SIL Open Font License.</p>
       <p>Dictionary: JMdict (EDRDG, CC BY-SA 4.0). Sentences: Tatoeba (CC BY 2.0 FR). JLPT lists: Jonathan Waller (tanos.co.uk, CC BY).</p>
@@ -72,6 +74,13 @@ export const settings = { render: el => {
     const r = importJSON(await f.text());
     if (!r.ok) return ok(r.error);
     ok('Restored'); location.hash = 'today';
+  };
+  $('[data-reset]', el).onclick = () => {
+    const b = sheet('<p>Erase all progress and start from the beginning? Your name and group stay. This can’t be undone unless you saved a backup.</p><button class="plate" data-yes>Start Over</button> <button class="plate" data-no>Cancel</button>');
+    b.onclick = e => {
+      if (e.target.closest('[data-yes]')) { reset(); postStats(); location.hash = 'today'; }
+      if (e.target.closest('button')) $('#sheet').close();
+    };
   };
   const create = $('[data-create]', el);
   if (create) create.onclick = async () => { if (await createGroup()) again(); };

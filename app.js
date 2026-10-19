@@ -10,9 +10,9 @@ import { ready, item, ladderFor, loadedWords } from './items.js';
 import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
-import { settings, backupDue } from './settings.js';
+import { settings } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
-import { words, grammar } from './lists.js';
+import { words, grammar, kana } from './lists.js';
 import { checkUpdate } from './update.js';
 import { coverage, fresh } from './coverage.js';
 import { GRAMMAR } from './grammar.js';
@@ -76,9 +76,8 @@ function arrive(i) {
   sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
 }
 
-// Small paper notes above the friends row: the backup nag, and (web only, once) how to add a Japanese voice on iPhone.
+// A small paper note above the friends row (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
 async function tips(el) {
-  if (backupDue()) el.innerHTML = '<button class="plate tip" data-go="settings">Back up your progress</button>';
   if (db.settings.voiceTipShown || globalThis.Capacitor?.isNativePlatform?.() || await canHear() || !el.isConnected) return;
   db.settings.voiceTipShown = true; save();
   el.insertAdjacentHTML('beforeend', '<p class="plate tip">Add a Japanese voice so Gengo can speak: Settings → Accessibility → Spoken Content → Voices → Japanese.</p>');
@@ -119,7 +118,7 @@ const views = {
     const road = $('.road', el), cur = $('.here', el);
     road.scrollTop = cur.offsetTop - (road.clientHeight - cur.offsetHeight) / 2;
   } },
-  friends, race: raceView, settings, words, grammar,
+  friends, race: raceView, settings, words, grammar, kana,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });
