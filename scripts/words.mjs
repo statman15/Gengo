@@ -82,7 +82,14 @@ for (const e of dict.words) {
 // (data/sentences.json from the last build) come first, then shorter readings, then entry id. A real corpus count would be better.
 const uses = {};
 if (existsSync('data/sentences.json')) for (const s of JSON.parse(readFileSync('data/sentences.json', 'utf8'))) for (const [, , id] of s.t) uses[id] = (uses[id] || 0) + 1;
-out.sort((a, b) => (b.j || -1) - (a.j || -1) || (uses[b.id] || 0) - (uses[a.id] || 0) || a.r.length - b.r.length || +a.id.slice(2) - +b.id.slice(2));
+// Polite essentials first, in this order (they rarely appear in sentences, so counts bury them):
+// はい いいえ こんにちは ありがとう すみません おはよう こんばんは さようなら おねがいします どうぞ はじめまして いただきます
+const STARTER = ['w-1010080', 'w-1583250', 'w-1289400', 'w-1586820', 'w-1295060', 'w-1612820', 'w-1289480', 'w-1291050', 'w-1001720', 'w-1189130', 'w-1625780', 'w-1410800'];
+const first = id => (STARTER.indexOf(id) + 1 || 99);
+// First-gloss overrides so starter answers aren't ambiguous: ええ, うん are casual (はい is the polite yes); どうぞ vs おねがいします.
+const GLOSS = { 'w-1001140': 'yes (casual)', 'w-1001090': 'yes (casual)', 'w-1189130': 'please (go ahead)' };
+for (const x of out) if (GLOSS[x.id]) x.m[0] = GLOSS[x.id];
+out.sort((a, b) => first(a.id) - first(b.id) || (b.j || -1) - (a.j || -1) || (uses[b.id] || 0) - (uses[a.id] || 0) || a.r.length - b.r.length || +a.id.slice(2) - +b.id.slice(2));
 // 2.5 MB cap (globals): drop the tail of non-JLPT entries until it fits.
 for (let size = Buffer.byteLength(JSON.stringify(out)); size > 2.45e6; out.pop()) size -= Buffer.byteLength(JSON.stringify(out.at(-1))) + 1;
 mkdirSync('data', { recursive: true });

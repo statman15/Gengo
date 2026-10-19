@@ -36,10 +36,11 @@ const data = JSON.parse(readFileSync('data/words.json', 'utf8'));
 assert.ok(statSync('data/words.json').size <= 2.5e6);
 assert.ok(!data.some(w => ['には', 'ですか', 'でしょう', 'のです'].includes(w.r))); // compound grammar is never a word card
 assert.equal(new Set(data.map(x => x.id)).size, data.length);
-assert.ok(data.slice(0, 50).every(x => x.j === 5));
+assert.ok(data.slice(12, 62).every(x => x.j === 5)); // after the starter set
 assert.ok(!data.some(x => ['prt', 'cop'].includes(x.f) || x.f.startsWith('aux')));
 assert.ok(data.find(x => x.w === '学生' && x.r === 'がくせい'));
-assert.ok(data.findIndex(x => x.r === 'はい') < data.findIndex(x => x.r === 'ええ')); // most-used first: the everyday yes before the casual one
+assert.deepEqual(data.slice(0, 2).map(x => x.r), ['はい', 'いいえ']); // polite starter set leads
+assert.equal(data.find(x => x.id === 'w-1001140').m[0], 'yes (casual)'); // ええ
 assert.ok(!data.some(x => x.w === '喪' && x.j === 5));
 const keys = data.slice(0, 300).map(x => x.r + '|' + x.w + '|' + x.m[0]); // meaning too: 要る and 居る are both uk, so both are plain いる
 assert.equal(new Set(keys).size, keys.length);
