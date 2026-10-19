@@ -1,4 +1,5 @@
 import { KANA } from './kana.js';
+import { GRAMMAR } from './grammar.js';
 
 const KEY = 'gengo';
 const mem = {}; // node tests have no localStorage
@@ -8,9 +9,18 @@ const DATE = ['due', 'last_review'];
 const NUM = ['stability', 'difficulty', 'elapsed_days', 'scheduled_days', 'learning_steps', 'reps', 'lapses', 'state'];
 const day = v => v >= 0 && Number.isFinite(v); // finite, non-negative number
 const date = v => { const d = new Date(v); return v != null && !isNaN(d) ? d : null; };
-// Card ids must be known kana for M1; M2 widens this one check.
-const KNOWN = new Set(KANA.map(k => k.id));
-const knownId = id => KNOWN.has(id);
+// Card ids: known kana, word ids (checked against words.json later, by the queue), known grammar ids, custom ids with an entry.
+const KNOWN = new Set(KANA.map(k => k.id)), GIDS = new Set(GRAMMAR.map(g => g.id));
+const wordId = id => /^w-\d+$/.test(id), grammarId = id => /^g-[a-z-]+$/.test(id) && GIDS.has(id);
+const strs = a => [...new Set((Array.isArray(a) ? a : []).filter(x => typeof x === 'string'))];
+const KANAONLY = /^[ぁ-ゖァ-ヺー]+$/;
+const str = (v, max) => typeof v === 'string' && v.length <= max;
+function custom(e) {
+  if (!e || typeof e !== 'object' || typeof e.r !== 'string' || !KANAONLY.test(e.r) || !Array.isArray(e.m)) return null;
+  const m = e.m.slice(0, 3);
+  if (!m.length || !m.every(x => typeof x === 'string' && x && x.length <= 80)) return null;
+  return { r: e.r, w: str(e.w, 20) ? e.w : '', m };
+}
 
 function card(c) {
   if (!c || typeof c !== 'object' || !NUM.every(k => Number.isFinite(c[k]))) return null;
@@ -32,8 +42,11 @@ export function revive(raw) {
   const ls = settings.lastStation; // a station index: integer 0..54
   if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
   if (![3, 5, 8, 10].includes(settings.newBatch)) settings.newBatch = 5;
+  const cust = Object.fromEntries(ent(r.custom).filter(([id]) => /^c-\d+$/.test(id)).map(([id, e]) => [id, custom(e)]).filter(([, e]) => e));
+  const knownId = id => KNOWN.has(id) || wordId(id) || grammarId(id) || (/^c-\d+$/.test(id) && id in cust);
+  const mine = { words: strs(r.mine?.words).filter(id => wordId(id) || id in cust), grammar: strs(r.mine?.grammar).filter(grammarId) };
   return {
-    settings,
+    settings, custom: cust, mine, seen: strs(r.seen),
     cards: Object.fromEntries(ent(r.cards).filter(([id]) => knownId(id)).map(([id, c]) => [id, card(c)]).filter(([, c]) => c)),
     days: Object.fromEntries(ent(r.days).filter(([, d]) => day(d?.reviews) && typeof d.cleared === 'boolean').map(([k, d]) => [k, { reviews: d.reviews, cleared: d.cleared }])),
     race: Object.fromEntries(ent(r.race).filter(([, d]) => day(d?.time)).map(([k, d]) => [k, { time: d.time }])),
@@ -55,4 +68,29 @@ export function importJSON(text) {
   Object.assign(db, next, { settings: { ...next.settings, deviceId, groupCode } }); // in place: importers hold the live db
   save();
   return { ok: true };
+}
+
+// false when already listed or already learning.
+export function addMine(kind, id) {
+  if (db.mine[kind].includes(id) || db.cards[id]) return false;
+  db.mine[kind].push(id); save();
+  return true;
+}
+
+export function addCustom({ r, w, m }) {
+  const id = 'c-' + (Math.max(0, ...Object.keys(db.custom).map(k => +k.slice(2))) + 1);
+  db.custom[id] = { r, w: w ?? '', m }; db.mine.words.push(id); save();
+  return id;
+}
+
+// One entry per non-blank line, matched exactly on written form or reading; capped at 500 lines.
+export function parseList(text, words) {
+  const found = [], unknown = [];
+  for (const line of String(text).split(/\r?\n/).slice(0, 500)) {
+    const t = line.trim();
+    if (!t) continue;
+    const x = words.find(w => w.w === t || w.r === t);
+    if (!x) { if (!unknown.includes(t)) unknown.push(t); } else if (!found.includes(x)) found.push(x);
+  }
+  return { found, unknown };
 }

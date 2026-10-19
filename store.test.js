@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { newCard, review } from './srs.js';
-const { db, save, exportJSON, importJSON, revive } = await import('./store.js');
+const { db, save, exportJSON, importJSON, revive, addMine, addCustom, parseList } = await import('./store.js');
 
 const now = new Date('2026-10-17T10:00:00');
 const id0 = db.settings.deviceId;
@@ -55,4 +55,33 @@ assert.equal(db.settings.deviceId, id0, 'deviceId survives import');
 assert.equal(db.settings.groupCode, 'GRP', 'groupCode survives import');
 assert.equal(db.settings.name, 'Imported');
 assert.deepEqual(db.cards, {});
+
+// M2: lists, custom words, milestones
+const g1 = JSON.parse(JSON.stringify(good));
+const m2 = revive({
+  cards: { 'w-1311110': g1, 'g-wo': g1, 'g-wa-desu': g1, 'g-nope': g1, 'c-1': g1, 'c-2': g1, 'c-3': g1, 'w-abc': g1, 'g-WO': g1 },
+  custom: { 'c-1': { r: 'ぷりん', w: 'プリン', m: ['pudding'] }, 'c-3': { r: 'abc', m: ['x'] }, 'c-4': { r: 'ぷ', m: [] }, 'x-1': { r: 'ぷ', m: ['a'] }, 'c-5': { r: 'ぷ', m: ['a', ''] } },
+  mine: { words: ['w-1', 'w-1', 5, 'c-1', 'c-9'], grammar: ['g-wa-desu', 'g-wa-desu', 'g-nope', null] },
+  seen: ['a', 'a', 3],
+});
+assert.deepEqual(Object.keys(m2.cards).sort(), ['c-1', 'g-wa-desu', 'g-wo', 'w-1311110']);
+assert.deepEqual(Object.keys(m2.custom), ['c-1']);
+assert.deepEqual(m2.mine, { words: ['w-1', 'c-1'], grammar: ['g-wa-desu'] });
+assert.deepEqual(m2.seen, ['a']);
+const m1 = revive({ cards: {}, settings: {} });
+assert.deepEqual([m1.mine, m1.custom, m1.seen], [{ words: [], grammar: [] }, {}, []]);
+
+assert.equal(addMine('words', 'w-1'), true);
+assert.equal(addMine('words', 'w-1'), false);
+db.cards['w-2'] = good;
+assert.equal(addMine('words', 'w-2'), false);
+const c = addCustom({ r: 'ぷりん', m: ['pudding'] });
+assert.equal(c, 'c-1');
+assert.equal(addCustom({ r: 'ぷりん', w: 'プリン', m: ['pudding'] }), 'c-2');
+assert.ok(db.mine.words.includes('c-2'));
+
+const W = [{ id: 'w-1', w: '学生', r: 'がくせい' }, { id: 'w-2', w: '先生', r: 'せんせい' }];
+const pl = parseList('学生\n\n がくせい \nzzz\n学生\nzzz', W);
+assert.deepEqual(pl.found, [W[0]]);
+assert.deepEqual(pl.unknown, ['zzz']);
 console.log('store ok');
