@@ -1,6 +1,15 @@
 export const $ = (s, el = document) => el.querySelector(s);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
+// Furigana. Kanji words get a <ruby>; the reading is hidden by CSS unless show (the word isn't known yet) or tapped (a peek).
+const HAN = /\p{Script=Han}/u;
+export const ruby = (w, r, show) => !r || !HAN.test(w) ? esc(w) : `<ruby${show ? ' class="on"' : ''}>${esc(w)}<rt>${esc(r)}</rt></ruby>`;
+// s.t = [[surface, reading, id]...]; show(id) says whether a word segment shows its reading; markId's word is wrapped in <mark>.
+export const sentenceHtml = (s, markId, show) => s.t.map(([sf, r, id]) => {
+  const h = id[0] === 'w' ? ruby(sf, r, show(id)) : esc(sf);
+  return id && id === markId ? `<mark>${h}</mark>` : h;
+}).join('');
+
 // One bottom sheet, reused by every screen.
 export function sheet(html) {
   const d = $('#sheet');
@@ -12,8 +21,8 @@ export function sheet(html) {
 }
 
 // Which phone chrome to draw: iOS conventions on Apple devices, Material everywhere else.
-export const os = new URLSearchParams(location.search).get('os') || // ?os=ios|android previews the other phone's chrome
-  (/iPhone|iPad|Macintosh/.test(navigator.userAgent) && !window.Capacitor?.isNativePlatform?.() ? 'ios' : 'android');
+export const os = new URLSearchParams(globalThis.location?.search).get('os') || // ?os=ios|android previews the other phone's chrome
+  (/iPhone|iPad|Macintosh/.test(globalThis.navigator?.userAgent) && !globalThis.Capacitor?.isNativePlatform?.() ? 'ios' : 'android');
 
 // The print behind every screen. sketch: 1 = ink sketch, 0 = full colour.
 export function stage({ src, focus = '50% 50%', sketch = 0, recede = false } = {}) {

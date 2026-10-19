@@ -132,6 +132,26 @@ button.plate:not(.card) { align-self: center; padding: 12px 22px; font-weight: 6
 .choice.right::after { content: "良"; font-family: var(--mincho); font-weight: 800; position: absolute; right: 8px; top: 6px;
   width: 26px; height: 26px; line-height: 23px; font-size: .85rem; color: var(--seal-text); border: 2px solid var(--seal-text); border-radius: 50%;
   transform: rotate(10deg); animation: stamp .35s var(--ease) both; }
+/* Word reviews: furigana fades with learning, tap a kanji word to peek */
+ruby:not(.on) rt { visibility: hidden; }
+rt { font-size: .45em; letter-spacing: .04em; }
+ruby:not(.on) { cursor: pointer; }
+.kana.word { font-size: clamp(3.4rem, 17vw, 4.8rem); line-height: 1.5; }
+.sentence { text-align: left; }
+.sentence p[lang] { margin: 0 0 12px; font-family: var(--mincho); font-size: 1.6rem; line-height: 2.3; }
+.sentence .prompt { font-size: 1rem; }
+.sentence .en { margin-top: 10px; color: var(--ink); }
+mark { background: none; color: inherit; text-decoration: underline 2px var(--seal-text); text-underline-offset: .22em; }
+.choices.gloss .choice { font-size: 1.05rem; line-height: 1.25; padding: 8px; }
+.gloss-big { margin: 6px 0 0; font-size: 1.5rem; font-weight: 600; }
+.hint { margin-top: 10px; padding: 6px 14px; color: var(--ink-2); background: none; border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); border-radius: var(--r); font: inherit; font-size: .85rem; }
+.tray { display: flex; justify-content: center; gap: 8px; margin: 14px 0 0; min-height: 3.4rem; }
+.tray .slot { min-width: 2.6rem; height: 3.4rem; padding: 0 4px; background: none; border: 0; border-bottom: 2px solid var(--ink-2); border-radius: 0;
+  color: var(--ink); font-family: var(--mincho); font-size: 2rem; }
+.tray.right .slot { color: var(--seal-text); border-color: var(--seal-text); }
+.tray.wrong .slot { opacity: .55; }
+.choices.tiles { grid-template-columns: repeat(4, 1fr); margin-top: 14px; }
+.choice.used { opacity: .3; }
 @keyframes stamp { from { transform: rotate(-8deg) scale(1.8); opacity: 0; } to { transform: rotate(10deg) scale(1); opacity: 1; } }
 .icon-btn { min-width: var(--tap); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
 

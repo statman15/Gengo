@@ -9,6 +9,9 @@ const norm = s => toHira(s).toLowerCase().trim().replace(/ー+$/, '').replace(/(
 export const heardMatches = (alts, {kana, sound}) =>
   alts.some(a => { const n = norm(a); return n.startsWith(toHira(kana)) || n === sound; });
 
+const bare = s => s.replace(/[\s\p{P}\p{S}]/gu, '');
+export const heardWord = (alts, {r, w}) => alts.some(a => { const n = bare(a); return n === w || toHira(n) === toHira(r); });
+
 export async function speak(text) {
   try {
     if (native()) return await plugin('TextToSpeech').speak({text, lang: LANG});
