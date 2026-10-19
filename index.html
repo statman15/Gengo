@@ -152,6 +152,18 @@ mark { background: none; color: inherit; text-decoration: underline 2px var(--se
 .tray.wrong .slot { opacity: .55; }
 .choices.tiles { grid-template-columns: repeat(4, 1fr); margin-top: 14px; }
 .choice.used { opacity: .3; }
+/* Grammar: lesson card, fill blank, build-a-sentence tiles */
+.lesson h2 { margin: 0; font-family: var(--mincho); font-size: 1.8rem; font-weight: 500; }
+.lesson .en { color: var(--ink-2); margin: 2px 0 12px; }
+.lesson .ex { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.lesson .ex span[lang] { font-family: var(--mincho); font-size: 1.25rem; }
+.lesson .hint { margin: 0; min-width: var(--tap); min-height: var(--tap); }
+.blank { color: var(--seal-text); }
+.tiles.words { display: flex; flex-wrap: wrap; justify-content: center; }
+.tiles.words .choice { min-height: 52px; padding: 0 14px; font-size: 1.3rem; }
+.sentence .tray { flex-wrap: wrap; gap: 6px; }
+.sentence .tray .slot { min-width: 1.8rem; font-size: 1.3rem; }
+.choices.long .choice { font-size: 1.15rem; padding: 4px; }
 @keyframes stamp { from { transform: rotate(-8deg) scale(1.8); opacity: 0; } to { transform: rotate(10deg) scale(1); opacity: 1; } }
 .icon-btn { min-width: var(--tap); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
 

@@ -54,7 +54,7 @@ export function say(el, item, done) {
 }
 
 // ---- Words. ctx = { known(id) -> bool, caps?, rand? }. Furigana shows only for words not yet known; a tap on a kanji word peeks.
-const shuffle = (a, rand) => { for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
+export const shuffle = (a, rand) => { for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
 const gloss = it => it.m?.[0] ?? '';
 export const canWord = (item, caps) => rung => rung === 'hear' ? !!caps.canHear : rung === 'say' ? !!caps.canSay : rung === 'read' ? forWord(item.id).length > 0 : true;
 
@@ -62,14 +62,14 @@ export const canWord = (item, caps) => rung => rung === 'hear' ? !!caps.canHear 
 export const splitReading = r => [...r].reduce((o, c) => (o.length && 'ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮー'.includes(c) ? o[o.length - 1] += c : o.push(c), o), []);
 
 // Tap tiles to fill slots, tap a placed one to take it back. Calls done({correct, ms}) once the slots are full (answer.length chars); the caller adds hints.
-export function tileTray(el, pieces, answer, done, slots = answer.length) {
+export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = esc) {
   if (!el.querySelector('.tray')) el.insertAdjacentHTML('beforeend', '<div class="tray" lang="ja"></div>');
   el.insertAdjacentHTML('beforeend', `<div class="choices tiles" lang="ja">${pieces.map((p, i) =>
-    `<button class="choice kana-choice" data-i="${i}">${esc(p)}</button>`).join('')}</div>`);
+    `<button class="choice kana-choice" data-i="${i}">${fmt(p)}</button>`).join('')}</div>`);
   const tray = el.querySelector('.tray'), box = el.querySelector('.tiles'), t0 = Date.now(), placed = [];
   let over = false;
   const draw = () => {
-    tray.innerHTML = placed.map(i => `<button class="slot" data-i="${i}">${esc(pieces[i])}</button>`).join('') +
+    tray.innerHTML = placed.map(i => `<button class="slot" data-i="${i}">${fmt(pieces[i])}</button>`).join('') +
       '<i class="slot"></i>'.repeat(Math.max(0, slots - placed.length));
     box.querySelectorAll('.choice').forEach(b => b.classList.toggle('used', placed.includes(+b.dataset.i)));
     const said = placed.map(i => pieces[i]).join('');
