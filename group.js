@@ -82,13 +82,23 @@ export async function createGroup(f = globalThis.fetch) {
 // The group code in an invite link ("...#join=<code>") or a bare code; undefined if none.
 export const joinCode = t => t.trim().match(/^(?:.*#join=)?([a-z0-9]{4,32})$/i)?.[1];
 
+// Already in a group: ask before a join link moves you. Resolves true to switch.
+async function leaveFor(code) {
+  const { $, esc, sheet } = await import('./ui.js');
+  return new Promise(done => {
+    const b = sheet(`<p>Leave group <b class="code">${esc(db.settings.groupCode)}</b> and join <b class="code">${esc(code)}</b>?</p><button class="plate" data-yes>Switch Group</button> <button class="plate" data-no>Stay</button>`);
+    $('#sheet').addEventListener('close', () => done(false), { once: true });
+    b.onclick = e => { if (e.target.closest('[data-yes]')) done(true); if (e.target.closest('button')) $('#sheet').close(); };
+  });
+}
+
 // Handles #join=<code>: asks for a name, joins, and resolves true once the Worker accepts us.
 export async function joinFromHash(f = globalThis.fetch) {
   const code = location.hash.startsWith('#join=') && joinCode(location.hash);
   if (!code) return false;
   history.replaceState(null, '', location.pathname + location.search + '#friends');
-  if (!configured() || !await askName()) return false;
   const prev = db.settings.groupCode;
+  if (prev === code || !configured() || (prev && !await leaveFor(code)) || !await askName()) return false;
   db.settings.groupCode = code;
   if (await postStats(f)) { save(); return true; }
   db.settings.groupCode = prev; // unknown, full or unreachable group: stay where we were

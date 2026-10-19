@@ -88,7 +88,7 @@ export const settings = { render: el => {
     if (!f) return;
     const r = importJSON(await f.text());
     if (!r.ok) return ok(r.error);
-    ok('Restored'); location.hash = 'today';
+    ok('Restored'); postStats(); location.hash = 'today';
   };
   $('[data-reset]', el).onclick = () => {
     const b = sheet('<p>Erase all progress and start from the beginning? Your name and group stay. This can’t be undone unless you saved a backup.</p><button class="plate" data-yes>Start Over</button> <button class="plate" data-no>Cancel</button>');

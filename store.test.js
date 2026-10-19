@@ -55,6 +55,10 @@ assert.equal(db.settings.deviceId, id0, 'deviceId survives import');
 assert.equal(db.settings.groupCode, 'GRP', 'groupCode survives import');
 assert.equal(db.settings.name, 'Imported');
 assert.deepEqual(db.cards, {});
+db.settings.groupCode = '';
+importJSON(JSON.stringify(other));
+assert.equal(db.settings.groupCode, 'OTHER', 'a phone with no group takes the backup’s group');
+db.settings.groupCode = 'GRP';
 
 // M2: lists, custom words, milestones
 const g1 = JSON.parse(JSON.stringify(good));

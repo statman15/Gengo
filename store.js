@@ -66,7 +66,8 @@ export function importJSON(text) {
   const obj = o => !!o && typeof o === 'object' && !Array.isArray(o);
   if (!obj(raw) || !(obj(raw.cards) || obj(raw.settings))) return { ok: false, error: 'That file is not a Gengo backup.' };
   const next = revive(raw), { deviceId, groupCode } = db.settings;
-  Object.assign(db, next, { settings: { ...next.settings, deviceId, groupCode } }); // in place: importers hold the live db
+  // in place: importers hold the live db. A new phone (no group yet) takes the backup's group.
+  Object.assign(db, next, { settings: { ...next.settings, deviceId, groupCode: groupCode || next.settings.groupCode } });
   save(); dropDaily();
   return { ok: true };
 }
