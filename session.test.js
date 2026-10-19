@@ -35,6 +35,10 @@ assert.equal(grammarReady({}, { grammar: ['g-tai'] }).id, 'g-tai');
 const two = nextNew(allKana, 5, { words: five, mine: { words: [], grammar: ['g-tai', GRAMMAR[1].id] } });
 assert.equal(two.filter(id => id.startsWith('g-')).length, 1, 'one grammar point per batch');
 
+assert.ok(!nextNew(allKana, 5, { words: five, mine: { words: ['c-404', 'w-404'], grammar: [] } }).some(id => id.endsWith('404')), 'unknown personal words skipped');
+assert.doesNotThrow(() => nextNew(allKana, 5, { mine: { words: [] } }));
+assert.doesNotThrow(() => nextNew(allKana, 5, { mine: { grammar: [] } }));
+assert.equal(grammarReady({}, {}), null);
 let seed = 7;
 const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 for (const item of KANA) {
