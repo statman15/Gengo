@@ -12,6 +12,3 @@
 - **Smaller group-sync gaps.** Restoring a backup on a new phone doesn't carry the group code; Leave Group leaves your row for up to 90 days; a race that runs past midnight isn't posted; joining via a link replaces an existing group without asking.
 - **Throttle group creation.** `POST /group` on the Worker is unthrottled; the KV free tier simply stops at its daily quota, so no money is at risk.
 - **Word frequency order.** Since 2026-10-19 words inside a JLPT level are ordered by how often they appear in our Tatoeba sentences (plus a polite starter set first). A real corpus frequency list (CC-licensed) would still order N5/N4 better than a 10k-sentence sample.
-- **Fill-the-blank ambiguity.** About 1 in 14 Tatoeba fill sentences has a wrong choice that's arguably also grammatical (e.g. 和食＿＿好きですか with を). Could accept alternates per sentence or filter those sentences out.
-
-- **Tap-to-peek in grammar sentences.** Known kanji in fill/build sentences have no peek for their reading.

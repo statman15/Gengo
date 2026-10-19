@@ -20,6 +20,15 @@ export const wireHear = body => body.onclick = e => { const b = e.target.closest
 
 // The first grammar-token segment whose surface is the blank (a particle in a tagged sentence), or -1.
 export const blankIndex = (t, blank) => t.findIndex(([sf, , id]) => sf === blank && id === '');
+// Would another choice also be grammatical in the blank at t[at]? ponytail: three hand rules (何か, を好き, 外を出る)
+// cover the cases found in our sentences; add a rule when a new false "wrong" turns up.
+const QW = /^(何|なに|なん|誰|だれ|どこ|いつ|どれ|どちら|どっち|どう|どの|どんな|いくつ|いくら)$/;
+const LIKE = /^(好き|嫌い|欲し|ほし|分か|わか|でき|出来|上手|下手|すき|きらい|得意|苦手)/;
+const PASS = /^(出|で[たてるま]|渡|わた|通|とお|歩|ある[いきく]|走|はし|飛|と[んぶ]|登|のぼ|散歩|曲が|まが|過ぎ|すぎ|越|こ[えし])/;
+export const ambiguous = (t, at, choices) => {
+  const x = t[at][0], a = t[at - 1]?.[0], b = t[at + 1]?.[0] ?? '';
+  return choices.some(q => q !== x && ((q === 'か' && QW.test(a)) || ('はがを'.includes(q) && 'はがを'.includes(x) && LIKE.test(b)) || (q === 'を' && x === 'に' && PASS.test(b))));
+};
 // Learned words whose pos starts with one of p.pos and that conjugate in all of p.forms.
 export const formWords = (p, cards, words) => words.filter(w => cards[w.id] && p.pos.some(x => w.f.startsWith(x)) && p.forms.every(f => conjugate(w.r, w.f, f)));
 export const canGrammar = (p, cards) => rung => rung === 'translate' ? aiReady() : rung !== 'form' || formWords(p, cards, loadedWords()).length > 0;
@@ -60,7 +69,7 @@ Reply in this shape: {"correct":true,"fix":"<a correct version close to theirs, 
 
 const grammar = {
   fill(el, p, done, ctx) {
-    const s = sentence(p, ctx, s => p.blank && blankIndex(s.t, p.blank) >= 0), t = s.t.map((x, i) => i === s.at ? ['＿＿', '', ''] : x), right = s.t[s.at][0];
+    const s = sentence(p, ctx, s => { const i = p.blank ? blankIndex(s.t, p.blank) : -1; return i >= 0 && !ambiguous(s.t, i, p.choices); }), t = s.t.map((x, i) => i === s.at ? ['＿＿', '', ''] : x), right = s.t[s.at][0];
     pick(el, `<div class="plate card sentence"><p lang="ja">${sentenceHtml({ t }, '', id => !ctx.known(id)).replace('＿＿', '<span class="blank">＿＿</span>')}</p><p class="prompt en">${esc(s.en)}</p></div>`,
       shuffle([...p.choices], ctx.rand ?? Math.random), right, done, () => el.querySelector('.blank').textContent = right);
   },
@@ -119,4 +128,5 @@ ACTS.grammar = Object.fromEntries(Object.entries(grammar).map(([k, run]) => [k, 
   run(el, p, r => done({ ...r, hinted }), ctx);
   el.querySelector('.plate.card').insertAdjacentHTML('beforeend', '<button class="why" data-why>why?</button>');
   el.querySelector('[data-why]').onclick = () => { hinted = true; wireHear(sheet(lessonHtml(p))); };
+  el.addEventListener('click', e => e.target.closest('ruby')?.classList.add('on')); // tap a known kanji word to peek its reading
 }]));
