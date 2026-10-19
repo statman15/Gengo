@@ -4,6 +4,7 @@ import { GRAMMAR } from './grammar.js';
 import { newCard, pickRung, TUNING } from './srs.js';
 import { dueQueue, nextNew, grammarReady, choices } from './session.js';
 import { ready } from './items.js';
+import { eligible } from './words.js';
 import { db } from './store.js';
 const now = new Date('2026-10-17T10:00:00');
 const at = (due, extra = {}) => ({ ...newCard(now), due: new Date(due), ...extra });
@@ -52,4 +53,13 @@ for (const item of KANA) {
 const none = r => r !== 'hear' && r !== 'say';
 for (const stability of [0, 5, 12, 30]) for (const r of [0, .1, .5, .99])
   assert.ok(!['hear', 'say'].includes(pickRung({ ...newCard(now), stability }, TUNING.ladder.kana, none, () => r).rung));
+{ // early-stopping scan gives the same ids as filtering every word
+  const words = ['あ', 'い', 'う', 'え', 'お', 'か', 'あい', 'いえ', 'かお'].map(r => ({ id: 'w-' + r, r }));
+  const cards = { 'h-a': {}, 'h-i': {}, 'h-u': {}, 'h-e': {}, 'h-o': {}, 'h-ka': {}, 'w-い': {} };
+  for (const n of [1, 3, 4]) {
+    const ws = words.filter(w => !cards[w.id] && eligible(w, cards)).map(w => w.id), rest = n;
+    const k = Math.min(KANA.filter(x => !cards[x.id]).length, Math.max(Math.ceil(rest / 2), rest - ws.length));
+    assert.deepEqual(nextNew(cards, n, { words }), [...KANA.map(x => x.id).filter(id => !cards[id]).slice(0, k), ...ws.slice(0, rest - k)]);
+  }
+}
 console.log('session ok');

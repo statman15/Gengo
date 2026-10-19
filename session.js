@@ -26,7 +26,8 @@ export function nextNew(cards, n, { words = [], mine = {} } = {}) {
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
   const rest = n - out.length;
   const kana = KANA.map(k => k.id).filter(id => !cards[id]);
-  const ws = words.filter(w => !cards[w.id] && !mw.includes(w.id) && eligible(w, cards)).map(w => w.id);
+  const ws = [];
+  for (const w of words) { if (ws.length >= rest) break; if (!cards[w.id] && !mw.includes(w.id) && eligible(w, cards)) ws.push(w.id); } // stop at `rest`: no need to scan all words
   const k = Math.min(kana.length, Math.max(Math.ceil(rest / 2), rest - ws.length));
   return [...out, ...kana.slice(0, k), ...ws.slice(0, rest - k)];
 }
