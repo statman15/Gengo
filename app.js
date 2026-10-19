@@ -113,7 +113,7 @@ const views = {
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
       <div class="plate road"><ol>${STATIONS.map(row).join('')}</ol><p class="credit muted">Utagawa Hiroshige, Wikimedia Commons</p></div>
       ${coveragePlate()}
-      <div class="friends"><button class="plate" data-go="words">My words</button><button class="plate" data-go="grammar">Grammar</button></div>
+      <div class="friends"><button class="plate" data-go="words">My words</button><button class="plate" data-go="grammar">Grammar</button><button class="plate" data-go="kana">Kana</button></div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
     const road = $('.road', el), cur = $('.here', el);
     road.scrollTop = cur.offsetTop - (road.clientHeight - cur.offsetHeight) / 2;
