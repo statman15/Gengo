@@ -5,7 +5,6 @@ import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
-import { ACTS, canWord } from './activities.js';
 import { lessonHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords } from './items.js';
 import { loadSentences } from './sentences.js';
@@ -21,7 +20,7 @@ const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'
 const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine });
 // "5 kana", "3 words and は": names what is in a new batch.
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length;
-  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, ...its.filter(x => x.kind === 'grammar').map(x => x.title)].filter(Boolean)); };
+  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
@@ -33,12 +32,12 @@ async function begin(queue, fresh = new Set()) {
   const h = location.hash, caps = { canHear: await canHear(), canSay: await canSay() };
   await loadSentences();
   if (location.hash !== h) return; // user navigated away while capabilities resolved
-  sess = { view: 'review', queue, fresh, caps, i: 0 };
+  sess = { view: 'review', queue, fresh, caps, i: 0, skipped: new Set() };
   go('review');
 }
 
 function finish(s) {
-  if (s.queue.length && !dueQueue(db.cards, new Date()).length) today().cleared = true;
+  if (s.queue.length && !dueQueue(db.cards, new Date()).some(id => !s.skipped.has(id))) today().cleared = true;
   save();
   postStats();
   go('today');
@@ -127,12 +126,12 @@ const views = {
     const s = sess;
     if (s.i >= s.queue.length) return finish(s);
     const i = s.i, id = s.queue[i], card = db.cards[id], it = item(id);
-    const can = it.kind === 'word' ? canWord(it, s.caps) : it.kind === 'grammar' ? canGrammar(it, db.cards) : r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
+    const can = it.kind === 'word' ? acts.canWord(it, s.caps) : it.kind === 'grammar' ? canGrammar(it, db.cards) : r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
     const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, ladderFor(it), can), stretch: false } : pickRung(card, ladderFor(it), can, Math.random);
-    if (!rung) { s.i++; return show('review'); } // nothing this card can do on this device: skip, ungraded
+    if (!rung) { s.skipped.add(id); s.i++; return show('review'); } // nothing this card can do on this device: skip, ungraded
     el.innerHTML = `<div class="screen">${bars(i, s.queue.length)}</div>`;
     const known = x => !!db.cards[x] && isKnown(db.cards[x]);
-    (it.kind === 'kana' ? acts : ACTS[it.kind])[rung]($('.screen', el), it, r => {
+    (it.kind === 'kana' ? acts : acts.ACTS[it.kind])[rung]($('.screen', el), it, r => {
       if (sess !== s || s.i !== i) return; // left the session or already answered
       db.cards[id] = review(card, ratingFor({ ...r, stretch, rung }), new Date());
       today().reviews++;
