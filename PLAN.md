@@ -73,6 +73,7 @@ Kana alone isn't reading. Grammar points are taught and reviewed alongside words
 | Activities (same easy-to-hard ladder) | **Fill the particle** (わたし__がくせいです → は/が/を/に) → **Pick the form** (たべる, past negative → たべませんでした) → **Build the sentence** (order shuffled word tiles to match an English sentence) → **Say/translate it** (AI-graded; arrives in M3). |
 | Reference | A **Grammar list** of every point you've learned, with its explanation and examples, reachable from Journey or Settings. A "why?" link on any grammar review opens its card. |
 | Journey | A mastered grammar point moves you along the Tōkaidō like a mastered word or kana. |
+| Furigana | **Fades as you learn** (Chris, 2026-10-18): the reading shows above kanji on new and weak words and disappears once the word is known (stability ≥ 3 days). Tap a word to peek. Applies in sentences too. |
 | AI | Stories (M3) and chat (M5) use only grammar you know, as well as your words. |
 
 ## Claude's calls (from the builder check, not discussed with Chris; change any)
