@@ -4,8 +4,10 @@ import { GRAMMAR } from './grammar.js';
 import { newCard, pickRung, TUNING } from './srs.js';
 import { dueQueue, nextNew, grammarReady, choices } from './session.js';
 import { ready } from './items.js';
+import { db } from './store.js';
 const now = new Date('2026-10-17T10:00:00');
 const at = (due, extra = {}) => ({ ...newCard(now), due: new Date(due), ...extra });
+db.custom['c-1'] = { r: 'ねこ', w: '', m: ['cat'] };
 await ready(async () => { throw new Error('offline'); });
 assert.deepEqual(dueQueue({
   'h-u': at('2026-10-17T09:00:00'), 'h-a': at('2026-10-15T09:00:00'), 'h-i': at('2026-10-18T09:00:00'),
