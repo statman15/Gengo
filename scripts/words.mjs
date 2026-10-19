@@ -72,7 +72,7 @@ for (const e of dict.words) {
   const wk = e.kanji.find(k => k.common), w = wk?.text || '';
   const rk = e.kana.find(k => k.common && (!w || k.appliesToKanji.includes('*') || k.appliesToKanji.includes(w))) || e.kana.find(k => k.common) || e.kana[0];
   out.push({
-    id: 'w-' + e.id, r: rk.text, w,
+    id: 'w-' + e.id, r: rk.text, w: s.misc.includes('uk') ? '' : w, // usually-kana words don't show their rare kanji
     m: e.sense.slice(0, 2).map(x => x.gloss.slice(0, 3).map(g => g.text)).flat(),
     p: /^v/.test(f) ? 'v' : /^adj-(i|ix|na)$/.test(f) ? 'adj' : /^n($|-)/.test(f) ? 'n' : 'x',
     f, j: jlpt.get(e.id) || 0,

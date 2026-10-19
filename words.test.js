@@ -41,7 +41,9 @@ assert.ok(!data.some(x => ['prt', 'cop'].includes(x.f) || x.f.startsWith('aux'))
 assert.ok(data.find(x => x.w === '学生' && x.r === 'がくせい'));
 assert.ok(data.slice(0, 300).every((x, i, a) => !i || a[i - 1].r.length <= x.r.length));
 assert.ok(!data.some(x => x.w === '喪' && x.j === 5));
-const keys = data.slice(0, 300).map(x => x.r + '|' + x.w);
+const keys = data.slice(0, 300).map(x => x.r + '|' + x.w + '|' + x.m[0]); // meaning too: 要る and 居る are both uk, so both are plain いる
 assert.equal(new Set(keys).size, keys.length);
 for (const w of ['学生', '行く', '食べる']) assert.ok(data.some(x => x.w === w && x.j === 5), w);
+for (const r of ['まだ', 'どこ', 'なぜ', 'いつも', 'ください', 'たくさん']) assert.ok(data.filter(x => x.r === r).every(x => x.w === ''), r);
+assert.ok(data.some(x => x.w === '学生'));
 console.log('words ok');
