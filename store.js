@@ -91,7 +91,7 @@ export function parseList(text, words) {
   for (const line of String(text).split(/\r?\n/).slice(0, 500)) {
     const t = line.trim();
     if (!t) continue;
-    const x = words.find(w => w.w === t || w.r === t);
+    const x = words.find(w => w.w === t || w.r === t) ?? Object.entries(db.custom).map(([id, c]) => ({ id, ...c })).find(w => w.w === t || w.r === t);
     if (!x) { if (!unknown.includes(t)) unknown.push(t); } else if (!found.includes(x)) found.push(x);
   }
   return { found, unknown };

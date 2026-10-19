@@ -94,4 +94,7 @@ assert.equal(Object.keys(db.custom).length, nc + 1, 'invalid ones not saved');
 const many = Array.from({ length: 600 }, (_, i) => ({ id: 'w-' + i, w: 'x' + i, r: 'y' + i }));
 const big = parseList(many.map(w => w.w).join('\n'), many);
 assert.equal(big.found.length, 500);
+const cc = Object.keys(db.custom).length, again = parseList('ぷりん', []);
+assert.deepEqual([again.found.map(x => x.id), again.unknown], [['c-1'], []], 'custom words match on paste');
+assert.equal(Object.keys(db.custom).length, cc);
 console.log('store ok');

@@ -9,9 +9,9 @@ import { stageHere } from './board.js';
 
 const KANA = /^[ぁ-ゖァ-ヺー]+$/;
 const mark = id => db.cards[id] ? 'Learning' : db.mine.words.includes(id) ? 'Added' : '';
-const wrow = x => `<div class="plate set"><span lang="ja">${ruby(x.w, x.r, true)}<br><small>${esc(x.m[0])}</small></span>${
-  mark(x.id) ? `<span class="muted">${mark(x.id)}</span>` : `<span class="acts"><button data-add="${esc(x.id)}">Add</button></span>`}</div>`;
-const mine = f => db.mine.words.map(item).filter(x => x && f(x.id)).map(wrow).join('');
+const wrow = (x, label = true) => `<div class="plate set"><span lang="ja">${ruby(x.w, x.r, true)}<br><small>${esc(x.m[0])}</small></span>${
+  mark(x.id) ? (label ? `<span class="muted">${mark(x.id)}</span>` : '') : `<span class="acts"><button data-add="${esc(x.id)}">Add</button></span>`}</div>`;
+const mine = f => db.mine.words.map(item).filter(x => x && f(x.id)).map(x => wrow(x, false)).join('');
 let q = '';
 
 const customForm = line => `<form class="plate set" data-line><span>${esc(line)}<input name="r" aria-label="Reading in kana" placeholder="Reading (kana)" value="${KANA.test(line) ? esc(line) : ''}"><input name="m" aria-label="Meaning" placeholder="Meaning"><input name="w" aria-label="Written form" placeholder="Written form (optional)" value="${KANA.test(line) ? '' : esc(line)}"><small class="muted" data-err hidden></small></span><button class="acts">Add your own</button></form>`;
@@ -33,12 +33,12 @@ export const words = { render: el => {
     if (b) { addMine('words', b.dataset.add); again(); }
     if (!e.target.closest('[data-paste]')) return;
     const s = sheet('<form><p>One word per line</p><textarea name="t" rows="8" aria-label="Words to add"></textarea><button class="plate">Add words</button></form>');
-    $('#sheet').onclose = again;
+    $('#sheet').addEventListener('close', again, { once: true });
     $('form', s).onsubmit = ev => {
       ev.preventDefault();
       const { found, unknown } = parseList(ev.target.t.value, loadedWords());
-      found.forEach(x => addMine('words', x.id));
-      const b2 = sheet(`<p>Added ${found.length} word${found.length == 1 ? '' : 's'}.</p>${unknown.length ? `<p>Not in the dictionary:</p>${unknown.map(customForm).join('')}` : ''}<form method="dialog"><button class="plate">Done</button></form>`);
+      const n = found.filter(x => addMine('words', x.id)).length;
+      const b2 = sheet(`<p>Added ${n} new word${n == 1 ? '' : 's'}.</p>${unknown.length ? `<p>Not in the dictionary:</p>${unknown.map(customForm).join('')}` : ''}<form method="dialog"><button class="plate">Done</button></form>`);
       b2.onsubmit = f => {
         const t = f.target;
         if (!t.matches('[data-line]')) return;
@@ -53,11 +53,10 @@ export const words = { render: el => {
 
 export const grammar = { render: el => {
   stageHere();
-  const nextUp = GRAMMAR.find(g => db.mine.grammar.includes(g.id) && !db.cards[g.id]);
   el.innerHTML = `<div class="screen setlist"><h1 class="plate">Grammar</h1>${GRAMMAR.map(p => db.cards[p.id]
-    ? `<div class="plate set" role="button" tabindex="0" data-open="${p.id}"><span><b lang="ja">${esc(p.title)}</b><br>${esc(p.en)}</span><span class="muted">Learned</span></div>`
+    ? `<button class="plate set" style="align-self:stretch;text-align:left" data-open="${p.id}"><span><b lang="ja">${esc(p.title)}</b><br>${esc(p.en)}</span><span class="muted">Learned</span></button>`
     : `<div class="plate set muted"><span><b lang="ja">${esc(p.title)}</b><br>${esc(p.en)}<br><small>unlocks at ${p.words} words</small></span><span class="acts">${
-      nextUp?.id === p.id ? '<span>Next up</span>' : `<button data-pull="${p.id}">Learn next</button>`}</span></div>`).join('')}
+      db.mine.grammar.includes(p.id) ? '<span>Next up</span>' : `<button data-pull="${p.id}">Learn next</button>`}</span></div>`).join('')}
     <div class="grow"></div>${nav('')}</div>`;
   el.onclick = e => {
     const o = e.target.closest('[data-open]'), b = e.target.closest('[data-pull]');
