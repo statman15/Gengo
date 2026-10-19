@@ -1,11 +1,14 @@
-import { $, esc, os, stage, nav, sheet } from './ui.js';
-import { KANA } from './kana.js';
-import { newCard, review, isMastered, TUNING, rungFor, pickRung, ratingFor } from './srs.js';
+import { $, esc, os, stage, nav, sheet, ruby } from './ui.js';
+import { newCard, review, isMastered, isKnown, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
+import { ACTS, canWord } from './activities.js';
+import { lessonHtml, wireHear, canGrammar } from './grammar-acts.js';
+import { ready, item, ladderFor, loadedWords } from './items.js';
+import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings, backupDue } from './settings.js';
@@ -14,8 +17,11 @@ import { checkUpdate } from './update.js';
 
 document.documentElement.classList.add(os);
 
-const byId = Object.fromEntries(KANA.map(k => [k.id, k]));
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
+const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine });
+// "5 kana", "3 words and は": names what is in a new batch.
+const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length;
+  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, ...its.filter(x => x.kind === 'grammar').map(x => x.title)].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
@@ -25,6 +31,7 @@ let sess = null;
 // Resolve what this device can do, then run the queue. fresh = ids just learned: always the first rung, never stretched.
 async function begin(queue, fresh = new Set()) {
   const h = location.hash, caps = { canHear: await canHear(), canSay: await canSay() };
+  await loadSentences();
   if (location.hash !== h) return; // user navigated away while capabilities resolved
   sess = { view: 'review', queue, fresh, caps, i: 0 };
   go('review');
@@ -63,13 +70,13 @@ const views = {
   today: { render: el => {
     const { station } = here(), last = Math.min(db.settings.lastStation, station), arriving = station > db.settings.lastStation;
     if (arriving) stage({ src: printSrc(last), focus: STATIONS[last].focus }); else stageHere();
-    const due = dueQueue(db.cards, new Date()).length, n = nextNew(db.cards, db.settings.newBatch).length;
+    const due = dueQueue(db.cards, new Date()).length, ids = newIds();
     el.innerHTML = `<div class="screen">
       ${cartouche(station)}
       <div class="grow"></div>
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
-      ${!due && n ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${n} new kana?</button>` : ''}
+      ${!due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
       <div class="friends"></div>
@@ -83,7 +90,7 @@ const views = {
     stageHere();
     const row = (s, i) => `<li${i === station ? ' class="here" aria-current="step"' : ''}><span class="no">${i + 1}</span>
       <div class="info"><b lang="ja">${s.jp}</b> <span class="name">${s.name}</span><p class="scene">${s.scene}</p></div>
-      <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more kana`}</span></li>`;
+      <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more`}</span></li>`;
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
       <div class="plate road"><ol>${STATIONS.map(row).join('')}</ol><p class="credit muted">Utagawa Hiroshige, Wikimedia Commons</p></div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
@@ -94,16 +101,17 @@ const views = {
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });
-    const s = sess ??= { view: 'learn', ids: nextNew(db.cards, db.settings.newBatch), i: 0 };
+    const s = sess ??= { view: 'learn', ids: newIds(), i: 0 };
     if (!s.ids.length) return go('today');
-    const item = byId[s.ids[s.i]], last = s.i === s.ids.length - 1;
-    el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}
-      <button class="plate card" data-hear aria-label="Hear ${esc(item.sound)}"><div class="kana" lang="ja">${item.kana}</div>
-        <p class="prompt">${esc(item.sound)}</p><p class="prompt">Tap to hear it</p></button>
+    const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r;
+    const face = it.kind === 'grammar' ? `<div class="plate card">${lessonHtml(it)}</div>`
+      : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="prompt">${esc(it.sound)}</p>`
+        : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="prompt">${esc(it.m[0])}</p>`}<p class="prompt">Tap to hear it</p></button>`;
+    el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}${face}
       <div class="grow"></div>
-      <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next kana'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
+      <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
       <div class="grow" style="flex:.4"></div></div>`;
-    $('[data-hear]', el).onclick = () => speak(item.kana);
+    if (it.kind === 'grammar') wireHear($('.card', el)); else $('[data-hear]', el).onclick = () => speak(say);
     $('[data-next]', el).onclick = () => {
       if (!last) { s.i++; return show('learn'); }
       const now = new Date();
@@ -111,25 +119,26 @@ const views = {
       save();
       begin(s.ids, new Set(s.ids));
     };
-    speak(item.kana);
+    if (it.kind !== 'grammar') speak(say);
   } },
   review: { render: el => {
     stage({ recede: true });
     if (!sess) return void begin(dueQueue(db.cards, new Date()));
     const s = sess;
     if (s.i >= s.queue.length) return finish(s);
-    const i = s.i, id = s.queue[i], card = db.cards[id];
-    const can = r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
-    const L = TUNING.ladder.kana; // ponytail: kana only until words/grammar cards are queued
-    const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, L, can), stretch: false } : pickRung(card, L, can, Math.random);
+    const i = s.i, id = s.queue[i], card = db.cards[id], it = item(id);
+    const can = it.kind === 'word' ? canWord(it, s.caps) : it.kind === 'grammar' ? canGrammar(it, db.cards) : r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
+    const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, ladderFor(it), can), stretch: false } : pickRung(card, ladderFor(it), can, Math.random);
+    if (!rung) { s.i++; return show('review'); } // nothing this card can do on this device: skip, ungraded
     el.innerHTML = `<div class="screen">${bars(i, s.queue.length)}</div>`;
-    acts[rung]($('.screen', el), byId[id], r => {
+    const known = x => !!db.cards[x] && isKnown(db.cards[x]);
+    (it.kind === 'kana' ? acts : ACTS[it.kind])[rung]($('.screen', el), it, r => {
       if (sess !== s || s.i !== i) return; // left the session or already answered
       db.cards[id] = review(card, ratingFor({ ...r, stretch, rung }), new Date());
       today().reviews++;
       save(); // graded now, so leaving during the pause loses nothing
       setTimeout(() => { if (sess === s && s.i === i) { s.i++; show('review'); } }, r.correct && !r.speechFallback ? 600 : 1200);
-    });
+    }, { known });
   } },
 };
 
@@ -141,6 +150,7 @@ export function show(view, arg) {
 $('#app').addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
 const joined = () => location.hash.startsWith('#join=') ? joinFromHash().then(() => go('friends')) : 0;
 addEventListener('hashchange', () => joined() || show(location.hash.slice(1)));
+await ready(); // words.json; never rejects, offline leaves kana only
 show(location.hash.startsWith('#join=') ? 'today' : location.hash.slice(1) || 'today');
 joined();
 postStats();
