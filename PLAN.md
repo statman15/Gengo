@@ -134,3 +134,11 @@ M3 "Stories" is built, decided in chat with Chris (no separate plan doc; iterate
 - **Today's story** (`story.js`, `story` view): offered on Today once 5+ words are due and the AI is set up. The AI writes 4–6 kana-only lines at your current Tōkaidō station using up to 8 due words, marked 【kana|n】 and underlined. Tap a line to hear it; Show English for the whole story. Then one meaning question per marked word that is still due, each counting as that word's review (rung `read`). One story per day, cached on the phone.
 - **Say/translate** (grammar rung `translate`, from stability 10, only with the AI set up): English sentence → type it, or Speak on Android → the AI grades with a corrected version and a one-line note.
 - Left out: separate "hints" (tap-to-hear and Show English cover it). Still to check with a real AI and on real phones: story quality, grading, the OmniRoute home address in the APK.
+
+## Status (M4, 2026-10-19)
+
+M4 "Kanji" is built (Chris skipped the questions; these are Claude's calls, change any):
+- **Data** (`scripts/kanji.mjs` → `data/kanji.json`, 225 KB): the 284 old-JLPT 4/3 kanji (≈ N5, N4) from KANJIDIC2 with meanings, on/kun readings and KanjiVG strokes, N5 first, then by frequency. Credits in Settings.
+- **Unlock**: a kanji becomes learnable once you have a card for a word written with it; up to a quarter of each new batch (rounded up) is kanji. The learn card shows the kanji, meanings, on and kun readings, and up to three of your words that use it.
+- **Ladder** (`kanji` in srs.js): **see** (pick the meaning) → **sound** (pick its reading: first on, else kun) at stability 3 → **trace** at 7 (`trace.js`: draw each stroke over a faint KanjiVG guide; a stroke passes when its 16 resampled points average within `TUNING.traceTolerance` = 18 of the 109-unit box, so direction counts; a miss flashes the right stroke, two misses draw it in and fail the card).
+- Not changed: the furigana fade still keys on words, not kanji. Still to check on real phones: tracing with a finger, and whether 18 is too strict or too loose.

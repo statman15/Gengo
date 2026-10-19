@@ -6,7 +6,7 @@ import { speak, canHear, canSay } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
 import { lessonHtml, wireHear, canGrammar } from './grammar-acts.js';
-import { ready, item, ladderFor, loadedWords } from './items.js';
+import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
 import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
@@ -22,10 +22,10 @@ import { ready as aiReady } from './ai.js';
 document.documentElement.classList.add(os);
 
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
-const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine });
+const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine, kanji: loadedKanji() });
 // "5 kana", "3 words and は": names what is in a new batch.
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length;
-  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
+  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, n('kanji') && `${n('kanji')} kanji`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 // Today's story: the ids still to question (asked words that are still due), and whether Today offers it.
 const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id] && isDue(db.cards[id], new Date()));
@@ -132,8 +132,12 @@ const views = {
     stage({ recede: true });
     const s = sess ??= { view: 'learn', ids: newIds(), i: 0 };
     if (!s.ids.length) return go('today');
-    const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r;
+    const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r ?? acts.kanjiReading(it);
+    const rd = a => [...new Set(a.map(x => x.replace(/[-.]/g, '')))].join('・'), uses = it.kind === 'kanji' ? Object.keys(db.cards).map(item).filter(x => x?.kind === 'word' && x.w.includes(it.k)).slice(0, 3) : [];
     const face = it.kind === 'grammar' ? `<div class="plate card">${lessonHtml(it)}</div>`
+      : it.kind === 'kanji' ? `<button class="plate card" data-hear aria-label="Hear ${esc(it.m[0])}"><div class="kana" lang="ja">${esc(it.k)}</div><p class="gloss-big">${esc(it.m.join(' · '))}</p>
+        ${it.on.length ? `<p class="prompt">On <span lang="ja">${esc(rd(it.on))}</span></p>` : ''}${it.kun.length ? `<p class="prompt">Kun <span lang="ja">${esc(rd(it.kun))}</span></p>` : ''}
+        ${uses.map(x => `<p class="prompt"><span lang="ja">${ruby(x.w, x.r, true)}</span> ${esc(x.m[0])}</p>`).join('')}<p class="prompt">Tap to hear it</p></button>`
       : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="gloss-big">${esc(it.sound)}</p>`
         : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="gloss-big">${esc(it.m[0])}</p>${it.m.length > 1 ? `<p class="prompt">${esc(it.m.slice(1, 3).join(' · '))}</p>` : ''}`}<p class="prompt">Tap to hear it</p></button>`;
     el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}${face}

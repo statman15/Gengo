@@ -19,11 +19,18 @@ export function grammarReady(cards, mine = {}) {
   return n >= GRAMMAR[i].words ? GRAMMAR[i] : null;
 }
 
-// Up to n new ids: one grammar point first, then personal words, then half kana / half words, either side filling the other.
-export function nextNew(cards, n, { words = [], mine = {} } = {}) {
+// Kanji ids not yet carded that appear in a word you are learning, in kanji.json order (N5 first, most frequent first).
+export function kanjiReady(cards, kanji) {
+  const seen = new Set(Object.keys(cards).filter(id => /^[wc]-/.test(id)).flatMap(id => [...(item(id)?.w ?? '')]));
+  return kanji.filter(k => !cards[k.id] && seen.has(k.k)).map(k => k.id);
+}
+
+// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji, then half kana / half words, either side filling the other.
+export function nextNew(cards, n, { words = [], mine = {}, kanji = [] } = {}) {
   const out = [], g = grammarReady(cards, mine), mw = (mine.words ?? []).filter(id => item(id));
   if (g && n) out.push(g.id);
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
+  out.push(...kanjiReady(cards, kanji).slice(0, Math.min(n - out.length, Math.ceil(n / 4))));
   const rest = n - out.length;
   const kana = KANA.map(k => k.id).filter(id => !cards[id]);
   const ws = [];

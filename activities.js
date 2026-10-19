@@ -2,7 +2,8 @@ import { KANA } from './kana.js';
 import { speak, listen, heardMatches, heardWord } from './speech.js';
 import { choices } from './session.js';
 import { esc, ruby, sentenceHtml } from './ui.js';
-import { loadedWords } from './items.js';
+import { loadedWords, loadedKanji } from './items.js';
+import { trace } from './trace.js';
 import { meaningChoices } from './words.js';
 import { forWord, best } from './sentences.js';
 
@@ -151,4 +152,28 @@ const word = {
     })();
   },
 };
-export const ACTS = { word };
+// ---- Kanji. A kanji's one reading for drills: its first on reading (katakana), else its first kun; KANJIDIC's . and - dropped.
+export const kanjiReading = k => (k.on[0] ?? k.kun[0] ?? '').replace(/[-.]/g, '');
+// Four choices: this kanji plus three whose text(x) differs, shuffled.
+function kanjiPick(el, it, prompt, text, done, rand = Math.random) {
+  const seen = new Set([text(it)]), opts = [it];
+  for (const x of shuffle(loadedKanji().filter(x => x.id !== it.id), rand)) if (opts.length < 4 && text(x) && !seen.has(text(x))) { seen.add(text(x)); opts.push(x); }
+  el.insertAdjacentHTML('beforeend', `<div class="plate card"><div class="kana" lang="ja">${esc(it.k)}</div><p class="prompt">${prompt}</p></div><div class="choices gloss">${
+    shuffle(opts, rand).map(o => `<button class="choice" data-id="${esc(o.id)}"${/[ァ-ヶぁ-ゖ]/.test(text(o)) ? ' lang="ja"' : ''}>${esc(text(o))}</button>`).join('')}</div>`);
+  const box = el.querySelector('.choices'), t0 = Date.now();
+  let over = false;
+  box.onclick = e => {
+    const b = e.target.closest('[data-id]');
+    if (!b || over) return;
+    over = true;
+    box.querySelector(`[data-id="${CSS.escape(it.id)}"]`).classList.add('right');
+    if (b.dataset.id !== it.id) b.classList.add('wrong');
+    done({ correct: b.dataset.id === it.id, ms: Date.now() - t0, hinted: false });
+  };
+}
+const kanji = {
+  see: (el, it, done, ctx) => kanjiPick(el, it, 'What does it mean?', x => x.m[0], done, ctx?.rand),
+  sound: (el, it, done, ctx) => kanjiPick(el, it, 'How is it read?', kanjiReading, done, ctx?.rand),
+  trace,
+};
+export const ACTS = { word, kanji };

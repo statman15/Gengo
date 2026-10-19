@@ -43,7 +43,7 @@ export function revive(raw) {
   if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
   if (![3, 5, 8, 10].includes(settings.newBatch)) settings.newBatch = 5;
   const cust = Object.fromEntries(ent(r.custom).filter(([id]) => /^c-\d+$/.test(id)).map(([id, e]) => [id, custom(e)]).filter(([, e]) => e));
-  const knownId = id => KNOWN.has(id) || wordId(id) || grammarId(id) || (/^c-\d+$/.test(id) && Object.hasOwn(cust, id));
+  const knownId = id => KNOWN.has(id) || wordId(id) || /^k-\p{Script=Han}$/u.test(id) || grammarId(id) || (/^c-\d+$/.test(id) && Object.hasOwn(cust, id));
   const mine = { words: strs(r.mine?.words).filter(id => wordId(id) || Object.hasOwn(cust, id)), grammar: strs(r.mine?.grammar).filter(grammarId) };
   return {
     settings, custom: cust, mine, seen: strs(r.seen),
