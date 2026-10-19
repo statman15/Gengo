@@ -44,7 +44,7 @@ export const settings = { render: el => {
     <div class="plate set"><span>Group${groupCode ? `<br><b class="code">${esc(groupCode)}</b>` : ''}</span><span class="acts">${
       groupCode ? '<button data-share>Share Invite</button><button data-leave>Leave Group</button>'
       : configured() ? '<button data-create>Create Group</button><button data-join>Join Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
-    <div class="plate set"><span>New kana per batch</span><div class="opts" role="group" aria-label="New kana per batch">${
+    <div class="plate set"><span>New per batch</span><div class="opts" role="group" aria-label="New per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
     <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
     <div class="plate set"><span>My words</span><span class="acts"><button data-go="words">Open</button></span></div>
