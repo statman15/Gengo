@@ -30,12 +30,12 @@ const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 // The live session ({view:'learn'|'review', ...}); show() drops it whenever the user leaves for another view.
 let sess = null;
 
-// Resolve what this device can do, then run the queue. fresh = ids just learned: always the first rung, never stretched.
-async function begin(queue, fresh = new Set()) {
+// Resolve what this device can do, then run the queue. learned = ids just learned: always the first rung, never stretched.
+async function begin(queue, learned = new Set()) {
   const h = location.hash, caps = { canHear: await canHear(), canSay: await canSay() };
   await loadSentences();
   if (location.hash !== h) return; // user navigated away while capabilities resolved
-  sess = { view: 'review', queue, fresh, caps, i: 0, skipped: new Set() };
+  sess = { view: 'review', queue, fresh: learned, caps, i: 0, skipped: new Set() };
   go('review');
 }
 
@@ -61,7 +61,7 @@ function finish(s) {
 
 const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%';
   return `<div class="plate cov"><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
-    <p>You can read <b>${p(c.library)}</b> of Gengo's sentences</p></div>`; };
+<span class="wide">Sentences you can read <b>${p(c.library)}</b></span></div>`; };
 
 const cartouche = i => `<div class="cartouche"><b>${STATIONS[i].jp}</b><small>${STATIONS[i].name} · ${i + 1} of 55</small></div>`;
 
