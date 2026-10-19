@@ -46,7 +46,8 @@ const aiPlate = () => { const c = conn(), p = PRESETS[cfg.preset], f = (k, label
     ${f('url', 'Address', 'https://…/v1')}${p.home ? f('home', 'Home address', 'optional, http://…') : ''}${f('key', 'API key', '', 'password')}
     ${c.models?.length ? `<label class="set">Model<select data-ai="model">${[...new Set([c.model, ...c.models].filter(Boolean))].map(m =>
       `<option${m === c.model ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>` : f('model', 'Model', 'Tap Test to list models')}
-    <div class="set"><small class="muted" data-ai-msg role="status">The key is stored only on this phone.</small><span class="acts"><button data-test>Test Connection</button></span></div></div>`; };
+    <div class="set"><span></span><span class="acts"><button data-test>Test Connection</button></span></div>
+    <p class="muted" data-ai-msg role="status">The key is stored only on this phone.</p></div>`; };
 
 export const settings = { render: el => {
   stageHere();

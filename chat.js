@@ -5,10 +5,11 @@ import { chat, json } from './ai.js';
 import { limits } from './story.js';
 
 export const MIN = 3, MAX = 5, TURNS = 5;
-// Due words for the chat, preferring ones today's story didn't use.
-export const chatWords = (due, avoid = []) => {
-  const ws = due.filter(id => item(id)?.kind === 'word');
-  return [...ws.filter(id => !avoid.includes(id)), ...ws.filter(id => avoid.includes(id))].slice(0, MAX);
+// Due words for the chat, leaving out today's story words; if fewer than MIN are left, today's story words join in for practice
+// (the story may already have reviewed them; the chat only reviews words that are still due).
+export const chatWords = (due, story = []) => {
+  const word = id => item(id)?.kind === 'word', ws = due.filter(id => word(id) && !story.includes(id));
+  return [...ws, ...(ws.length < MIN ? story.filter(word) : [])].slice(0, MAX);
 };
 
 const list = words => words.map((w, i) => `${i + 1}. ${w.r}${w.w ? ` (${w.w})` : ''}: ${w.m[0]}`).join('\n');
@@ -22,7 +23,7 @@ Rules:
 - Write only in hiragana and katakana. No kanji at all.
 - 1-2 short sentences per turn, polite です/ます style.
 ${limits(cards)}
-- Over ${TURNS} replies from the learner, ask questions that invite them to use these words, one or two at a time:
+- Over ${TURNS} replies from the learner, ask questions whose natural answers use these words, one at a time. Bring a word in only where it fits the moment; skipping some is fine. Greet only in your first line. Never say goodbye or wrap up: the app ends the conversation after the learner's ${TURNS}th reply, so always leave them something to answer.
 ${list(words)}
 - Everything you say must be natural Japanese a native speaker would really say; never force a word into an odd sentence.
 - If the learner makes a mistake, don't correct it; just carry on naturally.

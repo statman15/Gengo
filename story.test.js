@@ -29,3 +29,5 @@ import { saved as storySaved, keep as storyKeep } from './story.js';
 assert.throws(() => parse('{"lines":[{"jp":"こんにちは。","en":"Hi."}]}', words), /didn't use any/, 'no marked word: retry, not a dead story');
 storyKeep({ day: 'd', lines: null, ids: null }); assert.equal(storySaved('d'), null, 'a broken cached story is ignored');
 console.log('guards ok');
+assert.equal(parse('{"lines":[{"jp":"【おはよう|1】、【なに|N/A】ですか。","en":"x"}]}', [{ id: 'w-1', r: 'おはよう', w: '', m: ['good morning'] }]).lines[0].jp, 'おはよう、なにですか。', 'junk mark numbers are plain text');
+console.log('junk marks ok');

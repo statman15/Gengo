@@ -136,6 +136,7 @@ const views = {
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });
+    if (!sess && dueQueue(db.cards, new Date()).length) return go('today'); // reviews first, as Today offers them
     const s = sess ??= { view: 'learn', ids: newIds(), i: 0 };
     if (!s.ids.length) return go('today');
     const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r ?? acts.kanjiReading(it);
@@ -167,7 +168,7 @@ const views = {
     if (!s) {
       const ids = storyWords(dueQueue(db.cards, new Date()));
       if (ids.length < MIN) return go('today');
-      el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">Writing today’s story…</p></div></div>`;
+      el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">Writing today’s story…</p><p class="prompt">This can take up to a minute on a free AI key.</p></div></div>`;
       write(day, ids, db.cards, STATIONS[here().station]).then(() => location.hash === '#story' && show('story'), e => {
         if (location.hash !== '#story') return;
         el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">${esc(e.message)}</p></div><div class="grow"></div><button class="plate" data-retry>Try again</button>${back}</div>`;
@@ -283,8 +284,9 @@ const views = {
 };
 
 export function show(view, arg) {
+  if (!views[view]) { if (view) history.replaceState(null, '', '#today'); view = 'today'; } // unknown link: a real Today, nav included
   if (sess && sess.view !== view) sess = null;
-  (views[view] || views.today).render($('#app'), arg);
+  views[view].render($('#app'), arg);
 }
 
 $('#app').addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });

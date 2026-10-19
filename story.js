@@ -33,7 +33,7 @@ Reply in this shape: {"title":"<short English title>","lines":[{"jp":"…","en":
   ];
 }
 
-const MARK = /【([^|】]*)(?:\|(\d+))?】/g;
+const MARK = /【([^|】]*)(?:\|([^】]*))?】/g; // the number may be missing or junk (|N/A): then it's plain text
 // Reply -> { title, lines: [{ jp, en, segs: [[text, id?]...] }], ids: word ids that appear }. Marks with an unknown or missing number
 // become plain text; models often write the word and then repeat it in the mark (おはよう【おはよう|6】), so that echo is dropped.
 export function parse(text, words) {

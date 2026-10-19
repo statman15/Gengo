@@ -15,7 +15,7 @@ export function grammarReady(cards, mine = {}) {
   if (pulled) return GRAMMAR.find(g => g.id === pulled) ?? null;
   const i = GRAMMAR.findIndex(g => !cards[g.id]);
   if (i < 0 || (i && !cards[GRAMMAR[i - 1].id])) return null;
-  const n = Object.keys(cards).filter(id => /^[wc]-/.test(id)).length;
+  const n = Object.keys(cards).filter(id => /^[wc]-/.test(id) && item(id)).length; // only words that exist: a junk backup can't unlock grammar
   return n >= GRAMMAR[i].words ? GRAMMAR[i] : null;
 }
 

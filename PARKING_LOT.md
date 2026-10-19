@@ -1,12 +1,6 @@
 # Parking Lot
 
 ## Inbox
-- **Story uses up the chat's words.** The story takes up to 8 due words and answering it reviews them, so with fewer than about 11 due the chat button disappears. Could cap the story at 5 words, or let the chat reuse story words even after they're reviewed. (Stress test, 2026-10-19.)
-- **Landscape answer choices.** At 844x390 the second row of answer choices sits below the fold. (Stress test.)
-- **Settings AI status clipped.** "The key is stored only on this phone." wraps tightly next to Test Connection at 390px. (Stress test.)
-- **Unknown hash and #learn edge cases.** An unknown hash renders Today but keeps the hash and highlights no tab; #learn opens while reviews are due. (Stress test.)
-- **Junk ids in a restored backup.** A backup with thousands of made-up w- ids keeps them and can unlock grammar early; revive() could drop word ids that aren't in words.json once it has loaded. (Stress test.)
-- **Story and chat speed on free Gemini.** gemini-flash-latest took 60-70 s for a story and is often busy (503), so most turns fall back to Flash-Lite. Worth trying a lower reasoning effort or a different default model. (Real-AI test, 2026-10-19.)
 - **AnkiDroid import.** Read an AnkiDroid `.colpkg`/`.apkg` export (SQLite, via sql.js) and turn its review log into FSRS state, so Chris skips words he already knows. Skipped 2026-10-17: everyone starts from kana.
 - **Live kana races.** Head-to-head at the same moment. Needs real-time sync (Durable Objects or WebSockets); the async daily race covers it for now.
 - **Themed buildings.** Food words build the ramen shop, nature words the garden. Dropped for the Tōkaidō journey; could come back as side prints per word theme.

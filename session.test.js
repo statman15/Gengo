@@ -9,7 +9,8 @@ import { db } from './store.js';
 const now = new Date('2026-10-17T10:00:00');
 const at = (due, extra = {}) => ({ ...newCard(now), due: new Date(due), ...extra });
 db.custom['c-1'] = { r: 'ねこ', w: '', m: ['cat'] };
-await ready(async () => { throw new Error('offline'); });
+// words w-1..w-200 exist (grammar unlock only counts real words); kanji.json comes back empty
+await ready(async u => ({ ok: true, json: async () => u.includes('words') ? Array.from({ length: 200 }, (_, i) => ({ id: 'w-' + (i + 1), r: 'あ', w: '', m: ['x' + i], p: 'n', f: 'n', j: 5 })) : [] }));
 assert.deepEqual(dueQueue({
   'h-u': at('2026-10-17T09:00:00'), 'h-a': at('2026-10-15T09:00:00'), 'h-i': at('2026-10-18T09:00:00'),
 }, now), ['h-a', 'h-u']);
@@ -31,6 +32,7 @@ assert.equal(grammarReady(withWords(9), { grammar: [] }), null);
 assert.equal(grammarReady(withWords(10), { grammar: [] }).id, 'g-wa-desu');
 assert.equal(grammarReady({ ...allKana, 'w-1': card(), 'c-1': card() }, { grammar: [] }), null, 'few words');
 assert.equal(grammarReady({ ...withWords(9), 'c-1': card() }, { grammar: [] }).id, 'g-wa-desu', 'c- cards count');
+assert.equal(grammarReady({ ...allKana, ...Object.fromEntries(Array.from({ length: 20 }, (_, i) => ['w-9' + i + '00000', card()])) }, { grammar: [] }), null, 'made-up word ids (a junk backup) do not unlock grammar');
 assert.equal(nextNew(withWords(10), 5, { words: five })[0], 'g-wa-desu');
 assert.equal(grammarReady({ ...withWords(30), 'g-wa-desu': card() }, { grammar: [] }).id, 'g-ka');
 assert.equal(grammarReady({ ...withWords(30), 'g-ka': card() }, { grammar: [] }).id, 'g-wa-desu', 'g-ka waits for g-wa-desu');
