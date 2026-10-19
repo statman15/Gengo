@@ -12,3 +12,8 @@
 - **Live board refresh.** The Friends board loads once per visit. The Worker's KV list lags ~30 s after a post anyway.
 - **Smaller group-sync gaps.** Restoring a backup on a new phone doesn't carry the group code; Leave Group leaves your row for up to 90 days; a race that runs past midnight isn't posted; joining via a link replaces an existing group without asking.
 - **Throttle group creation.** `POST /group` on the Worker is unthrottled; the KV free tier simply stops at its daily quota, so no money is at risk.
+- **Word frequency order.** jmdict-simplified has no frequency tags, so words inside a JLPT level are ordered by reading length. A frequency list (e.g. a CC-licensed corpus count) would order N5/N4 more usefully.
+- **Fill-the-blank ambiguity.** About 1 in 14 Tatoeba fill sentences has a wrong choice that's arguably also grammatical (e.g. 和食＿＿好きですか with を). Could accept alternates per sentence or filter those sentences out.
+- **Grim Tatoeba sentences.** ~26 crude or dark sentences (死ね for 死ぬ is the shortest, so it's preferred). A small blocklist in scripts/sentences.mjs would fix it.
+- **Homophone distractors.** 要る and 居る both show as いる and can appear as each other's wrong choice.
+- **Tap-to-peek in grammar sentences.** Known kanji in fill/build sentences have no peek for their reading.

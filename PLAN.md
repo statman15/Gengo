@@ -122,3 +122,7 @@ M1 "Kana together" is built and released: https://statman15.github.io/Gengo/ (iP
 - **Updates:** the iPhone web app updates itself on every open (network-first service worker). The Android app checks GitHub's latest release on open (at most every 6 h) and shows an Update banner that downloads and opens the installer in-app (`update.js`, ported from HypertroPhy). Releases must keep the same signing key.
 - **Prints:** 55 Hōeidō scans, ~32 MB, credits in prints/CREDITS.md.
 - **Still to check on real phones (M1 done-when):** speaking and TTS on Android, the Japanese voice on iPhone, group join across all three, a week of kana.
+
+## Status (M2, 2026-10-18)
+
+M2 "First words and sentences" is built and reviewed on branch `m2` (subagent-driven from `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`, a review after every task plus a final whole-branch review): 19,892 JMdict words in JLPT order (usually-kana words show as kana), 10,658 Tatoeba sentences, 15 grammar points with lessons and fill/form/build drills, word drills (hear, see, read in a sentence, tiles, say), fading furigana, My words (search, paste a chapter list, custom words), the Grammar list, and coverage milestones on the Journey. Still to check on real phones: the say rung for words and a Japanese voice for TTS.
