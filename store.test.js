@@ -84,4 +84,14 @@ const W = [{ id: 'w-1', w: '学生', r: 'がくせい' }, { id: 'w-2', w: '先�
 const pl = parseList('学生\n\n がくせい \nzzz\n学生\nzzz', W);
 assert.deepEqual(pl.found, [W[0]]);
 assert.deepEqual(pl.unknown, ['zzz']);
+const proto = revive({ cards: { constructor: good, toString: good }, mine: { words: ['constructor', 'toString'], grammar: ['constructor'] } });
+assert.deepEqual([proto.cards, proto.mine], [{}, { words: [], grammar: [] }]);
+const nc = Object.keys(db.custom).length;
+for (const bad of [{ r: 'abc', m: ['x'] }, { r: 'ぷ', m: [] }, { r: 'ぷ', m: ['x'.repeat(81)] }, { r: 'ぷ', m: [''] }, null]) assert.equal(addCustom(bad), null, 'rejects ' + JSON.stringify(bad));
+assert.equal(addCustom({ r: 'ぷ', w: 'x'.repeat(21), m: ['a'] }), 'c-3');
+assert.equal(db.custom['c-3'].w, '');
+assert.equal(Object.keys(db.custom).length, nc + 1, 'invalid ones not saved');
+const many = Array.from({ length: 600 }, (_, i) => ({ id: 'w-' + i, w: 'x' + i, r: 'y' + i }));
+const big = parseList(many.map(w => w.w).join('\n'), many);
+assert.equal(big.found.length, 500);
 console.log('store ok');

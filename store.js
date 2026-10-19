@@ -43,8 +43,8 @@ export function revive(raw) {
   if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
   if (![3, 5, 8, 10].includes(settings.newBatch)) settings.newBatch = 5;
   const cust = Object.fromEntries(ent(r.custom).filter(([id]) => /^c-\d+$/.test(id)).map(([id, e]) => [id, custom(e)]).filter(([, e]) => e));
-  const knownId = id => KNOWN.has(id) || wordId(id) || grammarId(id) || (/^c-\d+$/.test(id) && id in cust);
-  const mine = { words: strs(r.mine?.words).filter(id => wordId(id) || id in cust), grammar: strs(r.mine?.grammar).filter(grammarId) };
+  const knownId = id => KNOWN.has(id) || wordId(id) || grammarId(id) || (/^c-\d+$/.test(id) && Object.hasOwn(cust, id));
+  const mine = { words: strs(r.mine?.words).filter(id => wordId(id) || Object.hasOwn(cust, id)), grammar: strs(r.mine?.grammar).filter(grammarId) };
   return {
     settings, custom: cust, mine, seen: strs(r.seen),
     cards: Object.fromEntries(ent(r.cards).filter(([id]) => knownId(id)).map(([id, c]) => [id, card(c)]).filter(([, c]) => c)),
@@ -72,14 +72,16 @@ export function importJSON(text) {
 
 // false when already listed or already learning.
 export function addMine(kind, id) {
-  if (db.mine[kind].includes(id) || db.cards[id]) return false;
+  if (db.mine[kind].includes(id) || Object.hasOwn(db.cards, id)) return false;
   db.mine[kind].push(id); save();
   return true;
 }
 
-export function addCustom({ r, w, m }) {
+export function addCustom(e) {
+  const c = custom(e);
+  if (!c) return null;
   const id = 'c-' + (Math.max(0, ...Object.keys(db.custom).map(k => +k.slice(2))) + 1);
-  db.custom[id] = { r, w: w ?? '', m }; db.mine.words.push(id); save();
+  db.custom[id] = c; db.mine.words.push(id); save();
   return id;
 }
 
