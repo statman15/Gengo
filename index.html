@@ -61,8 +61,10 @@ dialog::backdrop { background: #0008; }
 /* Paper: every word lives on a plate */
 .plate, .choice, .cartouche, dialog { background: var(--paper) url(paper.svg); }
 .plate { color: var(--ink); border-radius: var(--r); box-shadow: 0 8px 22px -6px #0006; }
+.cov { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; padding: 10px 14px; margin-top: 10px; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.cov b { float: right; } .cov p { grid-column: 1 / -1; margin: 4px 0 0; }
 .muted { color: var(--ink-2); }
-.journey .road { margin-top: 10px; padding: 4px 0 12px; max-height: 62dvh; overflow-y: auto; position: relative; line-height: 1.4; }
+.journey .road { margin-top: 10px; padding: 4px 0 12px; max-height: 34dvh; overflow-y: auto; position: relative; line-height: 1.4; }
 .road ol { list-style: none; margin: 0; padding: 0; }
 .road li { display: grid; grid-template-columns: 2rem 1fr auto; gap: 10px; align-items: center; padding: 10px 14px 10px 12px; color: var(--ink-2); font-size: .875rem; }
 .road li + li { border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }

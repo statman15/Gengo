@@ -14,6 +14,8 @@ import { settings, backupDue } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
 import { words, grammar } from './lists.js';
 import { checkUpdate } from './update.js';
+import { coverage, fresh } from './coverage.js';
+import { GRAMMAR } from './grammar.js';
 
 document.documentElement.classList.add(os);
 
@@ -37,12 +39,29 @@ async function begin(queue, fresh = new Set()) {
   go('review');
 }
 
+let lib = [], ended = false; // lib: all sentences, for coverage; ended: a session just finished
+loadSentences().then(a => lib = a);
+const cov = () => coverage(db.cards, loadedWords(), lib);
+
+// One-time milestone sheet: shows the newest fresh one; marks all fresh as seen so a backlog doesn't chain sheets.
+function milestone() {
+  const f = fresh(cov(), db.seen);
+  if (!f.length) return;
+  db.seen.push(...f.map(m => m.id)); save();
+  sheet(`<p>${f.at(-1).label}</p><form method="dialog"><button class="plate">Continue</button></form>`);
+}
+
 function finish(s) {
+  ended = true;
   if (s.queue.length && !dueQueue(db.cards, new Date()).some(id => !s.skipped.has(id))) today().cleared = true;
   save();
   postStats();
   go('today');
 }
+
+const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%';
+  return `<div class="plate cov"><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
+    <p>You can read <b>${p(c.library)}</b> of Gengo's sentences</p></div>`; };
 
 const cartouche = i => `<div class="cartouche"><b>${STATIONS[i].jp}</b><small>${STATIONS[i].name} · ${i + 1} of 55</small></div>`;
 
@@ -83,7 +102,8 @@ const views = {
       ${nav('today')}</div>`;
     homeFriends($('.friends', el));
     tips($('.tips', el));
-    if (arriving) arrive(station);
+    if (arriving) arrive(station); else if (ended) milestone();
+    ended = false;
   } },
   journey: { render: el => {
     const { station } = here(), mastered = Object.values(db.cards).filter(isMastered).length;
@@ -93,6 +113,7 @@ const views = {
       <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more`}</span></li>`;
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
       <div class="plate road"><ol>${STATIONS.map(row).join('')}</ol><p class="credit muted">Utagawa Hiroshige, Wikimedia Commons</p></div>
+      ${coveragePlate()}
       <div class="friends"><button class="plate" data-go="words">My words</button><button class="plate" data-go="grammar">Grammar</button></div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
     const road = $('.road', el), cur = $('.here', el);
