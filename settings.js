@@ -47,8 +47,11 @@ export const settings = { render: el => {
     <div class="plate set"><span>New kana per batch</span><div class="opts" role="group" aria-label="New kana per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
     <div class="plate set"><span>Backup</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
+    <div class="plate set"><span>My words</span><span class="acts"><button data-go="words">Open</button></span></div>
+    <div class="plate set"><span>Grammar</span><span class="acts"><button data-go="grammar">Open</button></span></div>
     <div class="plate about muted"><p>Gengo <span class="ver">dev</span></p>
       <p>Prints by Utagawa Hiroshige, via Wikimedia Commons. Shippori Mincho B1 under the SIL Open Font License.</p>
+      <p>Dictionary: JMdict (EDRDG, CC BY-SA 4.0). Sentences: Tatoeba (CC BY 2.0 FR). JLPT lists: Jonathan Waller (tanos.co.uk, CC BY).</p>
       <p>Your study data stays on this phone.</p></div>
     <div class="grow"></div>${nav('settings')}</div>`;
 

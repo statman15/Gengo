@@ -12,6 +12,7 @@ import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings, backupDue } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
+import { words, grammar } from './lists.js';
 import { checkUpdate } from './update.js';
 
 document.documentElement.classList.add(os);
@@ -92,11 +93,12 @@ const views = {
       <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more`}</span></li>`;
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
       <div class="plate road"><ol>${STATIONS.map(row).join('')}</ol><p class="credit muted">Utagawa Hiroshige, Wikimedia Commons</p></div>
+      <div class="friends"><button class="plate" data-go="words">My words</button><button class="plate" data-go="grammar">Grammar</button></div>
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
     const road = $('.road', el), cur = $('.here', el);
     road.scrollTop = cur.offsetTop - (road.clientHeight - cur.offsetHeight) / 2;
   } },
-  friends, race: raceView, settings,
+  friends, race: raceView, settings, words, grammar,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });

@@ -42,6 +42,12 @@ try {
   step = 'settings view';
   await page.evaluate(() => { location.hash = 'settings'; });
   await page.waitForFunction(() => document.querySelector('#app .setlist [data-backup]'));
+
+  for (const v of ['words', 'grammar']) {
+    step = v + ' view';
+    await page.evaluate(h => { location.hash = h; }, v);
+    await page.waitForFunction(() => document.querySelector('#app .setlist h1.plate')?.textContent === (location.hash === '#words' ? 'My words' : 'Grammar'));
+  }
 } catch (e) {
   errors.push(`step "${step}" failed: ${e.message}`);
 } finally {
@@ -50,4 +56,4 @@ try {
 }
 
 if (errors.length) { console.error(`FAIL (${errors.length}):\n  ${[...new Set(errors)].join('\n  ')}`); process.exit(1); }
-console.log('PASS smoke: app loads, home and settings views render, no console errors');
+console.log('PASS smoke: app loads, home, settings, words and grammar views render, no console errors');
