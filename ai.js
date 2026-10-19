@@ -31,7 +31,7 @@ async function address(c) {
   const key = c.home + c.url;
   if (picked.key === key && Date.now() - picked.at < 60000) return picked.url;
   let url = c.url || c.home; // no main address: try home anyway, so a dead home is "unreachable"
-  try { await fetch(base(c.home) + '/models', { headers: { Authorization: `Bearer ${c.key}` }, signal: AbortSignal.timeout(2500) }); url = c.home; } catch {}
+  try { await fetch(base(c.home) + '/models', { signal: AbortSignal.timeout(2500) }); url = c.home; } catch {} // no key on the probe: any reply means reachable
   picked = { at: Date.now(), key, url };
   return url;
 }
