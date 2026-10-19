@@ -126,3 +126,11 @@ M1 "Kana together" is built and released: https://statman15.github.io/Gengo/ (iP
 ## Status (M2, 2026-10-18)
 
 M2 "First words and sentences" is built and reviewed on branch `m2` (subagent-driven from `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`, a review after every task plus a final whole-branch review): 19,892 JMdict words in JLPT order (usually-kana words show as kana), 10,658 Tatoeba sentences, 15 grammar points with lessons and fill/form/build drills, word drills (hear, see, read in a sentence, tiles, say), fading furigana, My words (search, paste a chapter list, custom words), the Grammar list, and coverage milestones on the Journey. Still to check on real phones: the say rung for words and a Japanese voice for TTS.
+
+## Status (M3, 2026-10-19)
+
+M3 "Stories" is built, decided in chat with Chris (no separate plan doc; iterate on stories once he has read a few):
+- **AI connection** (`ai.js`, ported from HypertroPhy): OmniRoute / Gemini / Other, home address tried first, Gemini as the fallback when the chosen service can't be reached. Kept under its own localStorage key, so it is never in a backup and survives Start over. Android allows plain http for the OmniRoute home address.
+- **Today's story** (`story.js`, `story` view): offered on Today once 5+ words are due and the AI is set up. The AI writes 4–6 kana-only lines at your current Tōkaidō station using up to 8 due words, marked 【kana|n】 and underlined. Tap a line to hear it; Show English for the whole story. Then one meaning question per marked word that is still due, each counting as that word's review (rung `read`). One story per day, cached on the phone.
+- **Say/translate** (grammar rung `translate`, from stability 10, only with the AI set up): English sentence → type it, or Speak on Android → the AI grades with a corrected version and a one-line note.
+- Left out: separate "hints" (tap-to-hear and Show English cover it). Still to check with a real AI and on real phones: story quality, grading, the OmniRoute home address in the APK.

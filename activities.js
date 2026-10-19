@@ -86,7 +86,7 @@ export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = 
 }
 
 // Four meaning choices under a card the caller built. after() runs on answer.
-function meaning(el, item, card, done, ctx, after) {
+export function meaning(el, item, card, done, ctx, after) {
   const opts = meaningChoices(item, loadedWords(), ctx.rand ?? Math.random);
   el.insertAdjacentHTML('beforeend', `${card}<div class="choices gloss">${opts.map(o => `<button class="choice" data-id="${esc(o.id)}">${esc(gloss(o))}</button>`).join('')}</div>`);
   const box = el.querySelector('.choices'), t0 = Date.now();

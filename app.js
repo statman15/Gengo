@@ -1,5 +1,5 @@
 import { $, esc, os, stage, nav, sheet, ruby } from './ui.js';
-import { newCard, review, isMastered, isKnown, rungFor, pickRung, ratingFor } from './srs.js';
+import { newCard, review, isMastered, isKnown, isDue, rungFor, pickRung, ratingFor } from './srs.js';
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { speak, canHear, canSay } from './speech.js';
@@ -16,6 +16,8 @@ import { words, grammar, kana } from './lists.js';
 import { checkUpdate } from './update.js';
 import { coverage, fresh } from './coverage.js';
 import { GRAMMAR } from './grammar.js';
+import { MIN, storyWords, saved, keep, write } from './story.js';
+import { ready as aiReady } from './ai.js';
 
 document.documentElement.classList.add(os);
 
@@ -25,6 +27,11 @@ const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWord
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length;
   return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
+// Today's story: the ids still to question (asked words that are still due), and whether Today offers it.
+const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id] && isDue(db.cards[id], new Date()));
+const storyOffer = () => { const s = saved(dayKey(new Date()));
+  return s ? storyLeft(s).length > 0 : aiReady() && storyWords(dueQueue(db.cards, new Date())).length >= MIN; };
+const storyLine = (l, markId) => l.segs.map(([t, id]) => id && (!markId || id === markId) ? `<mark>${esc(t)}</mark>` : esc(t)).join('');
 const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
 // The live session ({view:'learn'|'review', ...}); show() drops it whenever the user leaves for another view.
@@ -94,6 +101,7 @@ const views = {
       <div class="grow"></div>
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
         : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
+      ${storyOffer() ? '<div class="grow" style="flex:.25"></div><button class="plate" data-go="story">Read today’s story</button>' : ''}
       ${!due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
@@ -142,6 +150,43 @@ const views = {
     };
     if (it.kind !== 'grammar') speak(say);
   } },
+  // The story, then one meaning question per marked word that is still due; each answer is that word's review.
+  story: { render: el => {
+    stage({ recede: true });
+    const day = dayKey(new Date()), s = saved(day), back = '<button class="plate" data-go="today">Back</button>';
+    if (!s) {
+      const ids = storyWords(dueQueue(db.cards, new Date()));
+      if (ids.length < MIN) return go('today');
+      el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">Writing today’s story…</p></div></div>`;
+      write(day, ids, db.cards, STATIONS[here().station]).then(() => location.hash === '#story' && show('story'), e => {
+        if (location.hash !== '#story') return;
+        el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">${esc(e.message)}</p></div><div class="grow"></div><button class="plate" data-retry>Try again</button>${back}</div>`;
+        $('[data-retry]', el).onclick = () => show('story');
+      });
+      return;
+    }
+    const left = storyLeft(s);
+    el.innerHTML = `<div class="screen"><div class="plate card sentence story"><h2>${esc(s.title)}</h2>${s.lines.map((l, i) =>
+      `<p lang="ja" data-line="${i}">${storyLine(l)}</p><p class="prompt en" hidden>${esc(l.en)}</p>`).join('')}
+      <button class="hint" data-en>Show English</button></div><div class="grow"></div>
+      ${left.length ? `<button class="plate" data-ask>Answer ${left.length} question${left.length > 1 ? 's' : ''}</button>` : back}</div>`;
+    $('.story', el).onclick = e => { const l = e.target.closest('[data-line]'); if (l) speak(s.lines[l.dataset.line].jp); };
+    $('[data-en]', el).onclick = e => { e.stopPropagation(); el.querySelectorAll('.story .en').forEach(p => p.hidden = !p.hidden); };
+    const known = x => !!db.cards[x] && isKnown(db.cards[x]);
+    const ask = () => {
+      const id = storyLeft(s)[0];
+      if (!id) { save(); postStats(); return go('today'); }
+      const l = s.lines.find(l => l.segs.some(g => g[1] === id));
+      el.innerHTML = `<div class="screen">${bars(s.done.length, s.ids.length)}</div>`;
+      acts.meaning($('.screen', el), item(id), `<div class="plate card sentence"><p lang="ja">${storyLine(l, id)}</p><p class="prompt">What does the marked word mean?</p><p class="prompt en" hidden>${esc(l.en)}</p></div>`, r => {
+        db.cards[id] = review(db.cards[id], ratingFor({ ...r, rung: 'read' }), new Date());
+        today().reviews++; s.done.push(id); keep(s); save();
+        setTimeout(() => { if (location.hash === '#story') ask(); }, r.correct ? 600 : 1200);
+      }, { known }, () => el.querySelector('.en').hidden = false);
+    };
+    const a = $('[data-ask]', el);
+    if (a) a.onclick = ask;
+  } },
   review: { render: el => {
     stage({ recede: true });
     if (!sess) return void begin(dueQueue(db.cards, new Date()));
@@ -159,7 +204,7 @@ const views = {
       today().reviews++;
       save(); // graded now, so leaving during the pause loses nothing
       setTimeout(() => { if (sess === s && s.i === i) { s.i++; show('review'); } }, r.correct && !r.speechFallback ? 600 : 1200);
-    }, { known });
+    }, { known, caps: s.caps });
   } },
 };
 

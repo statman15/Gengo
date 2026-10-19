@@ -3,6 +3,8 @@ import { db, save, exportJSON, importJSON, reset } from './store.js';
 import { dayKey } from './streak.js';
 import { createGroup, configured, inviteUrl, postStats, joinCode } from './group.js';
 import { stageHere } from './board.js';
+import { PRESETS, cfg, conn, saveAi, models, chat } from './ai.js';
+import * as ai from './ai.js';
 
 const DAY = 864e5;
 const native = () => !!globalThis.Capacitor?.isNativePlatform?.();
@@ -35,6 +37,17 @@ async function saveBackup() {
   return true;
 }
 
+// Stories and Say/translate need an AI connection; the key stays on this phone (ai.js).
+const aiPlate = () => { const c = conn(), p = PRESETS[cfg.preset], f = (k, label, ph, type = 'text') =>
+  `<label class="set">${label}<input data-ai="${k}" type="${type}" value="${esc(c[k])}" placeholder="${ph}" autocapitalize="off" autocomplete="off" spellcheck="false"></label>`;
+  return `<div class="plate ai"><div class="set"><span>AI</span><div class="opts" role="group" aria-label="AI service">${Object.entries(PRESETS).map(([k, x]) =>
+    `<button data-preset="${k}" aria-pressed="${k === cfg.preset}">${x.label}</button>`).join('')}</div></div>
+    <p class="muted">${esc(p.hint)}</p>
+    ${f('url', 'Address', 'https://…/v1')}${p.home ? f('home', 'Home address', 'optional, http://…') : ''}${f('key', 'API key', '', 'password')}
+    ${c.models?.length ? `<label class="set">Model<select data-ai="model">${[...new Set([c.model, ...c.models].filter(Boolean))].map(m =>
+      `<option${m === c.model ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>` : f('model', 'Model', 'Tap Test to list models')}
+    <div class="set"><small class="muted" data-ai-msg role="status">The key is stored only on this phone.</small><span class="acts"><button data-test>Test Connection</button></span></div></div>`; };
+
 export const settings = { render: el => {
   stageHere();
   const { name, groupCode, newBatch } = db.settings, again = () => settings.render(el);
@@ -47,6 +60,7 @@ export const settings = { render: el => {
     <div class="plate set"><span>New per batch</span><div class="opts" role="group" aria-label="New per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
     <div class="plate set"><span>Backup${backupDue() ? `<br><small class="muted">${db.settings.lastBackup == null ? 'Not backed up yet' : 'Last backup over 14 days ago'}</small>` : ''}</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
+    ${aiPlate()}
     <div class="plate set"><span>My words</span><span class="acts"><button data-go="words">Open</button></span></div>
     <div class="plate set"><span>Grammar</span><span class="acts"><button data-go="grammar">Open</button></span></div>
     <div class="plate set"><span>Kana chart</span><span class="acts"><button data-go="kana">Open</button></span></div>
@@ -81,6 +95,21 @@ export const settings = { render: el => {
       if (e.target.closest('[data-yes]')) { reset(); postStats(); location.hash = 'today'; }
       if (e.target.closest('button')) $('#sheet').close();
     };
+  };
+  el.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => { cfg.preset = b.dataset.preset; saveAi(); again(); });
+  el.querySelectorAll('[data-ai]').forEach(i => i.onchange = () => { conn()[i.dataset.ai] = i.value.trim(); saveAi(); });
+  // Test: fetch the model list (kept, so Model becomes a dropdown), pick one if none is set, then ask for a one-word reply.
+  $('[data-test]', el).onclick = async () => {
+    const say = t => { const m = $('[data-ai-msg]', el); if (m) m.textContent = t; };
+    say('Connecting…');
+    try {
+      const list = await models(), c = conn();
+      c.models = list;
+      if (!c.model) c.model = list.find(m => /flash|auto/.test(m)) || list[0] || '';
+      saveAi(); again(); say('Connecting…');
+      await chat([{ role: 'user', content: 'Reply with the single word OK.' }]);
+      say(`Connected${ai.via ? ` via ${ai.via === 'home' ? 'home address' : ai.via}` : ''} · ${c.model} · ${list.length} models`);
+    } catch (e) { say(e.message); }
   };
   const create = $('[data-create]', el);
   if (create) create.onclick = async () => { if (await createGroup()) again(); };

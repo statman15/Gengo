@@ -167,6 +167,11 @@ mark { background: none; color: inherit; text-decoration: underline 2px var(--se
 .blank { color: var(--seal-text); }
 .tiles.words { display: flex; flex-wrap: wrap; justify-content: center; }
 .tiles.words .choice { min-height: 52px; padding: 0 14px; font-size: 1.3rem; }
+.answer { display: block; width: 100%; box-sizing: border-box; margin: 14px 0 6px; padding: 12px; font: 1.4rem var(--mincho); color: var(--ink); background: none; border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); border-radius: var(--r); }
+.plate.card.right { box-shadow: inset 0 0 0 2px var(--seal-text), 0 8px 22px -6px #0006; }
+.story h2 { margin: 0 0 10px; font: 700 1.1rem var(--ui); }
+.story p[lang] { margin: 0; line-height: 1.8; cursor: pointer; }
+.story .en { margin: 0 0 10px; }
 .sentence .tray { flex-wrap: wrap; gap: 6px; }
 .sentence .tray .slot { min-width: 1.8rem; font-size: 1.3rem; }
 .choices.long .choice { font-size: 1.15rem; padding: 4px; }
@@ -184,6 +189,8 @@ mark { background: none; color: inherit; text-decoration: underline 2px var(--se
 .kana-grid .choice { min-height: 0; padding: 6px 0; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
 .kana-grid [lang] { font-family: var(--mincho); font-size: 1.7rem; font-weight: 500; }
 .kana-grid small { font-size: .75rem; font-weight: 500; color: var(--ink-2); }
+.ai p { margin: 6px 0; font-size: .8rem; }
+.ai select { flex: 1; min-width: 0; font: inherit; color: inherit; background: none; border: 0; text-align: right; padding: 8px 0; }
 .set .code { font-variant-numeric: tabular-nums; letter-spacing: .08em; }
 .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .opts { display: flex; }

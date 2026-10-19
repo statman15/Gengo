@@ -13,4 +13,5 @@ assert.deepEqual(formWords(masu, cards, words).map(w => w.id), ['w-1'], 'learned
 assert.deepEqual(formWords(adj, cards, words).map(w => w.id), ['w-2']);
 assert.equal(canGrammar(masu, {})('form'), false, 'no loaded words');
 assert.equal(canGrammar(masu, {})('build'), true);
+assert.equal(canGrammar(masu, {})('translate'), false, 'no AI set up: no translate');
 assert.match(lessonHtml({ title: '<b>', en: 'x', explain: 'y', ex: [{ jp: 'a [b] 。', en: 'z' }] }), /&#60;b&#62;[\s\S]*ab。/);

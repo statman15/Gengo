@@ -11,7 +11,7 @@ assert.deepEqual([item('c-1').kind, item('c-1').custom, item('c-1').r], ['word',
 assert.equal(item('c-2'), null);
 const g = item('g-wa-desu');
 assert.equal(g.kind, 'grammar');
-assert.deepEqual(ladderFor(g), [['fill', 0], ['build', 5]]);
+assert.deepEqual(ladderFor(g), [['fill', 0], ['build', 5], ['translate', 10]]);
 assert.equal(ladderFor(item('h-a')), TUNING.ladder.kana);
 assert.equal(ladderFor(item('c-1')), TUNING.ladder.word);
 console.log('items ok');

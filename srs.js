@@ -2,11 +2,11 @@ import { fsrs, createEmptyCard } from './vendor/ts-fsrs.js';
 
 export const TUNING = {
   mastered: 21, known: 3, stretch: 0.2,
-  slowMs: { default: 8000, read: 12000, tiles: 15000, fill: 12000, form: 12000, build: 25000 },
+  slowMs: { default: 8000, read: 12000, tiles: 15000, fill: 12000, form: 12000, build: 25000, translate: 60000 },
   ladder: {
     kana: [['hear', 0], ['see', 3], ['say', 10]],
     word: [['hear', 0], ['see', 2], ['read', 4], ['tiles', 7], ['say', 12]],
-    grammar: [['fill', 0], ['form', 0], ['build', 5]],
+    grammar: [['fill', 0], ['form', 0], ['build', 5], ['translate', 10]],
   },
 };
 const f = fsrs();

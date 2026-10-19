@@ -18,4 +18,4 @@ export const loadedWords = () => words;
 
 export const item = id => byId.get(id) ?? (Object.hasOwn(db.custom, id) ? { id, kind: 'word', custom: true, ...db.custom[id] } : null);
 
-export const ladderFor = it => it.kind === 'grammar' ? TUNING.ladder.grammar.filter(([r]) => it.acts.includes(r)) : TUNING.ladder[it.kind];
+export const ladderFor = it => it.kind === 'grammar' ? TUNING.ladder.grammar.filter(([r]) => r === 'translate' || it.acts.includes(r)) : TUNING.ladder[it.kind];

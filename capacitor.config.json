@@ -1,5 +1,8 @@
 {
   "appId": "com.statman15.gengo",
   "appName": "Gengo",
-  "webDir": "www"
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
 }

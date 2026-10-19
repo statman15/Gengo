@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { parse, prompt } from './story.js';
+
+const words = [{ id: 'w-1', r: 'たべる', w: '食べる', m: ['to eat'] }, { id: 'w-2', r: 'みず', w: '水', m: ['water'] }, { id: 'w-3', r: 'はい', w: '', m: ['yes'] }];
+const reply = 'Sure!\n```json\n{"title":"Tea","lines":[{"jp":"【みず|2】を【たべました|1】。","en":"I ate water."},{"jp":"【はい|9】、そうです。","en":"Yes."},{"jp":"","en":"x"}]}\n```';
+const s = parse(reply, words);
+assert.equal(s.title, 'Tea');
+assert.equal(s.lines.length, 2, 'empty lines dropped');
+assert.deepEqual(s.lines[0].segs, [['みず', 'w-2'], ['を'], ['たべました', 'w-1'], ['。']]);
+assert.equal(s.lines[0].jp, 'みずをたべました。');
+assert.deepEqual(s.lines[1].segs, [['はい'], ['、そうです。']], 'unknown word number is plain text');
+assert.deepEqual(s.ids, ['w-1', 'w-2'], 'only words that appear, in list order');
+assert.throws(() => parse('{"lines":[]}', words));
+assert.throws(() => parse('no json here', words));
+const p = prompt(words, { 'g-wa-desu': {} }, { jp: '日本橋', name: 'Nihonbashi', scene: 'A bridge' })[1].content;
+assert.ok(p.includes('1. たべる (食べる): to eat') && p.includes('XはYです') && p.includes('日本橋'));
+console.log('story ok');
