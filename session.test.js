@@ -1,14 +1,40 @@
 import assert from 'node:assert/strict';
 import { KANA } from './kana.js';
+import { GRAMMAR } from './grammar.js';
 import { newCard, pickRung, TUNING } from './srs.js';
-import { dueQueue, nextNew, choices } from './session.js';
+import { dueQueue, nextNew, grammarReady, choices } from './session.js';
+import { ready } from './items.js';
 const now = new Date('2026-10-17T10:00:00');
 const at = (due, extra = {}) => ({ ...newCard(now), due: new Date(due), ...extra });
+await ready(async () => { throw new Error('offline'); });
 assert.deepEqual(dueQueue({
-  b: at('2026-10-17T09:00:00'), a: at('2026-10-15T09:00:00'), later: at('2026-10-18T09:00:00'),
-}, now), ['a', 'b']);
+  'h-u': at('2026-10-17T09:00:00'), 'h-a': at('2026-10-15T09:00:00'), 'h-i': at('2026-10-18T09:00:00'),
+}, now), ['h-a', 'h-u']);
+assert.deepEqual(dueQueue({ 'h-a': at('2026-10-15T09:00:00'), 'w-999': at('2026-10-15T09:00:00') }, now), ['h-a'], 'unknown ids skipped');
 assert.deepEqual(nextNew({}, 5), ['h-a', 'h-i', 'h-u', 'h-e', 'h-o']);
 assert.deepEqual(nextNew({ 'h-a': {}, 'h-u': {} }, 3), ['h-i', 'h-e', 'h-o']);
+
+const W = (id, r) => ({ id, r }), words = [W('w-1', 'あお'), W('w-2', 'アイス'), W('w-3', 'いえ')];
+const card = () => newCard(now);
+const hiraIds = KANA.filter(k => k.script === 'hira').map(k => k.id);
+assert.equal(hiraIds.length, 71);
+const hira = Object.fromEntries(hiraIds.map(id => [id, card()]));
+assert.deepEqual(nextNew(hira, 4, { words }), ['k-a', 'k-i', 'w-1', 'w-3']);
+const allKana = Object.fromEntries(KANA.map(k => [k.id, card()]));
+const five = ['w-1', 'w-2', 'w-3', 'w-4', 'w-5'].map(id => W(id, 'あ'));
+assert.deepEqual(nextNew(allKana, 5, { words: five, mine: { words: ['c-1'], grammar: [] } }), ['c-1', 'w-1', 'w-2', 'w-3', 'w-4']);
+const withWords = n => ({ ...allKana, ...Object.fromEntries(Array.from({ length: n }, (_, i) => ['w-' + (i + 100), card()])) });
+assert.equal(grammarReady(withWords(9), { grammar: [] }), null);
+assert.equal(grammarReady(withWords(10), { grammar: [] }).id, 'g-wa-desu');
+assert.equal(grammarReady({ ...allKana, 'w-1': card(), 'c-1': card() }, { grammar: [] }), null, 'few words');
+assert.equal(grammarReady({ ...withWords(9), 'c-1': card() }, { grammar: [] }).id, 'g-wa-desu', 'c- cards count');
+assert.equal(nextNew(withWords(10), 5, { words: five })[0], 'g-wa-desu');
+assert.equal(grammarReady({ ...withWords(30), 'g-wa-desu': card() }, { grammar: [] }).id, 'g-ka');
+assert.equal(grammarReady({ ...withWords(30), 'g-ka': card() }, { grammar: [] }).id, 'g-wa-desu', 'g-ka waits for g-wa-desu');
+assert.equal(grammarReady({}, { grammar: ['g-tai'] }).id, 'g-tai');
+const two = nextNew(allKana, 5, { words: five, mine: { words: [], grammar: ['g-tai', GRAMMAR[1].id] } });
+assert.equal(two.filter(id => id.startsWith('g-')).length, 1, 'one grammar point per batch');
+
 let seed = 7;
 const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 for (const item of KANA) {
