@@ -63,7 +63,8 @@ export const splitReading = r => [...r].reduce((o, c) => (o.length && 'ぁぃぅ
 
 // Tap tiles to fill slots, tap a placed one to take it back. Calls done({correct, ms}) once the slots are full (answer.length chars); the caller adds hints.
 export function tileTray(el, pieces, answer, done, slots = answer.length) {
-  el.insertAdjacentHTML('beforeend', `<div class="tray" lang="ja"></div><div class="choices tiles" lang="ja">${pieces.map((p, i) =>
+  if (!el.querySelector('.tray')) el.insertAdjacentHTML('beforeend', '<div class="tray" lang="ja"></div>');
+  el.insertAdjacentHTML('beforeend', `<div class="choices tiles" lang="ja">${pieces.map((p, i) =>
     `<button class="choice kana-choice" data-i="${i}">${esc(p)}</button>`).join('')}</div>`);
   const tray = el.querySelector('.tray'), box = el.querySelector('.tiles'), t0 = Date.now(), placed = [];
   let over = false;
@@ -127,7 +128,7 @@ const word = {
   tiles(el, item, done, ctx) {
     const rand = ctx.rand ?? Math.random, pieces = splitReading(item.r), kata = /[ァ-ヶ]/.test(item.r[0]);
     const spare = shuffle(KANA.filter(k => k.script === (kata ? 'kata' : 'hira') && !pieces.includes(k.kana)), rand).slice(0, 2).map(k => k.kana);
-    el.insertAdjacentHTML('beforeend', `<div class="plate card"><p class="prompt">Build the word for</p><p class="gloss-big">${esc(gloss(item))}</p><button class="hint" data-replay>Hear it</button></div>`);
+    el.insertAdjacentHTML('beforeend', `<div class="plate card"><p class="prompt">Build the word for</p><p class="gloss-big">${esc(gloss(item))}</p><div class="tray" lang="ja"></div><button class="hint" data-replay>Hear it</button></div>`);
     let hinted = false;
     el.querySelector('[data-replay]').onclick = () => { hinted = true; speak(item.r); };
     tileTray(el, shuffle([...pieces, ...spare], rand), item.r, r => {

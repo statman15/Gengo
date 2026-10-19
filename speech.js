@@ -10,7 +10,7 @@ export const heardMatches = (alts, {kana, sound}) =>
   alts.some(a => { const n = norm(a); return n.startsWith(toHira(kana)) || n === sound; });
 
 const bare = s => s.replace(/[\s\p{P}\p{S}]/gu, '');
-export const heardWord = (alts, {r, w}) => alts.some(a => { const n = bare(a); return n === w || toHira(n) === toHira(r); });
+export const heardWord = (alts, {r, w}) => alts.some(a => { const n = bare(a); return !!n && (n === w || toHira(n) === toHira(r)); });
 
 export async function speak(text) {
   try {

@@ -19,4 +19,6 @@ assert.equal(heardWord(['ガクセイ'], gk), true);
 assert.equal(heardWord(['が く せ い'], gk), true);
 assert.equal(heardWord(['がっこう'], gk), false);
 assert.equal(heardWord([], gk), false);
+assert.equal(heardWord(['', '。'], { r: 'あれ', w: '' }), false); // kana-only: empty or punctuation never matches
+assert.equal(heardWord(['あれ'], { r: 'あれ', w: '' }), true);
 console.log('speech ok');

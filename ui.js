@@ -3,7 +3,7 @@ export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCode
 
 // Furigana. Kanji words get a <ruby>; the reading is hidden by CSS unless show (the word isn't known yet) or tapped (a peek).
 const HAN = /\p{Script=Han}/u;
-export const ruby = (w, r, show) => !r || !HAN.test(w) ? esc(w) : `<ruby${show ? ' class="on"' : ''}>${esc(w)}<rt>${esc(r)}</rt></ruby>`;
+export const ruby = (w, r, show) => !r || !HAN.test(w) ? esc(w || r) : `<ruby${show ? ' class="on"' : ''}>${esc(w)}<rt>${esc(r)}</rt></ruby>`;
 // s.t = [[surface, reading, id]...]; show(id) says whether a word segment shows its reading; markId's word is wrapped in <mark>.
 export const sentenceHtml = (s, markId, show) => s.t.map(([sf, r, id]) => {
   const h = id[0] === 'w' ? ruby(sf, r, show(id)) : esc(sf);

@@ -30,8 +30,8 @@ export function search(words, q) {
 }
 
 export function meaningChoices(word, pool, rand) {
-  const i = Math.max(0, pool.indexOf(word)), first = new Set([word.m[0]]);
-  const near = pool.slice(Math.max(0, i - 150), i + 151).filter(x => x !== word && x.p === word.p);
+  const i = Math.max(0, pool.findIndex(x => x.id === word.id)), first = new Set([word.m[0]]);
+  const near = (word.p ? pool.slice(Math.max(0, i - 150), i + 151) : pool).filter(x => x.id !== word.id && (!word.p || x.p === word.p));
   for (let k = near.length - 1; k > 0; k--) { const j = Math.floor(rand() * (k + 1)); [near[k], near[j]] = [near[j], near[k]]; }
   const out = [word];
   for (const x of near) if (out.length < 4 && !first.has(x.m[0])) { first.add(x.m[0]); out.push(x); }
