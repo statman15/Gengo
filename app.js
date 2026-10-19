@@ -172,9 +172,11 @@ export function show(view, arg) {
 $('#app').addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
 const joined = () => location.hash.startsWith('#join=') ? joinFromHash().then(() => go('friends')) : 0;
 addEventListener('hashchange', () => joined() || show(location.hash.slice(1)));
-await ready(); // words.json; never rejects, offline leaves kana only
+const loaded = ready(); // words.json; never rejects, offline leaves kana only
+const slow = await Promise.race([loaded.then(() => false), new Promise(r => setTimeout(r, 4000, true))]); // don't hold the first screen for a slow download
 show(location.hash.startsWith('#join=') ? 'today' : location.hash.slice(1) || 'today');
 joined();
+loaded.then(() => { if (slow && !location.hash.slice(1).replace(/^today$/, '')) show('today'); }); // slow load: refresh Today if still there
 postStats();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {}); // offline cache; optional
 checkUpdate();
