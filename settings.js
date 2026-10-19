@@ -105,7 +105,7 @@ export const settings = { render: el => {
     try {
       const list = await models(), c = conn();
       c.models = list;
-      if (!c.model) c.model = list.find(m => /flash|auto/.test(m)) || list[0] || '';
+      if (!c.model) c.model = list.find(m => m === 'gemini-flash-latest') || list.find(m => /flash/.test(m) && !/lite|image|tts|live/.test(m)) || list.find(m => /flash|auto/.test(m)) || list[0] || ''; // full Flash writes far better Japanese than Flash-Lite
       saveAi(); again(); say('Connecting…');
       await chat([{ role: 'user', content: 'Reply with the single word OK.' }]);
       say(`Connected${ai.via ? ` via ${ai.via === 'home' ? 'home address' : ai.via}` : ''} · ${c.model} · ${list.length} models`);

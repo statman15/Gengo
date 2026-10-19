@@ -23,8 +23,11 @@ for (let s = 1; s < 50; s++) {
   assert.equal(c.length, 4); assert.ok(c.includes(W[1])); assert.ok(!c.includes(W[2])); // 参る shares "to go"
   assert.ok(c.every(x => x.p === 'v'));
 }
+// homophones (要る/居る both いる) are never each other's wrong choice
+const H = [{id: 'h1', r: 'いる', w: '', m: ['to need'], p: 'v'}, {id: 'h2', r: 'いる', w: '', m: ['to be'], p: 'v'}, ...['a', 'b', 'c', 'd'].map(k => ({id: k, r: k, w: '', m: [k], p: 'v'}))];
+for (let s = 1; s < 30; s++) assert.ok(!meaningChoices(H[0], H, mulberry(s)).includes(H[1]));
 // a copied item (as items.js hands out) still gets neighbours: distractors come from near its place in the pool
-const P = Array.from({length: 600}, (_, k) => ({id: 'x' + k, r: 'a', w: 'a', m: ['g' + k], p: 'n'}));
+const P = Array.from({length: 600}, (_, k) => ({id: 'x' + k, r: 'r' + k, w: 'a', m: ['g' + k], p: 'n'}));
 for (let s = 1; s < 30; s++) assert.ok(meaningChoices({...P[400]}, P, mulberry(s)).every(x => Math.abs(+x.id.slice(1) - 400) <= 150));
 // a custom word (no p) still gets 4 choices, never sharing its first gloss
 for (let s = 1; s < 30; s++) { const c = meaningChoices({id: 'c1', m: ['g5'], r: 'a', w: ''}, P, mulberry(s)); assert.equal(c.length, 4); assert.equal(c.filter(x => x.m[0] === 'g5').length, 1); }

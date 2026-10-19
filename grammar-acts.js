@@ -55,7 +55,7 @@ Grammar being practised: ${p.title} (${p.en})
 One natural answer: ${answer}
 The student ${said}: ${s.mine}
 Is it a correct, natural translation? Accept any correct wording, kana or kanji; ignore punctuation and spacing.${said === 'said' ? ' It came from speech recognition, so ignore homophone and kanji choices.' : ''}
-Reply in this shape: {"correct":true,"fix":"<a correct version close to theirs, in kana>","note":"<one short English sentence of feedback>"}` },
+Reply in this shape: {"correct":true,"fix":"<a correct version close to theirs, in hiragana and katakana only, no kanji>","note":"<one short English sentence of feedback>"}` },
 ];
 
 const grammar = {
@@ -70,7 +70,8 @@ const grammar = {
       shuffle(p.forms.map(f => conjugate(w.r, w.f, f)), rand), conjugate(w.r, w.f, target), done);
   },
   translate(el, p, done, ctx) {
-    const s = sentence(p, ctx, s => readable(s, id => !!db.cards[id])), answer = s.t.map(x => x[0]).join(''), t0 = Date.now();
+    // The lesson's own examples: Tatoeba sentences can carry grammar the learner hasn't met (してる, sentence-final の).
+    const s = sentence(p, ctx, () => false), answer = s.t.map(x => x[0]).join(''), t0 = Date.now();
     el.insertAdjacentHTML('beforeend', `<div class="plate card"><p class="prompt">Say it in Japanese</p><p class="gloss-big">${esc(s.en)}</p>
       <input class="answer" lang="ja" aria-label="Your Japanese" placeholder="日本語で" autocomplete="off" autocapitalize="off" spellcheck="false">
       <p class="prompt" data-out role="status"></p></div>

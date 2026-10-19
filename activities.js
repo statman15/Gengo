@@ -153,7 +153,7 @@ const word = {
   },
 };
 // ---- Kanji. A kanji's one reading for drills: its first on reading (katakana), else its first kun; KANJIDIC's . and - dropped.
-export const kanjiReading = k => (k.on[0] ?? k.kun[0] ?? '').replace(/[-.]/g, '');
+export const kanjiReading = k => (k.on?.[0] ?? k.kun?.[0] ?? '').replace(/[-.]/g, ''); // '' for non-kanji: the learn view asks every item for a reading
 // Four choices: this kanji plus three whose text(x) differs, shuffled.
 function kanjiPick(el, it, prompt, text, done, rand = Math.random) {
   const seen = new Set([text(it)]), opts = [it];

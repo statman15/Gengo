@@ -9,6 +9,8 @@ import { GRAMMAR } from '../grammar.js';
 import { isGrammar } from './grammar-parts.mjs';
 import { tokenReading } from '../sentences.js';
 
+// Crude or violent sentences a beginner shouldn't drill (judged on the English; 殺到 "rush" and plain "he died" stay).
+const GRIM = /suicid|murder|\bkill|tortur|slaughter|strangl|assassin|shoot him|\bsex|make love|made love|naked|shit|idiot|^die!|wish i was dead|postmortem/i;
 const cache = process.argv[2] || join(tmpdir(), 'gengo-sentences');
 mkdirSync(cache, { recursive: true });
 const sh = (cmd, args) => execFileSync(cmd, args, { cwd: cache, maxBuffer: 1 << 30 });
@@ -89,6 +91,7 @@ for (const row of read('jpn_indices.csv').split('\n')) {
   }
   if (!bad && !PUNCT.test(text.slice(pos))) bad = 'align';
   if (bad) { drop(bad); continue; }
+  if (GRIM.test(en.replace(/kill(ing)? time|naked eye/gi, ''))) { drop('grim'); continue; }
   punct(pos, text.length);
   out.push({ en, t, g: GRAMMAR.filter(p => p.match(tok)).map(p => p.id), len: [...text].length });
 }

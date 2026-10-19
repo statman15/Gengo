@@ -20,3 +20,12 @@ await (await import('./items.js')).ready(async u => ({ ok: true, json: async () 
 const lim = limits({ 'w-9': {}, 'h-a': {}, 'h-i': {}, 'g-wa-desu': {} });
 assert.ok(lim.includes('みず=water') && lim.includes('Use ONLY these kana: あい.') && lim.includes('XはYです'), lim);
 console.log('limits ok');
+// models echo the word before its mark, mark unlisted words, and leave broken marks
+const e = parse('{"lines":[{"jp":"おはよう【おはよう|1】ございます。わたし【わたし|9】の【の】【】です。","en":"x"}]}', [{ id: 'w-1', r: 'おはよう', w: '', m: ['good morning'] }]);
+assert.equal(e.lines[0].jp, 'おはようございます。わたしのです。');
+assert.deepEqual(e.ids, ['w-1']);
+console.log('echo ok');
+import { saved as storySaved, keep as storyKeep } from './story.js';
+assert.throws(() => parse('{"lines":[{"jp":"こんにちは。","en":"Hi."}]}', words), /didn't use any/, 'no marked word: retry, not a dead story');
+storyKeep({ day: 'd', lines: null, ids: null }); assert.equal(storySaved('d'), null, 'a broken cached story is ignored');
+console.log('guards ok');

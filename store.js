@@ -53,7 +53,8 @@ export function revive(raw) {
   };
 }
 
-export const db = (() => { try { return revive(JSON.parse(ls.getItem(KEY))); } catch { return revive(null); } })();
+// Unreadable saved progress is kept under gengo-unreadable before a fresh db replaces it, so it can still be recovered by hand.
+export const db = (() => { try { return revive(JSON.parse(ls.getItem(KEY))); } catch { try { ls.setItem(KEY + '-unreadable', ls.getItem(KEY)); } catch {} return revive(null); } })();
 export const save = () => ls.setItem(KEY, JSON.stringify(db));
 if (!db.settings.deviceId) { db.settings.deviceId = crypto.randomUUID(); save(); }
 
@@ -66,15 +67,18 @@ export function importJSON(text) {
   if (!obj(raw) || !(obj(raw.cards) || obj(raw.settings))) return { ok: false, error: 'That file is not a Gengo backup.' };
   const next = revive(raw), { deviceId, groupCode } = db.settings;
   Object.assign(db, next, { settings: { ...next.settings, deviceId, groupCode } }); // in place: importers hold the live db
-  save();
+  save(); dropDaily();
   return { ok: true };
 }
+
+// Today's story and chat belong to the old progress (their words may be gone): drop them on Start over and Restore.
+const dropDaily = () => { try { ['gengo-story', 'gengo-chat'].forEach(k => globalThis.localStorage?.removeItem(k)); } catch {} };
 
 // Start over: a fresh db that keeps only who this is (name, device, group).
 export function reset() {
   const { name, deviceId, groupCode } = db.settings;
   Object.assign(db, revive({ settings: { name, deviceId, groupCode } }));
-  save();
+  save(); dropDaily();
 }
 
 // false when already listed or already learning.

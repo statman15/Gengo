@@ -27,4 +27,5 @@ assert.ok(nextNew(cards, 5, { kanji: K }).filter(id => id.startsWith('k-')).leng
 
 // Kanji cards survive a backup round trip.
 assert.ok(revive({ cards: { 'k-日': { stability: 1, difficulty: 5, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, reps: 1, lapses: 0, state: 1, due: '2026-01-01' } } }).cards['k-日']);
+assert.equal(kanjiReading({ id: 'g-wa-desu', kind: 'grammar' }), '', 'a grammar point has no reading (learn view crash)');
 console.log('kanji ok');

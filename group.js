@@ -92,5 +92,7 @@ export async function joinFromHash(f = globalThis.fetch) {
   db.settings.groupCode = code;
   if (await postStats(f)) { save(); return true; }
   db.settings.groupCode = prev; // unknown, full or unreachable group: stay where we were
+  const { sheet } = await import('./ui.js');
+  sheet('<p>Couldn’t join that group. Check that the invite link is complete, that the group doesn’t already have three people, and that you’re online.</p><form method="dialog"><button class="plate">OK</button></form>');
   return false;
 }

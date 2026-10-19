@@ -47,7 +47,7 @@ export const words = { render: el => {
         f.preventDefault();
         const r = t.r.value.trim(), m = t.m.value.trim();
         if (addCustom({ r, w: t.w.value.trim(), m: m ? [m] : [] })) return void (t.outerHTML = `<p class="plate set muted">Added ${esc(r)}</p>`);
-        const err = $('[data-err]', t); err.hidden = false; err.textContent = KANA.test(r) ? 'Add a meaning' : 'Reading must be kana';
+        const err = $('[data-err]', t); err.hidden = false; err.textContent = !KANA.test(r) ? 'Reading must be kana' : m.length > 80 ? 'Keep the meaning under 80 characters' : 'Add a meaning';
       };
     };
   };

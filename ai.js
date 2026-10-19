@@ -39,7 +39,7 @@ async function address(c) {
 // Which address answered the last request: '' (the main one), 'home', or 'Gemini' (fallback).
 export let via = '';
 
-async function call(path, body, c = conn()) {
+async function call(path, body, c = conn(), tries = 2) {
   if (!(c.url || c.home) || !c.key) throw new Error('Set up the AI connection in Settings first.');
   const url = await address(c);
   let res;
@@ -56,6 +56,9 @@ async function call(path, body, c = conn()) {
     throw Object.assign(new Error(`Couldn't reach ${host(url)}. Check the address (it must start with https://), and for a Tailscale address that Tailscale is on.`), { unreachable: true });
   }
   if (res.status === 401 || res.status === 403) throw new Error('The AI service rejected the key. Check it in Settings.');
+  // Free keys often get "busy" (503) or "too many requests" (429): wait and try once more, then say so plainly.
+  if ((res.status === 503 || res.status === 429) && tries > 1) { await new Promise(r => setTimeout(r, 2000)); return call(path, body, c, tries - 1); }
+  if (res.status === 503 || res.status === 429) throw Object.assign(new Error(`The AI service is busy right now (${res.status}). Try again in a minute.`), { busy: true });
   if (!res.ok) throw new Error(`The AI service answered ${res.status}: ${(await res.text()).slice(0, 200)}`);
   via = url === c.home && c.home ? 'home' : '';
   return res.json();
@@ -70,9 +73,15 @@ export async function chat(messages) {
   let r;
   try { r = await call('/chat/completions', { model: c.model, messages }, c); }
   catch (e) {
-    if (!e.unreachable || c === gem || !gem.key) throw e;
-    r = await call('/chat/completions', { model: gem.model || 'gemini-2.5-flash', messages }, gem);
-    via = 'Gemini';
+    const lite = 'gemini-flash-lite-latest';
+    if (e.busy && c.url.includes('generativelanguage') && c.model !== lite) { // Gemini Flash busy: its Lite model usually isn't
+      r = await call('/chat/completions', { model: lite, messages }, c);
+      via = 'Flash-Lite';
+    } else {
+      if (!e.unreachable || c === gem || !gem.key) throw e;
+      r = await call('/chat/completions', { model: gem.model || 'gemini-flash-latest', messages }, gem);
+      via = 'Gemini';
+    }
   }
   const text = r.choices?.[0]?.message?.content;
   if (!text) throw new Error('The AI sent back an empty answer. Try again, or pick another model in Settings.');

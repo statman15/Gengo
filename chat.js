@@ -24,8 +24,9 @@ Rules:
 ${limits(cards)}
 - Over ${TURNS} replies from the learner, ask questions that invite them to use these words, one or two at a time:
 ${list(words)}
+- Everything you say must be natural Japanese a native speaker would really say; never force a word into an odd sentence.
 - If the learner makes a mistake, don't correct it; just carry on naturally.
-Reply each turn in this shape: {"who":"<who you are, in English, 1-3 words>","jp":"…","en":"<English of your line>","hint":"<one short reply the learner could give, in kana, ideally using one of the words>"}` },
+Reply each turn in this shape: {"who":"<who you are, in English, 1-3 words>","jp":"…","en":"<English of your line>","hint":"<one short, natural answer to your line that the learner could give, in kana, using one of the words if it fits>"}` },
     { role: 'user', content: '(Start the conversation.)' },
     ...c.log.map(l => l.me ? { role: 'user', content: l.jp } : { role: 'assistant', content: JSON.stringify({ jp: l.jp, en: l.en, hint: l.hint }) }),
   ];
@@ -49,7 +50,7 @@ ${list(words)}
 The conversation:
 ${transcript}
 
-For each word, say whether the learner used it (any correct form or conjugation, kana or kanji) correctly ("right"), used it wrongly ("wrong"), or didn't use it ("no"), and in which of their replies (its number, 0 if not used).
+For each word, say whether the learner used it correctly ("right": the right meaning, in a reply that makes sense as an answer to what was said; any form, kana or kanji), wrongly ("wrong": wrong meaning, or a reply that doesn't fit the conversation), or not at all ("no"), and in which of their replies (its number, 0 if not used). Be honest; a word dropped into a reply that doesn't answer the question is "wrong".
 List up to 3 of the learner's replies that had mistakes, each with a corrected version in kana and a short English reason.
 Reply in this shape: {"words":[{"n":1,"used":"right","reply":2}],"fixes":[{"reply":3,"fix":"…","why":"…"}],"note":"<one or two encouraging English sentences>"}` },
   ];
@@ -79,7 +80,7 @@ export const replies = c => c.log.filter(l => l.me).length;
 const KEY = 'gengo-chat';
 const mem = {};
 const ls = globalThis.localStorage ?? { getItem: k => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
-export const saved = day => { try { const s = JSON.parse(ls.getItem(KEY)); return s?.day === day ? s : null; } catch { return null; } };
+export const saved = day => { try { const s = JSON.parse(ls.getItem(KEY)); return s?.day === day && Array.isArray(s.ids) && Array.isArray(s.log) && s.log.every(l => typeof l?.jp === 'string') && s.station ? s : null; } catch { return null; } }; // a broken copy is ignored
 export const keep = c => ls.setItem(KEY, JSON.stringify(c));
 
 // One request at a time (a reopened view reuses it). Adds the AI's next line, or after the last reply, the grade.

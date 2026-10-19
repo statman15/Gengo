@@ -23,3 +23,6 @@ assert.ok(m[0].content.includes('1. みず (水): water') && m[0].content.includ
 assert.deepEqual(m.slice(2).map(x => x.role), ['assistant', 'user', 'assistant', 'user']);
 assert.ok(gradeMessages(c, words)[1].content.includes('Learner (reply 2): みず'));
 console.log('chat ok');
+import { saved, keep } from './chat.js';
+keep({ day: 'd', ids: null, log: [null] }); assert.equal(saved('d'), null, 'a broken cached chat is ignored');
+console.log('chat guards ok');
