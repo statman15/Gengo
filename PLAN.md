@@ -162,3 +162,9 @@ Review and research: `docs/superpowers/plans/2026-10-22-learning-path.md`. Chris
 - **Kanji**: none until both basic kana sets are learned; the reading rung asks how one of your own words with the kanji is read (家 → いえ), falling back to the kanji's reading only if you have none.
 - Existing learners keep every card; the rule cards and phrases are simply offered next.
 - Next on the list: tracks (5), numbers/time/money (6), grammar to N5/N4 (7), a real frequency list (8), travel themes (9).
+
+## Pace (2026-10-22, Chris)
+
+Gengo follows a realistic timeline instead of offering new items without limit: **kana by about week 3, N5 basics by about month 6, N4 by about month 12** (`pace.js`). Each stage has a daily new-item budget (kana 9, N5 6, N4 4 a day), scaled by the share of answers right over the last 7 days (92%+ ×1.25, 85%+ ×1, 75%+ ×0.75, below ×0.5). Heavy review loads slow it further: with 50+ cards due within a day new items drop to 2 a day, with 100+ they pause. When the day's new items are used up, Today says "That's everything new for today" and offers **Keep practising**: recent and weak cards in the usual drills, ungraded, so the FSRS schedule is untouched. Kana take three quarters of each batch while they remain (the phrases are the spoken "common words" alongside them); words follow. The Journey shows the stage, its share done and whether you are ahead, on or behind pace. Days now also record `learned`, `graded` and `right` (kept in backups).
+
+A year-long simulation with the real scheduler (learner recall = FSRS prediction) hit kana on day ~23, N5 by day ~170 and N4 by day ~365; a learner at ~80% of the predicted recall reached N5 by about month 10.

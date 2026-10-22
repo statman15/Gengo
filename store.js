@@ -50,7 +50,8 @@ export function revive(raw) {
   return {
     settings, custom: cust, mine, seen: strs(r.seen),
     cards: Object.fromEntries(ent(r.cards).filter(([id]) => knownId(id)).map(([id, c]) => [id, card(c)]).filter(([, c]) => c)),
-    days: Object.fromEntries(ent(r.days).filter(([, d]) => day(d?.reviews) && typeof d.cleared === 'boolean').map(([k, d]) => [k, { reviews: d.reviews, cleared: d.cleared }])),
+    days: Object.fromEntries(ent(r.days).filter(([, d]) => day(d?.reviews) && typeof d.cleared === 'boolean').map(([k, d]) => [k, { reviews: d.reviews, cleared: d.cleared,
+      ...Object.fromEntries(['learned', 'graded', 'right'].filter(f => day(d[f])).map(f => [f, d[f]])) }])), // learned/graded/right: pace.js
     race: Object.fromEntries(ent(r.race).filter(([, d]) => day(d?.time)).map(([k, d]) => [k, { time: d.time }])),
   };
 }

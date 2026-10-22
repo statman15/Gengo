@@ -3,7 +3,8 @@ import { newCard, review, isMastered, isKnown, isDue, rungFor, pickRung, ratingF
 import { db, save } from './store.js';
 import { dayKey } from './streak.js';
 import { speak, canHear, canSay, listen } from './speech.js';
-import { dueQueue, nextNew } from './session.js';
+import { dueQueue, nextNew, dueSoon, practiceQueue } from './session.js';
+import { budget, paceLine } from './pace.js';
 import * as acts from './activities.js';
 import { lessonHtml, ruleHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
@@ -25,12 +26,16 @@ import { keypad } from './keypad.js';
 document.documentElement.classList.add(os);
 
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
-const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine, kanji: loadedKanji() });
+const newIds = (n = db.settings.newBatch) => nextNew(db.cards, n, { words: loadedWords(), mine: db.mine, kanji: loadedKanji() });
+// New items still allowed today: the stage's daily pace, scaled by this week's accuracy, slowed when reviews pile up (pace.js).
+const left = () => budget(db.cards, loadedWords(), db.days, new Date(), dayKey(new Date()), dueSoon(db.cards, new Date()));
 // "5 kana", "3 words, a phrase and a grammar point": names what is in a new batch.
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length, s = k => n(k) > 1 ? 's' : '';
   return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('rule') && 'a spelling rule', n('phrase') && `${n('phrase') > 1 ? n('phrase') : 'a'} phrase${s('phrase')}`,
     n('word') && `${n('word')} word${s('word')}`, n('kanji') && `${n('kanji')} kanji`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
+// One graded review: counts toward today's reviews and this week's accuracy (rating 1 = wrong).
+const tally = rating => { const d = today(); d.reviews++; d.graded = (d.graded ?? 0) + 1; if (rating > 1) d.right = (d.right ?? 0) + 1; };
 // Today's story: the ids still to question (asked words that are still due), and whether Today offers it.
 const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id] && isDue(db.cards[id], new Date()));
 const storyOffer = () => { const s = saved(dayKey(new Date()));
@@ -45,11 +50,12 @@ const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 let sess = null;
 
 // Resolve what this device can do, then run the queue. learned = ids just learned: always the first rung, never stretched.
-async function begin(queue, learned = new Set()) {
+// practice: free practice while new items are paused; nothing is graded, so the schedule stays as FSRS set it.
+async function begin(queue, learned = new Set(), practice = false) {
   const h = location.hash, caps = { canHear: await canHear(), canSay: await canSay() };
   await loadSentences();
   if (location.hash !== h) return; // user navigated away while capabilities resolved
-  sess = { view: 'review', queue, fresh: learned, caps, i: 0, skipped: new Set() };
+  sess = { view: 'review', queue, fresh: learned, caps, i: 0, skipped: new Set(), practice };
   go('review');
 }
 
@@ -73,8 +79,8 @@ function finish(s) {
   go('today');
 }
 
-const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%';
-  return `<div class="plate cov"><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
+const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%', pace = paceLine(db.cards, loadedWords(), db.days, new Date());
+  return `<div class="plate cov"><span class="wide">${esc(pace.text)}${pace.accuracy ? `<br><small>${esc(pace.accuracy)}</small>` : ''}</span><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
 <span class="wide">Sentences you can read <b>${p(c.library)}</b></span></div>`; };
 
 const cartouche = i => `<div class="cartouche"><b>${STATIONS[i].jp}</b><small>${STATIONS[i].name} · ${i + 1} of 55</small></div>`;
@@ -102,7 +108,7 @@ const views = {
   today: { render: el => {
     const { station } = here(), last = Math.min(db.settings.lastStation, station), arriving = station > db.settings.lastStation;
     if (arriving) stage({ src: printSrc(last), focus: STATIONS[last].focus }); else stageHere();
-    const due = dueQueue(db.cards, new Date()).length, ids = newIds();
+    const due = dueQueue(db.cards, new Date()).length, room = left(), full = !due && room < 1, ids = full ? [] : newIds(Math.min(db.settings.newBatch, room));
     el.innerHTML = `<div class="screen">
       ${cartouche(station)}
       <div class="grow"></div>
@@ -111,6 +117,7 @@ const views = {
       ${storyOffer() ? '<div class="grow" style="flex:.25"></div><button class="plate" data-go="story">Read today’s story</button>' : ''}
       ${chatOffer() ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="chat">${talk.saved(dayKey(new Date())) ? 'Continue today’s chat' : `Chat at ${STATIONS[station].jp}`}</button>` : ''}
       ${!due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
+      ${full ? '<div class="grow" style="flex:.25"></div><p class="plate tip">That’s everything new for today. Learning a little each day sticks better than a lot at once. Keep practising what you’ve learned, or come back tomorrow.</p><button class="plate" data-go="practice">Keep practising</button>' : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
       <div class="friends"></div>
@@ -139,7 +146,7 @@ const views = {
   learn: { render: el => {
     stage({ recede: true });
     if (!sess && dueQueue(db.cards, new Date()).length) return go('today'); // reviews first, as Today offers them
-    const s = sess ??= { view: 'learn', ids: newIds(), i: 0 };
+    const s = sess ??= { view: 'learn', ids: left() > 0 ? newIds(Math.min(db.settings.newBatch, left())) : [], i: 0 };
     if (!s.ids.length) return go('today');
     const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, has = x => !!db.cards[x];
     const rd = a => [...new Set(a.map(x => x.replace(/[-.]/g, '')))].join('・'), uses = it.kind === 'kanji' ? acts.kanjiWords(it, has).slice(0, 3) : [];
@@ -161,11 +168,14 @@ const views = {
       if (!last) { s.i++; return show('learn'); }
       const now = new Date();
       for (const id of s.ids) db.cards[id] = newCard(now);
+      today().learned = (today().learned ?? 0) + s.ids.length;
       save();
       begin(s.ids, new Set(s.ids));
     };
     if (it.kind !== 'grammar' && it.kind !== 'rule') speak(say);
   } },
+  // Free practice of recent and weak cards while new items are paused (see budget in pace.js).
+  practice: { render: () => { stage({ recede: true }); begin(practiceQueue(db.cards, new Date()), new Set(), true); } },
   // The story, then one meaning question per marked word that is still due; each answer is that word's review.
   story: { render: el => {
     stage({ recede: true });
@@ -195,8 +205,9 @@ const views = {
       const l = s.lines.find(l => l.segs.some(g => g[1] === id));
       el.innerHTML = `<div class="screen">${bars(s.done.length, s.ids.length)}</div>`;
       acts.meaning($('.screen', el), item(id), `<div class="plate card sentence"><p lang="ja">${storyLine(l, id)}</p><p class="prompt">What does the marked word mean?</p><p class="prompt en" hidden>${esc(l.en)}</p></div>`, r => {
-        db.cards[id] = review(db.cards[id], ratingFor({ ...r, rung: 'read' }), new Date());
-        today().reviews++; s.done.push(id); keep(s); save();
+        const rating = ratingFor({ ...r, rung: 'read' });
+        db.cards[id] = review(db.cards[id], rating, new Date());
+        tally(rating); s.done.push(id); keep(s); save();
         setTimeout(() => { if (location.hash === '#story') ask(); }, r.correct ? 600 : 1200);
       }, { known }, () => el.querySelector('.en').hidden = false);
     };
@@ -254,7 +265,7 @@ const views = {
         if (c.grade && !c.applied) {
           const now = new Date();
           for (const id of c.ids) { const r = talk.rating(c.grade.words[id], c.log), card = db.cards[id];
-            if (r && card && isDue(card, now)) { db.cards[id] = review(card, r, now); today().reviews++; } }
+            if (r && card && isDue(card, now)) { db.cards[id] = review(card, r, now); tally(r); } }
           c.applied = true; talk.keep(c); save(); postStats();
         }
         draw();
@@ -280,8 +291,7 @@ const views = {
     const known = x => !!db.cards[x] && isKnown(db.cards[x]);
     (it.kind === 'kana' ? acts : acts.ACTS[it.kind])[rung]($('.screen', el), it, r => {
       if (sess !== s || s.i !== i) return; // left the session or already answered
-      db.cards[id] = review(card, ratingFor({ ...r, stretch, rung }), new Date());
-      today().reviews++;
+      if (!s.practice) { const rating = ratingFor({ ...r, stretch, rung }); db.cards[id] = review(card, rating, new Date()); tally(rating); }
       save(); // graded now, so leaving during the pause loses nothing
       setTimeout(() => { if (sess === s && s.i === i) { s.i++; show('review'); } }, r.correct && !r.speechFallback ? 600 : 1200);
     }, { known, has: x => !!db.cards[x], caps: s.caps });

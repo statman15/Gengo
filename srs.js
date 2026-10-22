@@ -2,6 +2,8 @@ import { fsrs, createEmptyCard } from './vendor/ts-fsrs.js';
 
 export const TUNING = {
   mastered: 21, known: 3, stretch: 0.2,
+  paceScale: [[0.92, 1.25], [0.85, 1], [0.75, 0.75], [0, 0.5]], // share right this week -> daily new-item budget multiplier (pace.js)
+  loadCap: 50, loadTrickle: 2, // cards due within a day: from loadCap new items slow to loadTrickle a day, from 2x they pause (pace.js)
   slowMs: { default: 8000, read: 12000, tiles: 15000, fill: 12000, form: 12000, build: 25000, translate: 60000, trace: 60000 },
   ladder: {
     kana: [['hear', 0], ['see', 3], ['say', 10]],

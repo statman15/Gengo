@@ -10,6 +10,15 @@ import { item } from './items.js';
 export const dueQueue = (cards, now) =>
   Object.keys(cards).filter(id => item(id) && isDue(cards[id], now)).sort((a, b) => new Date(cards[a].due) - new Date(cards[b].due));
 
+// Cards that fall due within the next day: tomorrow's review load.
+export const dueSoon = (cards, now) => Object.keys(cards).filter(id => item(id) && new Date(cards[id].due) <= new Date(+now + 864e5)).length;
+
+// Up to n cards to practise when new items are paused: those reviewed in the last day first, then the rest, weakest first.
+export function practiceQueue(cards, now, n = 10) {
+  const recent = id => !!cards[id].last_review && +now - new Date(cards[id].last_review) < 864e5;
+  return Object.keys(cards).filter(id => item(id)).sort((a, b) => recent(b) - recent(a) || cards[a].stability - cards[b].stability).slice(0, n);
+}
+
 // The next grammar point to offer: a pulled-forward one, else the first uncarded point once the one before it
 // has a card and enough words (w- and c-) have cards.
 export function grammarReady(cards, mine = {}) {
@@ -32,22 +41,24 @@ export function kanjiReady(cards, kanji) {
 // Words a phrase card already teaches (はい, ありがとう…): skipped so they aren't learned twice.
 const SAID = new Set(PHRASES.map(p => said(p.r)));
 
-// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), then a phrase or two
-// (learned by ear, so they start on day one), then half kana (and at most one spelling rule) / half words, either side filling the other.
+// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), then three quarters kana
+// (at most one spelling rule), a phrase or two (learned by ear, so they start on day one), then words, either side filling the other.
 export function nextNew(cards, n, { words = [], mine = {}, kanji = [] } = {}) {
   const out = [], g = grammarReady(cards, mine), mw = (mine.words ?? []).filter(id => item(id));
   if (g && n) out.push(g.id);
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
   out.push(...kanjiReady(cards, kanji).slice(0, Math.min(n - out.length, Math.max(1, Math.floor(n / 4))))); // a quarter, rounded down: words stay the bulk
   const have = new Set(Object.keys(cards).map(item).filter(x => x?.kind === 'word').map(x => x.r)); // a word card already teaches it (learned before phrases existed)
-  out.push(...PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, Math.min(n - out.length, Math.max(1, Math.round(n / 5)))).map(p => p.id));
-  const rest = n - out.length;
+  const phrases = PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, Math.max(1, Math.round(n / 5))).map(p => p.id);
   const left = LEARN.filter(id => !cards[id]), second = left.findIndex((id, i) => id.startsWith('r-') && left.slice(0, i).some(x => x.startsWith('r-')));
   const kana = second < 0 ? left : left.slice(0, second); // one rule lesson per batch, and nothing past the next rule until it is learned
+  // Kana take three quarters of what's left, then the phrase(s), then words. While kana remain, words only fill gaps.
+  const room = n - out.length, ph = phrases.slice(0, room), k0 = Math.min(kana.length, Math.ceil(room * 3 / 4), room - ph.length);
+  const rest = room - ph.length;
   const ws = [];
   for (const w of words) { if (ws.length >= rest) break; if (!cards[w.id] && !mw.includes(w.id) && !SAID.has(w.r) && eligible(w, cards)) ws.push(w.id); } // stop at `rest`: no need to scan all words
-  const k = Math.min(kana.length, Math.max(Math.ceil(rest / 2), rest - ws.length));
-  return [...out, ...kana.slice(0, k), ...ws.slice(0, rest - k)];
+  const k = Math.min(kana.length, Math.max(k0, rest - ws.length)); // kana first: both sets in about 3 weeks
+  return [...out, ...ph, ...kana.slice(0, k), ...ws.slice(0, rest - k)];
 }
 
 const shuffle = (a, rand) => {

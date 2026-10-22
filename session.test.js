@@ -64,7 +64,7 @@ for (const stability of [0, 5, 12, 30]) for (const r of [0, .1, .5, .99])
   const cards = { ...said, 'h-a': {}, 'h-i': {}, 'h-u': {}, 'h-e': {}, 'h-o': {}, 'h-ka': {}, 'w-い': {} };
   for (const n of [1, 3, 4]) {
     const ws = words.filter(w => !cards[w.id] && eligible(w, cards)).map(w => w.id), rest = n;
-    const kana = LEARN.filter(id => !cards[id]).slice(0, 46), k = Math.min(kana.length, Math.max(Math.ceil(rest / 2), rest - ws.length));
+    const kana = LEARN.filter(id => !cards[id]).slice(0, 46), k = Math.min(kana.length, Math.max(Math.ceil(rest * 3 / 4), rest - ws.length));
     assert.deepEqual(nextNew(cards, n, { words }), [...kana.slice(0, k), ...ws.slice(0, rest - k)]);
   }
 }
@@ -78,7 +78,7 @@ assert.equal(LEARN.at(-1), 'r-kata-ext');
 const ky = [W('w-k', 'きって'), W('w-s', 'しゃしん'), W('w-h', 'はい'), W('w-x', 'すし')];
 const hiraOnly = { ...hira, ...Object.fromEntries(['r-particles', 'r-marks'].map(id => [id, card()])) };
 assert.deepEqual(nextNew(hiraOnly, 4, { words: ky }).filter(id => id.startsWith('w-')), ['w-x'], 'っ, small ゃ and はい held back');
-assert.deepEqual(nextNew({ ...hiraOnly, 'r-sokuon': card(), 'r-youon': card() }, 8, { words: ky }).filter(id => id.startsWith('w-')), ['w-k', 'w-s', 'w-x']);
+assert.deepEqual(nextNew({ ...hiraOnly, 'r-sokuon': card(), 'r-youon': card() }, 12, { words: ky }).filter(id => id.startsWith('w-')), ['w-k', 'w-s', 'w-x']);
 // Kanji wait for both basic kana sets.
 db.custom['c-2'] = { r: 'いえ', w: '家', m: ['house'] };
 const ks = [{ id: 'k-家', k: '家' }], wk = { 'c-2': card() };
@@ -102,3 +102,14 @@ console.log('session ok');
   for (let t = 0; t < 20; t++) assert.ok(choices(a, KANA, rand, two).every(x => !/^[gzdbpj]/.test(x.sound)));
 }
 console.log('phrase skip ok');
+{ // review load: cards due within a day; practice takes recent cards first, then the weakest
+  const { dueSoon, practiceQueue } = await import('./session.js');
+  const ids = KANA.map(k => k.id), at = (d, extra) => ({ ...newCard(now), due: new Date(+now + d * 864e5), ...extra });
+  const c = Object.fromEntries(ids.slice(0, 60).map((id, i) => [id, at(i < 49 ? 0.5 : 3)]));
+  assert.equal(dueSoon(c, now), 49);
+  c[ids[59]] = at(0.9);
+  assert.equal(dueSoon(c, now), 50, 'due within a day');
+  const p = { 'h-a': at(5, { stability: 9 }), 'h-i': at(5, { stability: 1 }), 'h-u': at(5, { stability: 20, last_review: new Date(+now - 3600e3) }), 'w-404': at(5, { stability: 0 }) };
+  assert.deepEqual(practiceQueue(p, now), ['h-u', 'h-i', 'h-a'], 'reviewed today first, then weakest; unknown ids dropped');
+}
+console.log('load ok');
