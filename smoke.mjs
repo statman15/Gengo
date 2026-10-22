@@ -37,7 +37,11 @@ try {
 
   step = 'load app';
   await page.goto(origin + '/', { waitUntil: 'networkidle0' });
-  await page.waitForFunction(() => document.querySelector('#app .seal'));
+  await page.waitForFunction(() => document.querySelector('#app .tracks [data-track]'));
+
+  step = 'choose a path';
+  await page.evaluate(() => document.querySelector('#app [data-track="whole"]').click());
+  await page.waitForFunction(() => document.querySelector('#app .seal') && !document.querySelector('#app .tracks'));
 
   step = 'settings view';
   await page.evaluate(() => { location.hash = 'settings'; });
@@ -56,4 +60,4 @@ try {
 }
 
 if (errors.length) { console.error(`FAIL (${errors.length}):\n  ${[...new Set(errors)].join('\n  ')}`); process.exit(1); }
-console.log('PASS smoke: app loads, home, settings, words and grammar views render, no console errors');
+console.log('PASS smoke: app loads, path picker, home, settings, words and grammar views render, no console errors');

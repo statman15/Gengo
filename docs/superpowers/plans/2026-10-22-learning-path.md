@@ -1,6 +1,6 @@
 # Learning path review (2026-10-22)
 
-The question: what order of kana, kanji, words and grammar gives the most Japanese for the time spent, how does Gengo compare today, and should there be separate tracks (whole language, conversation, travel)? Changes 1–4 are built; 5–9 are still proposals.
+The question: what order of kana, kanji, words and grammar gives the most Japanese for the time spent, how does Gengo compare today, and should there be separate tracks (whole language, conversation, travel)? Changes 1–5 are built (and travel themes from 9); 6–8 are still proposals. Pace was added on top (PLAN.md "Pace").
 
 ## What the evidence says
 

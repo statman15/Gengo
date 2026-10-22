@@ -32,7 +32,7 @@ function card(c) {
   return { ...out, due, ...(last && { last_review: last }) };
 }
 
-const SETTINGS = { name: ['string', ''], deviceId: ['string', ''], groupCode: ['string', ''], lastBackup: ['number', null], newBatch: ['number', 5], lastStation: ['number', 0], voiceTipShown: ['boolean', false] };
+const SETTINGS = { name: ['string', ''], deviceId: ['string', ''], groupCode: ['string', ''], lastBackup: ['number', null], newBatch: ['number', 5], lastStation: ['number', 0], voiceTipShown: ['boolean', false], track: ['string', ''] };
 // revive is pure: raw (parsed JSON or anything) in, a clean db out.
 export function revive(raw) {
   const r = raw && typeof raw === 'object' ? raw : {}, ent = o => Object.entries(o && typeof o === 'object' ? o : {});
@@ -44,6 +44,7 @@ export function revive(raw) {
   const ls = settings.lastStation; // a station index: integer 0..54
   if (!Number.isInteger(ls) || ls < 0 || ls > 54) settings.lastStation = Math.max(0, Math.min(54, Math.floor(ls)));
   if (![3, 5, 8, 10].includes(settings.newBatch)) settings.newBatch = 5;
+  if (!['', 'travel', 'talk', 'whole'].includes(settings.track)) settings.track = ''; // '' = not chosen yet: Today asks
   const cust = Object.fromEntries(ent(r.custom).filter(([id]) => /^c-\d+$/.test(id)).map(([id, e]) => [id, custom(e)]).filter(([, e]) => e));
   const knownId = id => KNOWN.has(id) || wordId(id) || /^k-\p{Script=Han}$/u.test(id) || grammarId(id) || (/^c-\d+$/.test(id) && Object.hasOwn(cust, id));
   const mine = { words: strs(r.mine?.words).filter(id => wordId(id) || Object.hasOwn(cust, id)), grammar: strs(r.mine?.grammar).filter(grammarId) };

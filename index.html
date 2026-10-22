@@ -142,6 +142,9 @@ ruby:not(.on) rt { visibility: hidden; }
 rt { font-size: .45em; letter-spacing: .04em; }
 ruby:not(.on) { cursor: pointer; }
 .kana.word { font-size: clamp(3.4rem, 17vw, 4.8rem); line-height: 1.5; }
+.tracks { display: grid; gap: 6px; padding: 10px 12px; font-size: .9rem; } .tracks p { margin: 0 0 2px; }
+.tracks .choice { display: grid; gap: 1px; text-align: left; padding: 8px 12px; min-height: 0; font-size: 1rem; } .tracks .choice small { font-size: .8rem; font-weight: 400; color: var(--ink-2); line-height: 1.25; }
+.set.track .opts { flex-wrap: wrap; justify-content: flex-end; }
 .kana.word.phrase { font-size: clamp(2rem, 10vw, 3rem); line-height: 1.35; }
 .sentence { text-align: left; }
 .sentence p[lang] { margin: 0 0 12px; font-family: var(--mincho); font-size: 1.6rem; line-height: 2.3; }

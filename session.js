@@ -2,6 +2,7 @@ import { isDue } from './srs.js';
 import { KANA, LOOK } from './kana.js';
 import { LEARN, BASIC } from './rules.js';
 import { PHRASES, said } from './phrases.js';
+import { trackOf } from './tracks.js';
 import { GRAMMAR } from './grammar.js';
 import { eligible } from './words.js';
 import { item } from './items.js';
@@ -19,11 +20,12 @@ export function practiceQueue(cards, now, n = 10) {
   return Object.keys(cards).filter(id => item(id)).sort((a, b) => recent(b) - recent(a) || cards[a].stability - cards[b].stability).slice(0, n);
 }
 
-// The next grammar point to offer: a pulled-forward one, else the first uncarded point once the one before it
-// has a card and enough words (w- and c-) have cards.
-export function grammarReady(cards, mine = {}) {
+// The next grammar point to offer: a pulled-forward one, else (unless auto is off, as on the Travel track) the first
+// uncarded point once the one before it has a card and enough words (w- and c-) have cards.
+export function grammarReady(cards, mine = {}, auto = true) {
   const pulled = (mine.grammar ?? []).find(id => !cards[id]);
   if (pulled) return GRAMMAR.find(g => g.id === pulled) ?? null;
+  if (!auto) return null;
   const i = GRAMMAR.findIndex(g => !cards[g.id]);
   if (i < 0 || (i && !cards[GRAMMAR[i - 1].id])) return null;
   const n = Object.keys(cards).filter(id => /^[wc]-/.test(id) && item(id)).length; // only words that exist: a junk backup can't unlock grammar
@@ -31,9 +33,11 @@ export function grammarReady(cards, mine = {}) {
 }
 
 // Kanji ids not yet carded that appear in a word you are learning, in kanji.json order (N5 first, most frequent first).
-// None until both basic kana sets are carded: kanji wait until you can write their readings.
-export function kanjiReady(cards, kanji) {
-  if (!BASIC.every(id => cards[id])) return [];
+// None until both basic kana sets are carded: kanji wait until you can write their readings. mode: 'full' (all),
+// 'light' (N5 kanji only, Conversation) or 'none' (Travel: signs are learned as words).
+export function kanjiReady(cards, kanji, mode = 'full') {
+  if (mode === 'none' || !BASIC.every(id => cards[id])) return [];
+  if (mode === 'light') kanji = kanji.filter(k => k.j === 5);
   const seen = new Set(Object.keys(cards).filter(id => /^[wc]-/.test(id)).flatMap(id => [...(item(id)?.w ?? '')]));
   return kanji.filter(k => !cards[k.id] && seen.has(k.k)).map(k => k.id);
 }
@@ -43,13 +47,16 @@ const SAID = new Set(PHRASES.map(p => said(p.r)));
 
 // Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), then three quarters kana
 // (at most one spelling rule), a phrase or two (learned by ear, so they start on day one), then words, either side filling the other.
-export function nextNew(cards, n, { words = [], mine = {}, kanji = [] } = {}) {
-  const out = [], g = grammarReady(cards, mine), mw = (mine.words ?? []).filter(id => item(id));
+// track: a TRACKS entry (tracks.js); words should already be in that track's order (wordOrder).
+export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = trackOf() } = {}) {
+  const out = [], g = grammarReady(cards, mine, track.grammar), mw = (mine.words ?? []).filter(id => item(id));
   if (g && n) out.push(g.id);
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
-  out.push(...kanjiReady(cards, kanji).slice(0, Math.min(n - out.length, Math.max(1, Math.floor(n / 4))))); // a quarter, rounded down: words stay the bulk
+  const kn = track.kanji === 'light' ? 1 : Math.max(1, Math.floor(n / 4)); // a quarter, rounded down (one on Conversation): words stay the bulk
+  out.push(...kanjiReady(cards, kanji, track.kanji).slice(0, Math.min(n - out.length, kn)));
+  const kanaLeft = LEARN.some(id => !cards[id]);
   const have = new Set(Object.keys(cards).map(item).filter(x => x?.kind === 'word').map(x => x.r)); // a word card already teaches it (learned before phrases existed)
-  const phrases = PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, Math.max(1, Math.round(n / 5))).map(p => p.id);
+  const phrases = PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, kanaLeft ? 1 : Math.max(1, Math.round(n * track.phrases / 5))).map(p => p.id); // one a batch while kana remain
   const left = LEARN.filter(id => !cards[id]), second = left.findIndex((id, i) => id.startsWith('r-') && left.slice(0, i).some(x => x.startsWith('r-')));
   const kana = second < 0 ? left : left.slice(0, second); // one rule lesson per batch, and nothing past the next rule until it is learned
   // Kana take three quarters of what's left, then the phrase(s), then words. While kana remain, words only fill gaps.

@@ -5,6 +5,7 @@ import { dayKey } from './streak.js';
 import { speak, canHear, canSay, listen } from './speech.js';
 import { dueQueue, nextNew, dueSoon, practiceQueue } from './session.js';
 import { budget, paceLine } from './pace.js';
+import { TRACKS, trackOf, wordOrder } from './tracks.js';
 import * as acts from './activities.js';
 import { lessonHtml, ruleHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
@@ -26,9 +27,10 @@ import { keypad } from './keypad.js';
 document.documentElement.classList.add(os);
 
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
-const newIds = (n = db.settings.newBatch) => nextNew(db.cards, n, { words: loadedWords(), mine: db.mine, kanji: loadedKanji() });
+const trk = () => trackOf(db.settings.track);
+const newIds = (n = db.settings.newBatch) => nextNew(db.cards, n, { words: wordOrder(loadedWords(), trk()), mine: db.mine, kanji: loadedKanji(), track: trk() });
 // New items still allowed today: the stage's daily pace, scaled by this week's accuracy, slowed when reviews pile up (pace.js).
-const left = () => budget(db.cards, loadedWords(), db.days, new Date(), dayKey(new Date()), dueSoon(db.cards, new Date()));
+const left = () => budget(db.cards, loadedWords(), db.days, new Date(), dayKey(new Date()), dueSoon(db.cards, new Date()), !!trk().travel);
 // "5 kana", "3 words, a phrase and a grammar point": names what is in a new batch.
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length, s = k => n(k) > 1 ? 's' : '';
   return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('rule') && 'a spelling rule', n('phrase') && `${n('phrase') > 1 ? n('phrase') : 'a'} phrase${s('phrase')}`,
@@ -44,6 +46,9 @@ const storyLine = (l, markId) => l.segs.map(([t, id]) => id && (!markId || id ==
 // Today's chat: offered once MIN due words are free of today's story; stays on Today until it is graded.
 const chatOffer = () => { const day = dayKey(new Date()), c = talk.saved(day);
   return c ? !c.applied : aiReady() && talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids).length >= talk.MIN; };
+// Today's one-time question (new learners, and anyone from before tracks): which path. Settings can change it later.
+const trackPicker = () => `<div class="plate tracks"><p>Choose your path. You can switch any time in Settings and keep everything.</p>${
+  Object.entries(TRACKS).map(([k, t]) => `<button class="choice" data-track="${k}"><b>${t.name}</b><small>${t.short}</small></button>`).join('')}</div>`;
 const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
 // The live session ({view:'learn'|'review', ...}); show() drops it whenever the user leaves for another view.
@@ -79,7 +84,7 @@ function finish(s) {
   go('today');
 }
 
-const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%', pace = paceLine(db.cards, loadedWords(), db.days, new Date());
+const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%', pace = paceLine(db.cards, loadedWords(), db.days, new Date(), !!trk().travel);
   return `<div class="plate cov"><span class="wide">${esc(pace.text)}${pace.accuracy ? `<br><small>${esc(pace.accuracy)}</small>` : ''}</span><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
 <span class="wide">Sentences you can read <b>${p(c.library)}</b></span></div>`; };
 
@@ -113,16 +118,18 @@ const views = {
       ${cartouche(station)}
       <div class="grow"></div>
       ${due ? `<button class="seal" data-go="review" aria-label="${due} due. Start review"><b>${due}</b><span>始</span></button>`
-        : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
+        : !db.settings.track ? '' : '<button class="seal done" aria-label="Nothing due today"><b>0</b><span>済</span></button>'}
       ${storyOffer() ? '<div class="grow" style="flex:.25"></div><button class="plate" data-go="story">Read today’s story</button>' : ''}
       ${chatOffer() ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="chat">${talk.saved(dayKey(new Date())) ? 'Continue today’s chat' : `Chat at ${STATIONS[station].jp}`}</button>` : ''}
-      ${!due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
-      ${full ? '<div class="grow" style="flex:.25"></div><p class="plate tip">That’s everything new for today. Learning a little each day sticks better than a lot at once. Keep practising what you’ve learned, or come back tomorrow.</p><button class="plate" data-go="practice">Keep practising</button>' : ''}
+      ${!db.settings.track ? trackPicker()
+        : !due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
+      ${full && db.settings.track ? '<div class="grow" style="flex:.25"></div><p class="plate tip">That’s everything new for today. Learning a little each day sticks better than a lot at once. Keep practising what you’ve learned, or come back tomorrow.</p><button class="plate" data-go="practice">Keep practising</button>' : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
-      <div class="friends"></div>
+      ${db.settings.track ? '<div class="friends"></div>' : ''}
       ${nav('today')}</div>`;
-    homeFriends($('.friends', el));
+    el.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { db.settings.track = b.dataset.track; save(); show('today'); });
+    if (db.settings.track) homeFriends($('.friends', el)); // the path picker needs the room on small phones
     tips($('.tips', el));
     if (arriving) arrive(station); else if (ended) milestone();
     ended = false;
@@ -145,7 +152,7 @@ const views = {
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.
   learn: { render: el => {
     stage({ recede: true });
-    if (!sess && dueQueue(db.cards, new Date()).length) return go('today'); // reviews first, as Today offers them
+    if (!sess && (dueQueue(db.cards, new Date()).length || !db.settings.track)) return go('today'); // reviews first, and a track chosen, as Today asks
     const s = sess ??= { view: 'learn', ids: left() > 0 ? newIds(Math.min(db.settings.newBatch, left())) : [], i: 0 };
     if (!s.ids.length) return go('today');
     const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, has = x => !!db.cards[x];
@@ -285,7 +292,9 @@ const views = {
     if (s.i >= s.queue.length) return finish(s);
     const i = s.i, id = s.queue[i], card = db.cards[id], it = item(id);
     const can = it.kind === 'word' ? acts.canWord(it, s.caps) : it.kind === 'grammar' ? canGrammar(it, db.cards) : r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
-    const { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, ladderFor(it), can), stretch: false } : pickRung(card, ladderFor(it), can, Math.random);
+    let { rung, stretch } = s.fresh.has(id) ? { rung: rungFor(card, ladderFor(it), can), stretch: false } : pickRung(card, ladderFor(it), can, Math.random);
+    // Conversation leans on listening: a reading drill on a word or phrase becomes a listening one about half the time.
+    if (!s.fresh.has(id) && (it.kind === 'word' || it.kind === 'phrase') && ['see', 'read', 'tiles'].includes(rung) && can('hear') && Math.random() < trk().listen) [rung, stretch] = ['hear', false];
     if (!rung) { s.skipped.add(id); s.i++; return show('review'); } // nothing this card can do on this device: skip, ungraded
     el.innerHTML = `<div class="screen">${bars(i, s.queue.length)}</div>`;
     const known = x => !!db.cards[x] && isKnown(db.cards[x]);

@@ -19,7 +19,8 @@ assert.deepEqual(dueQueue({
 assert.deepEqual(dueQueue({ 'h-a': at('2026-10-15T09:00:00'), 'w-999': at('2026-10-15T09:00:00') }, now), ['h-a'], 'unknown ids skipped');
 assert.deepEqual(nextNew({}, 5), ['p-hai', 'h-a', 'h-i', 'h-u', 'h-e'], 'a phrase from day one, then hiragana');
 assert.deepEqual(nextNew({ 'h-a': {}, 'h-u': {} }, 3), ['p-hai', 'h-i', 'h-e']);
-assert.equal(nextNew({}, 10).filter(id => id.startsWith('p-')).length, 2, 'two phrases in a batch of 10');
+assert.equal(nextNew({}, 10).filter(id => id.startsWith('p-')).length, 1, 'one phrase a batch while kana remain');
+assert.equal(nextNew(Object.fromEntries(LEARN.map(id => [id, {}])), 10).filter(id => id.startsWith('p-')).length, 2, 'two in a batch of 10 after kana');
 
 const W = (id, r) => ({ id, r }), words = [W('w-1', 'あお'), W('w-2', 'アイス'), W('w-3', 'いえ')];
 const card = () => newCard(now);

@@ -168,3 +168,12 @@ Review and research: `docs/superpowers/plans/2026-10-22-learning-path.md`. Chris
 Gengo follows a realistic timeline instead of offering new items without limit: **kana by about week 3, N5 basics by about month 6, N4 by about month 12** (`pace.js`). Each stage has a daily new-item budget (kana 9, N5 6, N4 4 a day), scaled by the share of answers right over the last 7 days (92%+ ×1.25, 85%+ ×1, 75%+ ×0.75, below ×0.5). Heavy review loads slow it further: with 50+ cards due within a day new items drop to 2 a day, with 100+ they pause. When the day's new items are used up, Today says "That's everything new for today" and offers **Keep practising**: recent and weak cards in the usual drills, ungraded, so the FSRS schedule is untouched. Kana take three quarters of each batch while they remain (the phrases are the spoken "common words" alongside them); words follow. The Journey shows the stage, its share done and whether you are ahead, on or behind pace. Days now also record `learned`, `graded` and `right` (kept in backups).
 
 A year-long simulation with the real scheduler (learner recall = FSRS prediction) hit kana on day ~23, N5 by day ~170 and N4 by day ~365; a learner at ~80% of the predicted recall reached N5 by about month 10.
+
+## Tracks (2026-10-22, Chris)
+
+Three paths, chosen on Today before the first lesson (and once by everyone from before tracks), changeable in Settings > Path; every card and the schedule are shared, so switching keeps all progress (`tracks.js`). Hiragana, then katakana, on every path.
+- **Travel**: one phrase a batch while kana remain, then two; then the 196 travel words (`travel.js`: signs, food, transport, hotel, shopping, time and places, health, taught one theme at a time in turn), then the usual order. No kanji cards (signs are learned as words, by meaning) and no automatic grammar (a point added from the Grammar list still comes). Timeline: kana ~week 3, travel set ~month 2, then N5 ~month 6.
+- **Conversation**: light kanji (N5 kanji only, one a batch, no tracing); about half the word and phrase reviews become listening drills; speaking (Android) comes in at half the usual stability.
+- **Whole language**: the path from before, kanji with tracing.
+- Better travel glosses for 16 words on every path (急行 express (train), 会計 the bill, 高い expensive; high…).
+- Year-long simulation, average learner: Travel kana day 22, travel set ~day 50, N4 by month 12; Conversation and Whole kana ~day 22, N5 ~month 6, N4 ~month 12.

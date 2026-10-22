@@ -1,3 +1,4 @@
+import { TRACKS, trackOf } from './tracks.js';
 import { $, esc, sheet, nav } from './ui.js';
 import { db, save, exportJSON, importJSON, reset } from './store.js';
 import { dayKey } from './streak.js';
@@ -58,6 +59,8 @@ export const settings = { render: el => {
     <div class="plate set"><span>Group${groupCode ? `<br><b class="code">${esc(groupCode)}</b>` : ''}</span><span class="acts">${
       groupCode ? '<button data-share>Share Invite</button><button data-leave>Leave Group</button>'
       : configured() ? '<button data-create>Create Group</button><button data-join>Join Group</button>' : '<span class="muted">Not set up yet</span>'}</span></div>
+    <div class="plate set track"><span>Path<br><small class="muted">${esc(trackOf(db.settings.track).blurb)}</small></span><div class="opts" role="group" aria-label="Learning path">${
+      Object.entries(TRACKS).map(([k, t]) => `<button data-track="${k}" aria-pressed="${k === (db.settings.track || 'whole')}">${t.name}</button>`).join('')}</div></div>
     <div class="plate set"><span>New per batch</span><div class="opts" role="group" aria-label="New per batch">${
       [3, 5, 8, 10].map(n => `<button data-batch="${n}" aria-pressed="${n === newBatch}">${n}</button>`).join('')}</div></div>
     <div class="plate set"><span>Backup${backupDue() ? `<br><small class="muted">${db.settings.lastBackup == null ? 'Not backed up yet' : 'Last backup over 14 days ago'}</small>` : ''}</span><span class="acts"><button data-backup>Save Backup</button><button data-restore>Restore Backup</button><input type="file" class="vh" accept=".json,application/json" tabindex="-1" aria-hidden="true"></span></div>
@@ -79,6 +82,7 @@ export const settings = { render: el => {
     if (n.length < 1 || n.length > 20) return void (e.target.value = db.settings.name);
     db.settings.name = n; save(); postStats();
   };
+  el.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { db.settings.track = b.dataset.track; save(); again(); });
   el.querySelectorAll('[data-batch]').forEach(b => b.onclick = () => { db.settings.newBatch = +b.dataset.batch; save(); again(); });
   $('[data-backup]', el).onclick = async () => { if (await saveBackup()) ok('Backup saved'); };
   const file = $('input[type=file]', el);
