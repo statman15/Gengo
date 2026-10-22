@@ -7,7 +7,7 @@ import { KANA } from './kana.js';
 // Prompt rules that keep the AI to what the learner has learned: their words, their kana, their grammar.
 // ponytail: the list is capped at 400 words (most recent last); trim further if prompts get slow on a free key.
 export function limits(cards) {
-  const words = Object.keys(cards).map(item).filter(x => x?.kind === 'word').slice(-400).map(w => `${w.r}=${w.m[0]}`);
+  const words = Object.keys(cards).map(item).filter(x => x?.kind === 'word' || x?.kind === 'phrase').slice(-400).map(w => `${w.r}=${w.m[0]}`);
   const kana = KANA.filter(k => cards[k.id]).map(k => k.kana), grammar = GRAMMAR.filter(g => cards[g.id]).map(g => `${g.title} (${g.en})`);
   return `- Use ONLY words the learner has learned (any polite form of them), plus particles and です/ます. If you need another word, say it differently with these. Learned words: ${words.join(', ') || '(none yet)'}.
 ${kana.length < KANA.length ? `- Use ONLY these kana: ${kana.join('')}.

@@ -10,7 +10,8 @@ assert.deepEqual(kanaIds('コーヒー'), ['k-ko', 'k-hi']);
 assert.deepEqual(kanaIds('ヴァイオリン'), ['k-u', 'k-a', 'k-i', 'k-o', 'k-ri', 'k-n']);
 const cards = Object.fromEntries(['h-ki', 'h-tsu'].map(id => [id, {}]));
 assert.equal(eligible({r: 'きって'}, cards), false);
-assert.equal(eligible({r: 'きって'}, {...cards, 'h-te': {}}), true);
+assert.equal(eligible({r: 'きって'}, {...cards, 'h-te': {}}), false, 'small っ waits for its rule');
+assert.equal(eligible({r: 'きって'}, {...cards, 'h-te': {}, 'r-sokuon': {}}), true);
 const W = [{id: 'w-1', r: 'がくせい', w: '学生', m: ['student'], p: 'n'}, {id: 'w-2', r: 'いく', w: '行く', m: ['to go'], p: 'v'},
   {id: 'w-3', r: 'まいる', w: '参る', m: ['to go', 'to come'], p: 'v'}, {id: 'w-4', r: 'たべる', w: '食べる', m: ['to eat'], p: 'v'},
   {id: 'w-5', r: 'のむ', w: '飲む', m: ['to drink'], p: 'v'}, {id: 'w-6', r: 'みる', w: '見る', m: ['to see'], p: 'v'}];

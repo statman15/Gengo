@@ -5,13 +5,14 @@ import { dayKey } from './streak.js';
 import { speak, canHear, canSay, listen } from './speech.js';
 import { dueQueue, nextNew } from './session.js';
 import * as acts from './activities.js';
-import { lessonHtml, wireHear, canGrammar } from './grammar-acts.js';
+import { lessonHtml, ruleHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
 import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings } from './settings.js';
 import { STATIONS, printSrc, stationCost } from './journey.js';
+import { HINT } from './kana.js';
 import { words, grammar, kana } from './lists.js';
 import { checkUpdate } from './update.js';
 import { coverage, fresh } from './coverage.js';
@@ -25,9 +26,10 @@ document.documentElement.classList.add(os);
 
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
 const newIds = () => nextNew(db.cards, db.settings.newBatch, { words: loadedWords(), mine: db.mine, kanji: loadedKanji() });
-// "5 kana", "3 words and は": names what is in a new batch.
-const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length;
-  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('word') && `${n('word')} word${n('word') > 1 ? 's' : ''}`, n('kanji') && `${n('kanji')} kanji`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
+// "5 kana", "3 words, a phrase and a grammar point": names what is in a new batch.
+const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length, s = k => n(k) > 1 ? 's' : '';
+  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('rule') && 'a spelling rule', n('phrase') && `${n('phrase') > 1 ? n('phrase') : 'a'} phrase${s('phrase')}`,
+    n('word') && `${n('word')} word${s('word')}`, n('kanji') && `${n('kanji')} kanji`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 // Today's story: the ids still to question (asked words that are still due), and whether Today offers it.
 const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id] && isDue(db.cards[id], new Date()));
@@ -139,19 +141,22 @@ const views = {
     if (!sess && dueQueue(db.cards, new Date()).length) return go('today'); // reviews first, as Today offers them
     const s = sess ??= { view: 'learn', ids: newIds(), i: 0 };
     if (!s.ids.length) return go('today');
-    const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, say = it.kana ?? it.r ?? acts.kanjiReading(it);
-    const rd = a => [...new Set(a.map(x => x.replace(/[-.]/g, '')))].join('・'), uses = it.kind === 'kanji' ? Object.keys(db.cards).map(item).filter(x => x?.kind === 'word' && x.w.includes(it.k)).slice(0, 3) : [];
+    const it = item(s.ids[s.i]), last = s.i === s.ids.length - 1, has = x => !!db.cards[x];
+    const rd = a => [...new Set(a.map(x => x.replace(/[-.]/g, '')))].join('・'), uses = it.kind === 'kanji' ? acts.kanjiWords(it, has).slice(0, 3) : [];
+    const say = it.kana ?? it.r ?? uses[0]?.r ?? acts.kanjiReading(it); // a kanji speaks as your word that uses it
     const face = it.kind === 'grammar' ? `<div class="plate card">${lessonHtml(it)}</div>`
+      : it.kind === 'rule' ? `<div class="plate card">${ruleHtml(it)}</div>`
+      : it.kind === 'phrase' ? `<button class="plate card" data-hear aria-label="Hear ${esc(it.m[0])}">${acts.phraseFace(it, { has })}<p class="gloss-big">${esc(it.m[0])}</p><p class="prompt">Tap to hear it</p></button>`
       : it.kind === 'kanji' ? `<button class="plate card" data-hear aria-label="Hear ${esc(it.m[0])}"><div class="kana" lang="ja">${esc(it.k)}</div><p class="gloss-big">${esc(it.m.join(' · '))}</p>
         ${it.on.length ? `<p class="prompt">On <span lang="ja">${esc(rd(it.on))}</span></p>` : ''}${it.kun.length ? `<p class="prompt">Kun <span lang="ja">${esc(rd(it.kun))}</span></p>` : ''}
         ${uses.map(x => `<p class="prompt"><span lang="ja">${ruby(x.w, x.r, true)}</span> ${esc(x.m[0])}</p>`).join('')}<p class="prompt">Tap to hear it</p></button>`
-      : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="gloss-big">${esc(it.sound)}</p>`
+      : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="gloss-big">${esc(it.sound)}</p>${HINT[it.kana] ? `<p class="prompt">${esc(HINT[it.kana])}</p>` : ''}`
         : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="gloss-big">${esc(it.m[0])}</p>${it.m.length > 1 ? `<p class="prompt">${esc(it.m.slice(1, 3).join(' · '))}</p>` : ''}`}<p class="prompt">Tap to hear it</p></button>`;
     el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}${face}
       <div class="grow"></div>
       <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
       <div class="grow" style="flex:.4"></div></div>`;
-    if (it.kind === 'grammar') wireHear($('.card', el)); else $('[data-hear]', el).onclick = () => speak(say);
+    if (it.kind === 'grammar' || it.kind === 'rule') wireHear($('.card', el)); else $('[data-hear]', el).onclick = () => speak(say);
     $('[data-next]', el).onclick = () => {
       if (!last) { s.i++; return show('learn'); }
       const now = new Date();
@@ -159,7 +164,7 @@ const views = {
       save();
       begin(s.ids, new Set(s.ids));
     };
-    if (it.kind !== 'grammar') speak(say);
+    if (it.kind !== 'grammar' && it.kind !== 'rule') speak(say);
   } },
   // The story, then one meaning question per marked word that is still due; each answer is that word's review.
   story: { render: el => {
@@ -279,7 +284,7 @@ const views = {
       today().reviews++;
       save(); // graded now, so leaving during the pause loses nothing
       setTimeout(() => { if (sess === s && s.i === i) { s.i++; show('review'); } }, r.correct && !r.speechFallback ? 600 : 1200);
-    }, { known, caps: s.caps });
+    }, { known, has: x => !!db.cards[x], caps: s.caps });
   } },
 };
 

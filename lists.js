@@ -4,7 +4,9 @@ import { db, addMine, addCustom, parseList } from './store.js';
 import { search } from './words.js';
 import { item, loadedWords } from './items.js';
 import { GRAMMAR } from './grammar.js';
-import { lessonHtml, wireHear } from './grammar-acts.js';
+import { lessonHtml, ruleHtml, wireHear } from './grammar-acts.js';
+import { RULES } from './rules.js';
+import { PHRASES } from './phrases.js';
 import { stageHere } from './board.js';
 import { KANA as CHART } from './kana.js';
 import { speak } from './speech.js';
@@ -68,14 +70,20 @@ export const grammar = { render: el => {
 } };
 
 // Kana chart: the classic 5-column table per script (blank cells keep や/わ rows aligned). Tap a kana to hear it.
+// Below it, the spelling rules and phrases you have learned: tap a rule to reread it, a phrase to hear it.
 const GAP = { yu: 1, yo: 1, wo: 3, ga: 4 }; // blanks before these sounds; 4 before が ends the ん row
 const chart = script => CHART.filter(k => k.script === script).map(k => '<i></i>'.repeat(GAP[k.sound] ?? 0) +
   `<button class="choice" data-say="${k.kana}"><span lang="ja">${k.kana}</span><small>${k.sound}</small></button>`).join('');
 export const kana = { render: el => {
   stageHere();
+  const rules = RULES.filter(r => db.cards[r.id]), phrases = PHRASES.filter(p => db.cards[p.id]);
   el.innerHTML = `<div class="screen setlist"><h1 class="plate">Kana chart</h1>
     <h2 class="plate set">Hiragana</h2><div class="kana-grid">${chart('hira')}</div>
     <h2 class="plate set">Katakana</h2><div class="kana-grid">${chart('kata')}</div>
+    ${rules.length ? `<h2 class="plate set">Spelling rules</h2>${rules.map(r => `<button class="plate set" style="align-self:stretch;text-align:left" data-rule="${r.id}"><span><b lang="ja">${esc(r.title)}</b><br>${esc(r.en)}</span></button>`).join('')}` : ''}
+    ${phrases.length ? `<h2 class="plate set">Phrases</h2>${phrases.map(p => `<button class="plate set" style="align-self:stretch;text-align:left" data-say="${esc(p.r)}"><span><span lang="ja">${esc(p.r)}</span><br><small>${esc(p.m[0])}</small></span></button>`).join('')}` : ''}
     <div class="grow"></div>${nav('')}</div>`;
-  el.onclick = e => { const b = e.target.closest('[data-say]'); if (b) speak(b.dataset.say); };
+  el.onclick = e => { const b = e.target.closest('[data-say]'), r = e.target.closest('[data-rule]');
+    if (b) speak(b.dataset.say);
+    if (r) wireHear(sheet(ruleHtml(RULES.find(x => x.id === r.dataset.rule)))); };
 } };

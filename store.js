@@ -1,5 +1,7 @@
 import { KANA } from './kana.js';
 import { GRAMMAR } from './grammar.js';
+import { RULES } from './rules.js';
+import { PHRASES } from './phrases.js';
 
 const KEY = 'gengo';
 const mem = {}; // node tests have no localStorage
@@ -9,8 +11,8 @@ const DATE = ['due', 'last_review'];
 const NUM = ['stability', 'difficulty', 'elapsed_days', 'scheduled_days', 'learning_steps', 'reps', 'lapses', 'state'];
 const day = v => v >= 0 && Number.isFinite(v); // finite, non-negative number
 const date = v => { const d = new Date(v); return v != null && !isNaN(d) ? d : null; };
-// Card ids: known kana, word ids (checked against words.json later, by the queue), known grammar ids, custom ids with an entry.
-const KNOWN = new Set(KANA.map(k => k.id)), GIDS = new Set(GRAMMAR.map(g => g.id));
+// Card ids: known kana, spelling rules and phrases, word ids (checked against words.json later, by the queue), known grammar ids, custom ids with an entry.
+const KNOWN = new Set([...KANA, ...RULES, ...PHRASES].map(k => k.id)), GIDS = new Set(GRAMMAR.map(g => g.id));
 const wordId = id => /^w-\d+$/.test(id), grammarId = id => /^g-[a-z-]+$/.test(id) && GIDS.has(id);
 const strs = a => [...new Set((Array.isArray(a) ? a : []).filter(x => typeof x === 'string'))];
 const KANAONLY = /^[ぁ-ゖァ-ヺー]+$/;

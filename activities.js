@@ -6,11 +6,13 @@ import { loadedWords, loadedKanji } from './items.js';
 import { trace } from './trace.js';
 import { meaningChoices } from './words.js';
 import { forWord, best } from './sentences.js';
+import { PHRASES } from './phrases.js';
+import { kanaIds } from './words.js';
 
 // Each activity appends its card (and choices) to el, then calls done({correct, ms, hinted, speechFallback}) once, at the moment of answer.
 // The caller owns the pause before the next item.
-function quiz(el, item, card, text, kanaChoice, replay, done) {
-  const opts = choices(item, KANA, Math.random);
+function quiz(el, item, card, text, kanaChoice, replay, done, ctx) {
+  const opts = choices(item, KANA, Math.random, ctx?.has);
   el.insertAdjacentHTML('beforeend', `${card}<div class="choices">${opts.map(o =>
     `<button class="choice${kanaChoice ? ' kana-choice' : ''}" data-id="${o.id}"${kanaChoice ? ' lang="ja"' : ''}>${esc(text(o))}</button>`).join('')}</div>`);
   const box = el.querySelector('.choices'), t0 = Date.now();
@@ -28,15 +30,15 @@ function quiz(el, item, card, text, kanaChoice, replay, done) {
 }
 
 // Never await speak(): it has no timeout and iOS may not fire onend.
-export function hear(el, item, done) {
+export function hear(el, item, done, ctx) {
   speak(item.kana);
   quiz(el, item, '<button class="plate card" data-replay aria-label="Play the sound again"><p class="prompt">Which kana did you hear?</p><p class="prompt">Tap to hear it again</p></button>',
-    o => o.kana, true, true, done);
+    o => o.kana, true, true, done, ctx);
 }
 
-export function see(el, item, done) {
+export function see(el, item, done, ctx) {
   quiz(el, item, `<div class="plate card"><div class="kana" lang="ja">${item.kana}</div><p class="prompt">Which sound?</p></div>`,
-    o => o.sound, false, false, done);
+    o => o.sound, false, false, done, ctx);
 }
 
 export function say(el, item, done) {
@@ -88,7 +90,7 @@ export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = 
 
 // Four meaning choices under a card the caller built. after() runs on answer.
 export function meaning(el, item, card, done, ctx, after) {
-  const opts = meaningChoices(item, loadedWords(), ctx.rand ?? Math.random);
+  const opts = meaningChoices(item, item.kind === 'phrase' ? PHRASES : loadedWords(), ctx.rand ?? Math.random);
   el.insertAdjacentHTML('beforeend', `${card}<div class="choices gloss">${opts.map(o => `<button class="choice" data-id="${esc(o.id)}">${esc(gloss(o))}</button>`).join('')}</div>`);
   const box = el.querySelector('.choices'), t0 = Date.now();
   let over = false, hinted = false;
@@ -152,8 +154,72 @@ const word = {
     })();
   },
 };
+// ---- Phrases: heard and said from day one; the romaji shows until you have every kana in it.
+const reads = (it, ctx) => kanaIds(it.r).every(id => ctx.has?.(id));
+export const phraseFace = (it, ctx) => `<div class="kana word phrase" lang="ja">${esc(it.r)}</div>${reads(it, ctx) ? '' : `<p class="prompt">${esc(it.ro)}</p>`}`;
+const phrase = {
+  hear(el, item, done, ctx) {
+    speak(item.r);
+    meaning(el, item, '<button class="plate card" data-replay aria-label="Play the phrase again"><p class="prompt">What does it mean?</p><p class="prompt">Tap to hear it again</p></button>', done, ctx);
+  },
+  see(el, item, done, ctx) {
+    meaning(el, item, `<div class="plate card">${phraseFace(item, ctx)}<p class="prompt">What does it mean?</p></div>`, done, ctx);
+  },
+  say(el, item, done) {
+    el.insertAdjacentHTML('beforeend', `<div class="plate card"><p class="gloss-big">${esc(gloss(item))}</p><p class="prompt">Say it in Japanese</p></div>`);
+    const prompt = el.querySelector('.prompt'), t0 = Date.now();
+    (async () => {
+      for (let miss = 0; miss < 2; miss++) {
+        if (heardWord(await listen(), { r: item.r, w: item.jw })) return done({ correct: true, ms: Date.now() - t0, hinted: false });
+        if (!el.isConnected) return;
+        if (!miss) prompt.textContent = 'Try once more';
+      }
+      prompt.textContent = `${item.r}  (${item.ro})`;
+      speak(item.r);
+      done({ correct: true, ms: Date.now() - t0, hinted: true, speechFallback: true });
+    })();
+  },
+};
+
+// ---- Spelling rules. One example per drill, from those whose kana you have (all of them if none yet).
+const example = (it, ctx) => {
+  const ok = it.ex.filter(e => kanaIds(e.k[0]).every(id => ctx.has?.(id)));
+  const a = ok.length ? ok : it.ex;
+  return a[Math.floor((ctx.rand ?? Math.random)() * a.length)];
+};
+// Four (or three) choices of one side of an example, shuffled; the right one is marked data-ok.
+function ruleQuiz(el, card, side, e, done, ctx, ja) {
+  const order = shuffle(side.map((_, i) => i), ctx.rand ?? Math.random);
+  el.insertAdjacentHTML('beforeend', `${card}<div class="choices${ja ? '' : ' gloss'}">${order.map(i =>
+    `<button class="choice${ja ? ' kana-choice' : ''}" data-i="${i}"${i === 0 ? ' data-ok="1"' : ''}${ja ? ' lang="ja"' : ''}>${esc(side[i])}</button>`).join('')}</div>`);
+  const box = el.querySelector('.choices'), t0 = Date.now();
+  let over = false, hinted = false;
+  el.querySelector('[data-replay]')?.addEventListener('click', () => { hinted = true; speak(e.k[0]); });
+  box.onclick = ev => {
+    const b = ev.target.closest('[data-i]');
+    if (!b || over) return;
+    over = true;
+    box.querySelector('[data-ok]').classList.add('right');
+    if (!b.dataset.ok) b.classList.add('wrong');
+    done({ correct: !!b.dataset.ok, ms: Date.now() - t0, hinted });
+  };
+}
+const rule = {
+  see(el, it, done, ctx) {
+    const e = example(it, ctx);
+    ruleQuiz(el, `<div class="plate card"><div class="kana word phrase" lang="ja">${esc(e.k[0])}</div><p class="prompt">How is it read?</p></div>`, e.r, e, done, ctx, false);
+  },
+  hear(el, it, done, ctx) {
+    const e = example(it, ctx);
+    speak(e.k[0]);
+    ruleQuiz(el, '<button class="plate card" data-replay aria-label="Play it again"><p class="prompt">Which did you hear?</p><p class="prompt">Tap to hear it again</p></button>', e.k, e, done, ctx, true);
+  },
+};
+
 // ---- Kanji. A kanji's one reading for drills: its first on reading (katakana), else its first kun; KANJIDIC's . and - dropped.
 export const kanjiReading = k => (k.on?.[0] ?? k.kun?.[0] ?? '').replace(/[-.]/g, ''); // '' for non-kanji: the learn view asks every item for a reading
+// The words you are learning that are written with kanji k, the word that is just k first.
+export const kanjiWords = (k, has) => loadedWords().filter(w => w.w.includes(k.k) && has?.(w.id)).sort((a, b) => (b.w === k.k) - (a.w === k.k));
 // Four choices: this kanji plus three whose text(x) differs, shuffled.
 function kanjiPick(el, it, prompt, text, done, rand = Math.random) {
   const seen = new Set([text(it)]), opts = [it];
@@ -173,7 +239,15 @@ function kanjiPick(el, it, prompt, text, done, rand = Math.random) {
 }
 const kanji = {
   see: (el, it, done, ctx) => kanjiPick(el, it, 'What does it mean?', x => x.m[0], done, ctx?.rand),
-  sound: (el, it, done, ctx) => kanjiPick(el, it, 'How is it read?', kanjiReading, done, ctx?.rand),
+  sound: (el, it, done, ctx) => {
+    const ws = kanjiWords(it, ctx?.has);
+    if (!ws.length) return kanjiPick(el, it, 'How is it read?', kanjiReading, done, ctx?.rand);
+    const rand = ctx.rand ?? Math.random, w = ws[Math.floor(rand() * Math.min(ws.length, 3))], len = [...w.r].length;
+    const others = [...new Set(shuffle(loadedWords().filter(x => x.w && x.r !== w.r && Math.abs([...x.r].length - len) <= 1).slice(0, 400).map(x => x.r), rand))].slice(0, 3);
+    const face = esc(w.w).replace(esc(it.k), `<mark>${esc(it.k)}</mark>`);
+    ruleQuiz(el, `<div class="plate card"><div class="kana word" lang="ja">${face}</div><p class="prompt">${esc(w.m[0])}: how is this word read?</p></div>`,
+      [w.r, ...others], { k: [w.r] }, done, { rand }, true);
+  },
   trace,
 };
-export const ACTS = { word, kanji };
+export const ACTS = { word, kanji, phrase, rule };

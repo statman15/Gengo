@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { KANA } from './kana.js';
 import { GRAMMAR } from './grammar.js';
 import { newCard, pickRung, TUNING } from './srs.js';
-import { dueQueue, nextNew, grammarReady, choices } from './session.js';
+import { dueQueue, nextNew, grammarReady, choices, kanjiReady } from './session.js';
+import { RULES, LEARN, BASIC } from './rules.js';
+import { PHRASES } from './phrases.js';
 import { ready } from './items.js';
 import { eligible } from './words.js';
 import { db } from './store.js';
@@ -15,16 +17,18 @@ assert.deepEqual(dueQueue({
   'h-u': at('2026-10-17T09:00:00'), 'h-a': at('2026-10-15T09:00:00'), 'h-i': at('2026-10-18T09:00:00'),
 }, now), ['h-a', 'h-u']);
 assert.deepEqual(dueQueue({ 'h-a': at('2026-10-15T09:00:00'), 'w-999': at('2026-10-15T09:00:00') }, now), ['h-a'], 'unknown ids skipped');
-assert.deepEqual(nextNew({}, 5), ['h-a', 'h-i', 'h-u', 'h-e', 'h-o']);
-assert.deepEqual(nextNew({ 'h-a': {}, 'h-u': {} }, 3), ['h-i', 'h-e', 'h-o']);
+assert.deepEqual(nextNew({}, 5), ['p-hai', 'h-a', 'h-i', 'h-u', 'h-e'], 'a phrase from day one, then hiragana');
+assert.deepEqual(nextNew({ 'h-a': {}, 'h-u': {} }, 3), ['p-hai', 'h-i', 'h-e']);
+assert.equal(nextNew({}, 10).filter(id => id.startsWith('p-')).length, 2, 'two phrases in a batch of 10');
 
 const W = (id, r) => ({ id, r }), words = [W('w-1', 'あお'), W('w-2', 'アイス'), W('w-3', 'いえ')];
 const card = () => newCard(now);
 const hiraIds = KANA.filter(k => k.script === 'hira').map(k => k.id);
 assert.equal(hiraIds.length, 71);
-const hira = Object.fromEntries(hiraIds.map(id => [id, card()]));
-assert.deepEqual(nextNew(hira, 4, { words }), ['k-a', 'k-i', 'w-1', 'w-3']);
-const allKana = Object.fromEntries(KANA.map(k => [k.id, card()]));
+const said = Object.fromEntries(PHRASES.map(p => [p.id, card()]));
+const hira = { ...said, ...Object.fromEntries(hiraIds.map(id => [id, card()])) };
+assert.deepEqual(nextNew(hira, 4, { words }), ['r-particles', 'w-1', 'w-3'], 'the hiragana rules follow hiragana, one per batch, nothing past the next rule');
+const allKana = { ...said, ...Object.fromEntries([...KANA, ...RULES].map(k => [k.id, card()])) };
 const five = ['w-1', 'w-2', 'w-3', 'w-4', 'w-5'].map(id => W(id, 'あ'));
 assert.deepEqual(nextNew(allKana, 5, { words: five, mine: { words: ['c-1'], grammar: [] } }), ['c-1', 'w-1', 'w-2', 'w-3', 'w-4']);
 const withWords = n => ({ ...allKana, ...Object.fromEntries(Array.from({ length: n }, (_, i) => ['w-' + (i + 100), card()])) });
@@ -57,11 +61,34 @@ for (const stability of [0, 5, 12, 30]) for (const r of [0, .1, .5, .99])
   assert.ok(!['hear', 'say'].includes(pickRung({ ...newCard(now), stability }, TUNING.ladder.kana, none, () => r).rung));
 { // early-stopping scan gives the same ids as filtering every word
   const words = ['あ', 'い', 'う', 'え', 'お', 'か', 'あい', 'いえ', 'かお'].map(r => ({ id: 'w-' + r, r }));
-  const cards = { 'h-a': {}, 'h-i': {}, 'h-u': {}, 'h-e': {}, 'h-o': {}, 'h-ka': {}, 'w-い': {} };
+  const cards = { ...said, 'h-a': {}, 'h-i': {}, 'h-u': {}, 'h-e': {}, 'h-o': {}, 'h-ka': {}, 'w-い': {} };
   for (const n of [1, 3, 4]) {
     const ws = words.filter(w => !cards[w.id] && eligible(w, cards)).map(w => w.id), rest = n;
-    const k = Math.min(KANA.filter(x => !cards[x.id]).length, Math.max(Math.ceil(rest / 2), rest - ws.length));
-    assert.deepEqual(nextNew(cards, n, { words }), [...KANA.map(x => x.id).filter(id => !cards[id]).slice(0, k), ...ws.slice(0, rest - k)]);
+    const kana = LEARN.filter(id => !cards[id]).slice(0, 46), k = Math.min(kana.length, Math.max(Math.ceil(rest / 2), rest - ws.length));
+    assert.deepEqual(nextNew(cards, n, { words }), [...kana.slice(0, k), ...ws.slice(0, rest - k)]);
   }
+}
+// Learn order: 46 hiragana, the five hiragana rules, then katakana woven with hiragana ゛゜; every kana and rule exactly once.
+assert.deepEqual(LEARN.slice(46, 51), ['r-particles', 'r-marks', 'r-sokuon', 'r-youon', 'r-long']);
+assert.equal(LEARN[51], 'h-ga');
+assert.ok(LEARN.slice(51, 54).includes('k-a'), 'katakana starts right after the hiragana rules');
+assert.deepEqual([...LEARN].sort(), [...KANA.map(k => k.id), ...RULES.map(r => r.id)].sort());
+assert.equal(LEARN.at(-1), 'r-kata-ext');
+// Words needing a rule wait for it; a word a phrase already teaches is skipped.
+const ky = [W('w-k', 'きって'), W('w-s', 'しゃしん'), W('w-h', 'はい'), W('w-x', 'すし')];
+const hiraOnly = { ...hira, ...Object.fromEntries(['r-particles', 'r-marks'].map(id => [id, card()])) };
+assert.deepEqual(nextNew(hiraOnly, 4, { words: ky }).filter(id => id.startsWith('w-')), ['w-x'], 'っ, small ゃ and はい held back');
+assert.deepEqual(nextNew({ ...hiraOnly, 'r-sokuon': card(), 'r-youon': card() }, 8, { words: ky }).filter(id => id.startsWith('w-')), ['w-k', 'w-s', 'w-x']);
+// Kanji wait for both basic kana sets.
+db.custom['c-2'] = { r: 'いえ', w: '家', m: ['house'] };
+const ks = [{ id: 'k-家', k: '家' }], wk = { 'c-2': card() };
+assert.deepEqual(kanjiReady({ ...hira, ...wk }, ks), [], 'no kanji before katakana');
+assert.deepEqual(kanjiReady({ ...Object.fromEntries(BASIC.map(id => [id, card()])), ...wk }, ks), ['k-家']);
+// With has(), wrong answers are kana you have, look-alikes first (at most two).
+const sa = KANA.find(k => k.kana === 'さ'), haveSaChi = id => ['h-sa', 'h-chi', 'h-ki', 'h-a', 'h-i', 'h-u'].includes(id);
+for (let t = 0; t < 20; t++) {
+  const c = choices(sa, KANA, rand, haveSaChi).map(x => x.kana);
+  assert.ok(c.includes('ち') && c.includes('き'), 'both look-alikes of さ offered');
+  assert.ok(c.every(x => 'さちきあいう'.includes(x)), 'only kana you have');
 }
 console.log('session ok');

@@ -16,6 +16,9 @@ const exSeg = e => { const w = e.jp.split(' '); return { en: e.en, at: w.findInd
 
 export const lessonHtml = p => `<div class="lesson"><h2 lang="ja">${esc(p.title)}</h2><p class="en">${esc(p.en)}</p><p>${esc(p.explain)}</p>${p.ex.map(e =>
   `<div class="ex"><button class="hint" data-hear="${esc(plain(e.jp))}" aria-label="Hear it">▶</button><div><span lang="ja">${esc(plain(e.jp))}</span><br>${esc(e.en)}</div></div>`).join('')}</div>`;
+// A spelling rule's lesson: the rule and its examples (the right spelling of each), tap to hear.
+export const ruleHtml = r => `<div class="lesson"><h2 lang="ja">${esc(r.title)}</h2><p class="en">${esc(r.en)}</p><p>${esc(r.explain)}</p>${r.ex.slice(0, 4).map(e =>
+  `<div class="ex"><button class="hint" data-hear="${esc(e.k[0])}" aria-label="Hear it">▶</button><div><span lang="ja">${esc(e.k[0])}</span><br>${esc(e.r[0])}</div></div>`).join('')}</div>`;
 export const wireHear = body => body.onclick = e => { const b = e.target.closest('[data-hear]'); if (b) speak(b.dataset.hear); };
 
 // The first grammar-token segment whose surface is the blank (a particle in a tagged sentence), or -1.

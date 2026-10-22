@@ -1,11 +1,14 @@
-// One lookup for every card id: kana, shipped word, custom word, grammar point, kanji. Plus each item's ladder.
+// One lookup for every card id: kana, spelling rule, phrase, shipped word, custom word, grammar point, kanji. Plus each item's ladder.
 import { KANA } from './kana.js';
 import { GRAMMAR } from './grammar.js';
+import { RULES } from './rules.js';
+import { PHRASES } from './phrases.js';
 import { loadWords } from './words.js';
 import { TUNING } from './srs.js';
 import { db } from './store.js';
 
-const byId = new Map([...KANA.map(k => [k.id, { ...k, kind: 'kana' }]), ...GRAMMAR.map(g => [g.id, { ...g, kind: 'grammar' }])]);
+const byId = new Map([...KANA.map(k => [k.id, { ...k, kind: 'kana' }]), ...GRAMMAR.map(g => [g.id, { ...g, kind: 'grammar' }]),
+  ...RULES.map(r => [r.id, { ...r, kind: 'rule' }]), ...PHRASES.map(p => [p.id, { ...p, kind: 'phrase' }])]);
 let words = [], kanji = [], loading;
 const loadKanji = async (fetchFn = fetch) => { try { const r = await fetchFn('data/kanji.json'); return r.ok ? await r.json() : []; } catch { return []; } };
 
@@ -22,4 +25,5 @@ export const loadedKanji = () => kanji;
 
 export const item = id => byId.get(id) ?? (Object.hasOwn(db.custom, id) ? { id, kind: 'word', custom: true, ...db.custom[id] } : null);
 
-export const ladderFor = it => it.kind === 'grammar' ? TUNING.ladder.grammar.filter(([r]) => r === 'translate' || it.acts.includes(r)) : TUNING.ladder[it.kind];
+export const ladderFor = it => it.kind === 'grammar' ? TUNING.ladder.grammar.filter(([r]) => r === 'translate' || it.acts.includes(r))
+  : it.kind === 'rule' ? TUNING.ladder.rule.filter(([r]) => it.acts.includes(r)) : TUNING.ladder[it.kind];

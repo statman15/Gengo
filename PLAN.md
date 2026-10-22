@@ -152,3 +152,13 @@ M5 "AI chat" is built, decided with Chris in chat (question cards):
 - **Grading:** after the 5th reply the AI says per word: used right (Good; Hard if that reply came from Suggest), wrong (Again), or not used (no review, stays due), plus up to 3 corrected replies and a note. 6 AI calls per chat.
 - Still to check with a real AI and on phones: whether models keep to kana, steer to the words, and grade fairly.
 - **Follow-up (Chris, after first try):** a web page can't pick the phone's keyboard language, so replies (chat and Say/translate) get an in-app **kana keypad** (`keypad.js`: phone layout, ゛゜小 cycles the last kana, カナ switches script, ⌨ hands back to the phone keyboard). Stories and chats now get the list of **learned words and kana** and are told to use nothing else (plus particles, です/ます and known grammar; `limits()` in story.js). Romaji-to-kana typing is the fallback idea if the keypad is too slow.
+
+## Learning path (2026-10-22)
+
+Review and research: `docs/superpowers/plans/2026-10-22-learning-path.md`. Chris picked three tracks (Travel, Conversation, Whole language; chosen at the start and in Settings), hiragana first on every track while hearing and saying common phrases, then katakana; kanji only after both basic kana. Changes 1–4 are built:
+- **Phrases** (`phrases.js`, ids `p-…`): 79 set phrases, everyday courtesy first, then travel. One a batch (two in a batch of 8 or 10) from the very first batch. Ladder hear → see (romaji shows until you have its kana) → say. Words a phrase already teaches (はい, ありがとう…) are skipped. Learned phrases are listed on the Kana page.
+- **Spelling rules** (`rules.js`, ids `r-…`): lesson cards with drills for particle readings (は=wa, へ=e, を=o), the が/ぱ marks, small っ, small ゃゅょ, long vowels and katakana extras. Offered in `LEARN` order: 46 hiragana, the five hiragana rules, then hiragana ゛゜ woven into basic katakana (katakana no longer waits for every hiragana), then katakana ゛゜ and the katakana extras. One rule per batch, and nothing past the next rule until it is learned. A word needing small っ, ゃ, ー or ァ waits for that rule.
+- **Kana hints and look-alikes** (`HINT`, `LOOK` in kana.js): a picture line on each basic kana's learn card; kana drills take wrong answers from kana you have, up to two look-alikes first (さ/ち, シ/ツ, ソ/ン…).
+- **Kanji**: none until both basic kana sets are learned; the reading rung asks how one of your own words with the kanji is read (家 → いえ), falling back to the kanji's reading only if you have none.
+- Existing learners keep every card; the rule cards and phrases are simply offered next.
+- Next on the list: tracks (5), numbers/time/money (6), grammar to N5/N4 (7), a real frequency list (8), travel themes (9).

@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import { ready, item, loadedKanji, ladderFor } from './items.js';
 import { kanjiReady, nextNew } from './session.js';
-import { kanjiReading } from './activities.js';
+import { kanjiReading, kanjiWords } from './activities.js';
+import { BASIC } from './rules.js';
 import { revive } from './store.js';
 
 const file = p => ({ ok: true, json: async () => JSON.parse(readFileSync(p, 'utf8')) });
@@ -20,10 +21,14 @@ assert.equal(kanjiReading({ on: [], kun: ['み.る'] }), 'みる');
 // A kanji unlocks only once a word using it has a card.
 const nichi = JSON.parse(readFileSync('data/words.json', 'utf8')).find(x => x.w === '日本');
 assert.deepEqual(kanjiReady({}, K), [], 'nothing learned, nothing unlocked');
-const cards = { [nichi.id]: {} };
+const kana = Object.fromEntries(BASIC.map(id => [id, {}])), cards = { ...kana, [nichi.id]: {} };
+assert.deepEqual(kanjiReady({ [nichi.id]: {} }, K), [], 'kanji wait until both basic kana sets are learned');
 assert.deepEqual(kanjiReady(cards, K).sort(), ['k-日', 'k-本'].sort());
 assert.deepEqual(kanjiReady({ ...cards, 'k-日': {} }, K), ['k-本'], 'already carded kanji drop out');
-assert.ok(nextNew(cards, 5, { kanji: K }).filter(id => id.startsWith('k-')).length === 2, 'up to a quarter of the batch (rounded up)');
+assert.ok(nextNew(cards, 5, { kanji: K }).filter(id => /^k-\p{Script=Han}/u.test(id)).length === 2, 'up to a quarter of the batch (rounded up)');
+
+// The reading drill uses your own word with the kanji: 日本 for 日 (the word that is just the kanji would come first).
+assert.deepEqual(kanjiWords(item('k-日'), id => id === nichi.id).map(w => w.w), ['日本']);
 
 // Kanji cards survive a backup round trip.
 assert.ok(revive({ cards: { 'k-日': { stability: 1, difficulty: 5, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, reps: 1, lapses: 0, state: 1, due: '2026-01-01' } } }).cards['k-日']);

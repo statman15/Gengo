@@ -1,5 +1,6 @@
 // Word data: loader, kana-unlock check, search, multiple-choice distractors.
 import { KANA } from './kana.js';
+import { rulesFor } from './rules.js';
 
 export const loadWords = async (fetchFn = fetch) => {
   try { const r = await fetchFn('data/words.json'); return r.ok ? await r.json() : []; } catch { return []; }
@@ -15,7 +16,8 @@ export const kanaIds = reading => [...new Set([...reading].map(c => {
   return byKana['あいうえおつやゆよ'[i]] || byKana['アイウエオツヤユヨ'[j]] || byKana[c] || null;
 }).filter(Boolean))];
 
-export const eligible = (word, cards) => kanaIds(word.r).every(id => cards[id]);
+// Learnable once every kana in its reading has a card, and the spelling rules it needs (small ゃ, っ, ー…) do too.
+export const eligible = (word, cards) => [...kanaIds(word.r), ...rulesFor(word.r)].every(id => cards[id]);
 
 const norm = s => ` ${s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()} `;
 export function search(words, q) {

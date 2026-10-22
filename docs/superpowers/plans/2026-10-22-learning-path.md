@@ -1,6 +1,6 @@
-# Learning path review (2026-10-22, draft for Chris)
+# Learning path review (2026-10-22)
 
-The question: what order of kana, kanji, words and grammar gives the most Japanese for the time spent, how does Gengo compare today, and should there be separate tracks (whole language, conversation, travel)? Nothing here is built yet; it is a list of proposed changes to approve, cut or reorder.
+The question: what order of kana, kanji, words and grammar gives the most Japanese for the time spent, how does Gengo compare today, and should there be separate tracks (whole language, conversation, travel)? Changes 1–4 are built; 5–9 are still proposals.
 
 ## What the evidence says
 
@@ -96,7 +96,7 @@ Each change ships to both apps (same web files); nothing here is Android-only. S
 - **Tracks:** all three, chosen at the start of learning and changeable in Settings.
 - **Order for every track:** hiragana first, while hearing and saying basic common words and phrases; then katakana. (So no katakana-first even for Travel.)
 - **Kanji:** start only after both basic kana sets are known.
-- **First build:** changes 1–4 (phrase cards, kana fixes, kana mnemonics and look-alikes, kanji gate and readings).
+- **First build:** changes 1–4 (phrase cards, kana fixes, kana mnemonics and look-alikes, kanji gate and readings). **Built 2026-10-22**, see PLAN.md "Learning path".
 
 Still open: existing users (you three) keep their cards and get the new order from here, with the yōon and rule cards offered next. That's my pick, with no reset.
 

@@ -5,6 +5,8 @@ export const TUNING = {
   slowMs: { default: 8000, read: 12000, tiles: 15000, fill: 12000, form: 12000, build: 25000, translate: 60000, trace: 60000 },
   ladder: {
     kana: [['hear', 0], ['see', 3], ['say', 10]],
+    rule: [['see', 0], ['hear', 3]],
+    phrase: [['hear', 0], ['see', 2], ['say', 6]],
     word: [['hear', 0], ['see', 2], ['read', 4], ['tiles', 7], ['say', 12]],
     grammar: [['fill', 0], ['form', 0], ['build', 5], ['translate', 10]],
     kanji: [['see', 0], ['sound', 3], ['trace', 7]],
