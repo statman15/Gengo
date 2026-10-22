@@ -25,7 +25,7 @@ const kana = Object.fromEntries(BASIC.map(id => [id, {}])), cards = { ...kana, [
 assert.deepEqual(kanjiReady({ [nichi.id]: {} }, K), [], 'kanji wait until both basic kana sets are learned');
 assert.deepEqual(kanjiReady(cards, K).sort(), ['k-日', 'k-本'].sort());
 assert.deepEqual(kanjiReady({ ...cards, 'k-日': {} }, K), ['k-本'], 'already carded kanji drop out');
-assert.ok(nextNew(cards, 5, { kanji: K }).filter(id => /^k-\p{Script=Han}/u.test(id)).length === 2, 'up to a quarter of the batch (rounded up)');
+assert.ok(nextNew(cards, 5, { kanji: K }).filter(id => /^k-\p{Script=Han}/u.test(id)).length === 1, 'a quarter of the batch, rounded down (at least one)');
 
 // The reading drill uses your own word with the kanji: 日本 for 日 (the word that is just the kanji would come first).
 assert.deepEqual(kanjiWords(item('k-日'), id => id === nichi.id).map(w => w.w), ['日本']);

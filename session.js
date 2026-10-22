@@ -32,14 +32,15 @@ export function kanjiReady(cards, kanji) {
 // Words a phrase card already teaches (はい, ありがとう…): skipped so they aren't learned twice.
 const SAID = new Set(PHRASES.map(p => said(p.r)));
 
-// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji, then a phrase or two
+// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), then a phrase or two
 // (learned by ear, so they start on day one), then half kana (and at most one spelling rule) / half words, either side filling the other.
 export function nextNew(cards, n, { words = [], mine = {}, kanji = [] } = {}) {
   const out = [], g = grammarReady(cards, mine), mw = (mine.words ?? []).filter(id => item(id));
   if (g && n) out.push(g.id);
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
-  out.push(...kanjiReady(cards, kanji).slice(0, Math.min(n - out.length, Math.ceil(n / 4))));
-  out.push(...PHRASES.filter(p => !cards[p.id]).slice(0, Math.min(n - out.length, Math.max(1, Math.round(n / 5)))).map(p => p.id));
+  out.push(...kanjiReady(cards, kanji).slice(0, Math.min(n - out.length, Math.max(1, Math.floor(n / 4))))); // a quarter, rounded down: words stay the bulk
+  const have = new Set(Object.keys(cards).map(item).filter(x => x?.kind === 'word').map(x => x.r)); // a word card already teaches it (learned before phrases existed)
+  out.push(...PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, Math.min(n - out.length, Math.max(1, Math.round(n / 5)))).map(p => p.id));
   const rest = n - out.length;
   const left = LEARN.filter(id => !cards[id]), second = left.findIndex((id, i) => id.startsWith('r-') && left.slice(0, i).some(x => x.startsWith('r-')));
   const kana = second < 0 ? left : left.slice(0, second); // one rule lesson per batch, and nothing past the next rule until it is learned
@@ -60,7 +61,7 @@ const shuffle = (a, rand) => {
 export function choices(item, pool, rand, has) {
   const seen = new Set([item.sound]), others = [];
   const look = new Set(LOOK.filter(g => g.includes(item.kana)).join(''));
-  const rank = x => !has ? 0 : look.has(x.kana) && has(x.id) ? 0 : has(x.id) ? 1 : 2;
+  const rank = x => !has ? 0 : look.has(x.kana) && has(x.id) ? 0 : has(x.id) ? 1 : /^[gzdbpj]/.test(x.sound) ? 3 : 2; // unlearned ゛゜ kana last
   let looks = 0;
   for (const x of shuffle(pool.filter(x => x.script === item.script), rand).sort((a, b) => rank(a) - rank(b)))
     if (others.length < 3 && !seen.has(x.sound) && (rank(x) || !has || looks++ < 2)) { seen.add(x.sound); others.push(x); }

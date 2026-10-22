@@ -1,7 +1,7 @@
 // Grammar lessons and the fill / form / build activities. Same done({correct, ms, hinted}) contract as activities.js.
 import { speak } from './speech.js';
 import { esc, ruby, sentenceHtml, sheet } from './ui.js';
-import { ACTS, shuffle, tileTray } from './activities.js';
+import { ACTS, shuffle, tileTray, canRead } from './activities.js';
 import { conjugate, FORMS } from './conjugate.js';
 import { forPoint, best, readable } from './sentences.js';
 import { loadedWords } from './items.js';
@@ -38,7 +38,7 @@ export const canGrammar = (p, cards) => rung => rung === 'translate' ? aiReady()
 
 // A tagged sentence for the point that passes keep, else one of its examples.
 const sentence = (p, ctx, keep) => {
-  const s = best(forPoint(p.id).filter(keep), ctx.known, ctx.rand ?? Math.random);
+  const s = best(forPoint(p.id).filter(keep), ctx.known, ctx.rand ?? Math.random, canRead(ctx));
   return s ? { ...s, at: p.blank ? blankIndex(s.t, p.blank) : -1 } : exSeg(p.ex[Math.floor((ctx.rand ?? Math.random)() * p.ex.length)]);
 };
 

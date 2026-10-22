@@ -37,7 +37,7 @@ for (const c of dic.characters) {
   const j = c.misc.jlptLevel, s = strokes[c.literal];
   if (!(j === 4 || j === 3) || !s?.length) continue;
   const g = c.readingMeaning?.groups ?? [], rd = t => g.flatMap(x => x.readings).filter(r => r.type === t).map(r => r.value);
-  out.push({ id: 'k-' + c.literal, k: c.literal, m: g.flatMap(x => x.meanings).filter(x => x.lang === 'en').map(x => x.value).slice(0, 3),
+  out.push({ id: 'k-' + c.literal, k: c.literal, m: g.flatMap(x => x.meanings).filter(x => x.lang === 'en').map(x => x.value).filter(v => !/^-|\.$|^don$/.test(v)).slice(0, 3), // drop suffixes (-times), abbreviations (Inst.) and the confusing 'don'
     on: rd('ja_on').slice(0, 3), kun: rd('ja_kun').slice(0, 3), j: j === 4 ? 5 : 4, fr: c.misc.frequency ?? 9999, s });
 }
 out.sort((a, b) => b.j - a.j || a.fr - b.fr);

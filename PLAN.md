@@ -139,7 +139,7 @@ M3 "Stories" is built, decided in chat with Chris (no separate plan doc; iterate
 
 M4 "Kanji" is built (Chris skipped the questions; these are Claude's calls, change any):
 - **Data** (`scripts/kanji.mjs` → `data/kanji.json`, 225 KB): the 284 old-JLPT 4/3 kanji (≈ N5, N4) from KANJIDIC2 with meanings, on/kun readings and KanjiVG strokes, N5 first, then by frequency. Credits in Settings.
-- **Unlock**: a kanji becomes learnable once you have a card for a word written with it; up to a quarter of each new batch (rounded up) is kanji. The learn card shows the kanji, meanings, on and kun readings, and up to three of your words that use it.
+- **Unlock**: a kanji becomes learnable once you have a card for a word written with it; up to a quarter of each new batch (rounded down, at least one; was rounded up until 2026-10-22) is kanji. The learn card shows the kanji, meanings, on and kun readings, and up to three of your words that use it.
 - **Ladder** (`kanji` in srs.js): **see** (pick the meaning) → **sound** (pick its reading: first on, else kun) at stability 3 → **trace** at 7 (`trace.js`: draw each stroke over a faint KanjiVG guide; a stroke passes when its 16 resampled points average within `TUNING.traceTolerance` = 18 of the 109-unit box, so direction counts; a miss flashes the right stroke, two misses draw it in and fail the card).
 - Not changed: the furigana fade still keys on words, not kanji. Still to check on real phones: tracing with a finger, and whether 18 is too strict or too loose.
 
@@ -156,7 +156,7 @@ M5 "AI chat" is built, decided with Chris in chat (question cards):
 ## Learning path (2026-10-22)
 
 Review and research: `docs/superpowers/plans/2026-10-22-learning-path.md`. Chris picked three tracks (Travel, Conversation, Whole language; chosen at the start and in Settings), hiragana first on every track while hearing and saying common phrases, then katakana; kanji only after both basic kana. Changes 1–4 are built:
-- **Phrases** (`phrases.js`, ids `p-…`): 79 set phrases, everyday courtesy first, then travel. One a batch (two in a batch of 8 or 10) from the very first batch. Ladder hear → see (romaji shows until you have its kana) → say. Words a phrase already teaches (はい, ありがとう…) are skipped. Learned phrases are listed on the Kana page.
+- **Phrases** (`phrases.js`, ids `p-…`): 80 set phrases, everyday courtesy first, then travel. One a batch (two in a batch of 8 or 10) from the very first batch. Ladder hear → see (romaji shows until you have its kana) → say. Words a phrase already teaches (はい, ありがとう…) are skipped. Learned phrases are listed on the Kana page.
 - **Spelling rules** (`rules.js`, ids `r-…`): lesson cards with drills for particle readings (は=wa, へ=e, を=o), the が/ぱ marks, small っ, small ゃゅょ, long vowels and katakana extras. Offered in `LEARN` order: 46 hiragana, the five hiragana rules, then hiragana ゛゜ woven into basic katakana (katakana no longer waits for every hiragana), then katakana ゛゜ and the katakana extras. One rule per batch, and nothing past the next rule until it is learned. A word needing small っ, ゃ, ー or ァ waits for that rule.
 - **Kana hints and look-alikes** (`HINT`, `LOOK` in kana.js): a picture line on each basic kana's learn card; kana drills take wrong answers from kana you have, up to two look-alikes first (さ/ち, シ/ツ, ソ/ン…).
 - **Kanji**: none until both basic kana sets are learned; the reading rung asks how one of your own words with the kanji is read (家 → いえ), falling back to the kanji's reading only if you have none.

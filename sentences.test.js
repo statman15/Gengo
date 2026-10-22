@@ -20,3 +20,11 @@ for (const x of data.slice(0, 500)) assert.ok(x.en && x.t.length && x.t.every(([
 for (const p of GRAMMAR) assert.ok(data.filter(x => x.g.includes(p.id)).length >= 20, p.id);
 const ni = data.filter(x => x.t.some(([sf]) => sf === 'には')); assert.ok(ni.length && ni.every(x => x.t.filter(([sf]) => sf === 'には').every(([, , id]) => id === ''))); // compound particle is grammar, not a word
 console.log('sentences.test.js ok');
+{ // best prefers a sentence you can read: タブー loses to a kana-only one when katakana isn't learned, even with fewer known words
+  const { best } = await import('./sentences.js');
+  const a = { t: [['タブー', '', ''], ['です', '', ''], ['犬', 'いぬ', 'w-1']] }, b = { t: [['いい', '', ''], ['です', '', '']] };
+  const noKata = t => !/[ァ-ヺ]/.test(t);
+  assert.equal(best([a, b], id => id === 'w-1', () => 0, noKata), b);
+  assert.equal(best([a, b], id => id === 'w-1', () => 0), a, 'without reads, most known words wins as before');
+}
+console.log('best ok');

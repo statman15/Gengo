@@ -13,17 +13,20 @@ export const loadSentences = (fetchFn = fetch) => loaded ||= (async () => {
   } catch { return []; }
 })();
 
+const HAN = /\p{Script=Han}/u;
 export const forWord = id => byWord[id] || [];
 export const forPoint = id => byPoint[id] || [];
 export const readable = (s, known) => s.t.every(([, , id]) => id[0] !== 'w' || known(id));
-export function best(list, known, rand) {
-  const n = s => s.t.filter(([, , id]) => id[0] === 'w' && known(id)).length;
+// The sentence with the most known words, preferring ones whose kana you can read (reads(text) for each token as shown:
+// a kanji word by its furigana, anything else as written), so a beginner isn't handed katakana they haven't met.
+export function best(list, known, rand, reads = () => true) {
+  const ok = s => s.t.every(([sf, r, id]) => reads(id[0] === 'w' && HAN.test(sf) ? r : sf));
+  const n = s => s.t.filter(([, , id]) => id[0] === 'w' && known(id)).length + (ok(s) ? 1000 : 0);
   let top = [], max = -1;
   for (const s of list) { const k = n(s); if (k > max) [top, max] = [[s], k]; else if (k === max) top.push(s); }
   return top[Math.floor(rand() * top.length)] || null;
 }
 
-const HAN = /\p{Script=Han}/u;
 // Reading of an inflected surface from its dictionary head+reading: stem reading + the kana left over.
 export function tokenReading(surface, head, headReading) {
   if (!HAN.test(surface)) return surface;

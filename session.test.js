@@ -92,3 +92,13 @@ for (let t = 0; t < 20; t++) {
   assert.ok(c.every(x => 'さちきあいう'.includes(x)), 'only kana you have');
 }
 console.log('session ok');
+{ // an existing learner who already has the word はい (from before phrases) isn't offered the phrase はい
+  db.custom['c-3'] = { r: 'はい', w: '', m: ['yes'] };
+  assert.ok(!nextNew({ 'c-3': card() }, 5).includes('p-hai'));
+  assert.equal(nextNew({ 'c-3': card() }, 5)[0], 'p-iie');
+}
+{ // knowing only ア and イ, the fillers are unlearned basic katakana, never ガ-style marked ones
+  const a = KANA.find(k => k.kana === 'ア'), two = id => id === 'k-a' || id === 'k-i';
+  for (let t = 0; t < 20; t++) assert.ok(choices(a, KANA, rand, two).every(x => !/^[gzdbpj]/.test(x.sound)));
+}
+console.log('phrase skip ok');

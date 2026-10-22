@@ -8,6 +8,7 @@ import { meaningChoices } from './words.js';
 import { forWord, best } from './sentences.js';
 import { PHRASES } from './phrases.js';
 import { kanaIds } from './words.js';
+import { rulesFor } from './rules.js';
 
 // Each activity appends its card (and choices) to el, then calls done({correct, ms, hinted, speechFallback}) once, at the moment of answer.
 // The caller owns the pause before the next item.
@@ -90,7 +91,9 @@ export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = 
 
 // Four meaning choices under a card the caller built. after() runs on answer.
 export function meaning(el, item, card, done, ctx, after) {
-  const opts = meaningChoices(item, item.kind === 'phrase' ? PHRASES : loadedWords(), ctx.rand ?? Math.random);
+  const mine = item.kind === 'phrase' && ctx.has ? PHRASES.filter(x => x.id === item.id || ctx.has(x.id)) : [];
+  // phrases: wrong answers from phrases you have learned once there are enough, so elimination doesn't give it away
+  const opts = meaningChoices(item, item.kind === 'phrase' ? (mine.length >= 4 ? mine : PHRASES) : loadedWords(), ctx.rand ?? Math.random);
   el.insertAdjacentHTML('beforeend', `${card}<div class="choices gloss">${opts.map(o => `<button class="choice" data-id="${esc(o.id)}">${esc(gloss(o))}</button>`).join('')}</div>`);
   const box = el.querySelector('.choices'), t0 = Date.now();
   let over = false, hinted = false;
@@ -124,7 +127,7 @@ const word = {
     meaning(el, item, `<div class="plate card"><div class="kana word" lang="ja">${ruby(item.w, item.r, showRuby(item, ctx))}</div><p class="prompt">What does it mean?</p></div>`, done, ctx);
   },
   read(el, item, done, ctx) {
-    const s = best(forWord(item.id), ctx.known, ctx.rand ?? Math.random);
+    const s = best(forWord(item.id), ctx.known, ctx.rand ?? Math.random, canRead(ctx));
     el.insertAdjacentHTML('beforeend', `<div class="plate card sentence"><p lang="ja">${sentenceHtml(s, item.id, id => !ctx.known(id))}</p><p class="prompt">What does the marked word mean?</p><p class="prompt en" hidden>${esc(s.en)}</p></div>`);
     meaning(el, item, '', done, ctx, () => el.querySelector('.en').hidden = false);
   },
@@ -154,6 +157,9 @@ const word = {
     })();
   },
 };
+// Can you read this text: every kana in it (and the spelling rules it needs) has a card. Without ctx.has, assume yes.
+export const canRead = ctx => t => !ctx.has || [...kanaIds(t), ...rulesFor(t)].every(id => ctx.has(id));
+
 // ---- Phrases: heard and said from day one; the romaji shows until you have every kana in it.
 const reads = (it, ctx) => kanaIds(it.r).every(id => ctx.has?.(id));
 export const phraseFace = (it, ctx) => `<div class="kana word phrase" lang="ja">${esc(it.r)}</div>${reads(it, ctx) ? '' : `<p class="prompt">${esc(it.ro)}</p>`}`;
