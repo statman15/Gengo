@@ -155,7 +155,7 @@ Warm washi neutrals, sumi ink, one vermilion; the only other hue comes live from
 
 ## Layout
 
-Single column, mobile first. `.screen` is a full-height flex column (min-height 100dvh) with 16px side padding and top padding of safe-area plus 12px; flexible spacer divs (`flex:1`, `flex:.5`) push the cartouche to the top right, the seal to the lower middle and the friends row to the bottom. Spacing rhythm is 4, 8, 10, 12, 16, 20px. Touch targets use `--tap` (48px; 44px on iOS, where root type also follows Dynamic Type). Review is a stack: progress plate, card, then a two-column grid of choices (10px gap). Safe-area insets (`--safe-t`, `--safe-b`) are honoured at top, nav and choices. The nav is sticky at the bottom, bleeding out of the screen padding with a -16px side margin. Dialog is a bottom sheet, max 560px.
+Single column, mobile first. `.screen` is a full-height flex column (min-height 100dvh) with 16px side padding and top padding of safe-area plus 12px; flexible spacer divs (`flex:1`, `flex:.5`) push the cartouche to the top right, the seal to the lower middle and any notes (voice tip, stories and chats) to the bottom, above the nav; the friends standings live only on the Friends tab. Spacing rhythm is 4, 8, 10, 12, 16, 20px. Touch targets use `--tap` (48px; 44px on iOS, where root type also follows Dynamic Type). Review is a stack: a top bar (a round ✕ back to Today, 44px, beside the progress plate), card, then a two-column grid of choices (10px gap). Safe-area insets (`--safe-t`, `--safe-b`) are honoured at top, nav and choices. The nav is sticky at the bottom, bleeding out of the screen padding with a -16px side margin. Dialog is a bottom sheet, max 560px.
 
 ## Elevation & Depth
 
