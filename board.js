@@ -15,13 +15,6 @@ const raced = () => db.race[dayKey(new Date())];
 const plate = (text, go) => go ? `<button class="plate" data-go="${go}">${text}</button>` : `<div class="plate">${text}</div>`;
 
 // The top three board rows (you included) for the home screen, or one plate linking to Friends.
-export async function homeFriends(el) {
-  if (!configured() || !db.settings.groupCode) return void (el.innerHTML = plate('Invite friends', 'friends'));
-  const rows = await board();
-  el.innerHTML = rows === 'offline' ? plate('Offline', 'friends')
-    : byWeek(rows).slice(0, 3).map((r, i) => `<div class="plate${i ? '' : ' lead'}"><b>${r.streak}</b>${esc(r.name)}</div>`).join('');
-}
-
 const stationName = i => STATIONS[Math.min(Math.floor(i), STATIONS.length - 1)].name;
 const row = (r, today) => `<div class="plate row"><span class="who">${esc(r.name)}<br><small class="muted">${stationName(r.station)}</small></span><b>🔥${r.streak}</b><span>${r.week} wk</span><span>${r.race?.day === today ? secs(r.race.time) : '–'}</span></div>`;
 

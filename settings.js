@@ -71,7 +71,7 @@ export const settings = { render: el => {
     <div class="plate set"><span>Start over<br><small class="muted">Erase all progress on this phone</small></span><span class="acts"><button data-reset>Start Over</button></span></div>
     <div class="plate about muted"><p>Gengo <span class="ver">dev</span></p>
       <p>Prints by Utagawa Hiroshige, via Wikimedia Commons. Shippori Mincho B1 under the SIL Open Font License.</p>
-      <p>Dictionary: JMdict (EDRDG, CC BY-SA 4.0). Sentences: Tatoeba (CC BY 2.0 FR). JLPT lists: Jonathan Waller (tanos.co.uk, CC BY). Kanji: KANJIDIC2 (EDRDG, CC BY-SA 4.0) and KanjiVG strokes (Ulrich Apel, CC BY-SA 3.0).</p>
+      <p>Dictionary: JMdict (EDRDG, CC BY-SA 4.0). Sentences: Tatoeba (CC BY 2.0 FR). JLPT lists: Jonathan Waller (tanos.co.uk, CC BY). Word frequency: wordfreq (Robyn Speer et al., CC BY-SA 4.0). Kanji: KANJIDIC2 (EDRDG, CC BY-SA 4.0) and KanjiVG strokes (Ulrich Apel, CC BY-SA 3.0).</p>
       <p>Your study data stays on this phone.</p></div>
     <div class="grow"></div>${nav('settings')}</div>`;
 

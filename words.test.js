@@ -51,4 +51,11 @@ assert.equal(new Set(keys).size, keys.length);
 for (const w of ['学生', '行く', '食べる']) assert.ok(data.some(x => x.w === w && x.j === 5), w);
 for (const r of ['まだ', 'どこ', 'なぜ', 'いつも', 'ください', 'たくさん']) assert.ok(data.filter(x => x.r === r).every(x => x.w === ''), r);
 assert.ok(data.some(x => x.w === '学生'));
+// data/words.json is in frequency order (scripts/word-order.mjs): starters first, then N5, N4 … with common words early
+{
+  const D = JSON.parse(readFileSync('data/words.json', 'utf8')), lv = w => w.j ? 6 - w.j : 9, rest = D.slice(12);
+  assert.ok(rest.every((w, i) => !i || lv(rest[i - 1]) <= lv(w)), 'JLPT levels stay in order');
+  const n5 = rest.filter(w => w.j === 5).map(w => w.w || w.r), at = s => n5.indexOf(s);
+  for (const s of ['言う', '見る', '行く', '何']) assert.ok(at(s) >= 0 && at(s) < 40, `${s} is among the first N5 words`);
+}
 console.log('words ok');

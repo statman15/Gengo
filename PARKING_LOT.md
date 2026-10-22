@@ -11,5 +11,4 @@
 - **Live board refresh.** The Friends board loads once per visit. The Worker's KV list lags ~30 s after a post anyway.
 - **Smaller group-sync gaps.** Leave Group leaves your row on the board for up to 90 days; a race that runs past midnight isn't posted. (Restore now carries the group code, and a join link asks before switching groups.)
 - **Throttle group creation.** `POST /group` on the Worker is unthrottled; the KV free tier simply stops at its daily quota, so no money is at risk.
-- **Word frequency order.** Since 2026-10-19 words inside a JLPT level are ordered by how often they appear in our Tatoeba sentences (plus a polite starter set first). A real corpus frequency list (CC-licensed) would still order N5/N4 better than a 10k-sentence sample.
 - **Personal FSRS parameters.** Gengo uses ts-fsrs's default memory model for everyone. A learner who remembers much less than it predicts (a 70–80% simulated learner) piles up 100–190 reviews a day even with new items paused. Fitting the parameters to each person's own review history (the FSRS optimizer) would schedule them shorter, gentler intervals. Needs a review log, which Gengo doesn't keep yet.

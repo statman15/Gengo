@@ -20,7 +20,7 @@ What Renshuu doesn't have and Gengo will: stories made from your own due words, 
 | Scheduler | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs), vendored as one ES module file (pinned version) so the APK works offline. |
 | Starting point | **Everyone starts from kana.** No AnkiDroid import (parked). |
 | Kana | Every hiragana, then every katakana, is an FSRS card that goes through the same activities. A word unlocks only once you know its kana. |
-| Word order | Most common first: JMdict frequency tags (`news1`/`ichi1`/`nfXX`) plus JLPT level. Each person can also **type in their own lesson words** (for example the chapter they're on in Japanese Living Language). JMdict supplies the meanings. Publishers' lists (Genki, Living Language, Core 2k/6k) are never shipped. |
+| Word order | Most common first: JLPT level, then real word frequency inside each level (wordfreq, `scripts/word-order.mjs`). Each person can also **type in their own lesson words** (for example the chapter they're on in Japanese Living Language). JMdict supplies the meanings. Publishers' lists (Genki, Living Language, Core 2k/6k) are never shipped. |
 | Sessions | **Open-ended.** Due reviews come first. When they're cleared, the app asks "Learn new words?" each time; there's no fixed daily cap. |
 | Activities | One item, several ways to review it. M1: **listening** (hear it, pick the meaning/kana), **kana tiles** (build the word from shuffled tiles), **speaking** (Android only; the iPhone never shows it). Later: reading in context (Tatoeba sentence), stories, kanji tracing, AI chat. |
 | Activity ladder | Picked from the item's **FSRS stability**: weak items get recognition (listening), middle items get building (tiles), strong items get production (speaking, later tracing). Thresholds live in one settings object so they can be tuned. |
@@ -47,6 +47,7 @@ What Renshuu doesn't have and Gengo will: stories made from your own due words, 
 | Tatoeba | Example sentences for reading in context (M2), pre-matched to words by a prep script | CC BY 2.0 FR |
 | Hiroshige, *Tōkaidō* (Met Open Access or Wikimedia scans) | The journey | Public domain |
 | JLPT level lists (Jonathan Waller's, via open-anki-jlpt-decks) | Ordering and coverage | CC BY |
+| [wordfreq](https://github.com/rspeer/wordfreq) (Robyn Speer et al.; subtitles, Wikipedia, news, web, social media) | Word order inside each JLPT level | CC BY-SA 4.0 |
 
 Data prep scripts live in `scripts/` (Node), write trimmed JSON into `data/`, and are run by hand. They're not part of a build.
 
@@ -161,7 +162,7 @@ Review and research: `docs/superpowers/plans/2026-10-22-learning-path.md`. Chris
 - **Kana hints and look-alikes** (`HINT`, `LOOK` in kana.js): a picture line on each basic kana's learn card; kana drills take wrong answers from kana you have, up to two look-alikes first (さ/ち, シ/ツ, ソ/ン…).
 - **Kanji**: none until both basic kana sets are learned; the reading rung asks how one of your own words with the kanji is read (家 → いえ), falling back to the kanji's reading only if you have none.
 - Existing learners keep every card; the rule cards and phrases are simply offered next.
-- Next on the list: tracks (5), numbers/time/money (6), grammar to N5/N4 (7), a real frequency list (8), travel themes (9).
+- Since built: tracks (5), numbers/time/money (6), grammar to N5/N4 (7), travel themes (9) and a real frequency list (8): `scripts/word-order.mjs` reorders `data/words.json` by wordfreq's Japanese list (a verb or adjective counts its stems too, since MeCab splits 食べ|ます; compounds it splits are scored by their rarest part; unscored words keep their place). The 12 polite starters stay first and JLPT levels stay in order. Rerun it after `scripts/words.mjs`, then `scripts/journey-plan.mjs`.
 
 ## Pace (2026-10-22, Chris)
 

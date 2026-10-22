@@ -10,7 +10,7 @@ import * as acts from './activities.js';
 import { lessonHtml, ruleHtml, numberHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
 import { loadSentences } from './sentences.js';
-import { friends, raceView, homeFriends, stageHere } from './board.js';
+import { friends, raceView, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings } from './settings.js';
 import { STATIONS, READINGS, printSrc, stationCost } from './journey.js';
@@ -27,6 +27,8 @@ import { keypad } from './keypad.js';
 document.documentElement.classList.add(os);
 
 const bars = (done, total) => `<div class="plate progress">${'<i class="d"></i>'.repeat(done)}${'<i></i>'.repeat(total - done)}</div>`;
+// A lesson's top bar: progress plus a close button back to Today (as well as the phone's back button). Graded cards stay graded.
+const head = (done, total) => `<div class="sessionbar"><button class="plate x" data-go="today" aria-label="Close">✕</button>${bars(done, total)}</div>`;
 const trk = () => trackOf(db.settings.track);
 const newIds = (n = db.settings.newBatch) => nextNew(db.cards, n, { words: wordOrder(loadedWords(), trk()), mine: db.mine, kanji: loadedKanji(), track: trk() });
 // New items still allowed today: the stage's daily pace, scaled by this week's accuracy, slowed when reviews pile up (pace.js).
@@ -122,7 +124,7 @@ function arrive(i) {
   sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
 }
 
-// A small paper note above the friends row (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
+// A small paper note above the nav (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
 async function tips(el) {
   if (db.settings.voiceTipShown || globalThis.Capacitor?.isNativePlatform?.() || await canHear() || !el.isConnected) return;
   db.settings.voiceTipShown = true; save();
@@ -147,10 +149,8 @@ const views = {
       ${full && db.settings.track ? '<div class="grow" style="flex:.25"></div><p class="plate tip">That’s everything new for today. Learning a little each day sticks better than a lot at once. Keep practising what you’ve learned, or come back tomorrow.</p><button class="plate" data-go="practice">Keep practising</button>' : ''}
       <div class="grow" style="flex:.5"></div>
       <div class="tips"></div>
-      ${db.settings.track ? '<div class="friends"></div>' : ''}
       ${nav('today')}</div>`;
     el.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { db.settings.track = b.dataset.track; save(); show('today'); });
-    if (db.settings.track) homeFriends($('.friends', el)); // the path picker needs the room on small phones
     tips($('.tips', el));
     if (arriving) arrive(station); else if (ended) milestone();
     ended = false;
@@ -191,7 +191,7 @@ const views = {
         ${uses.map(x => `<p class="prompt"><span lang="ja">${ruby(x.w, x.r, true)}</span> ${esc(x.m[0])}</p>`).join('')}<p class="prompt">Tap to hear it</p></button>`
       : `<button class="plate card" data-hear aria-label="Hear ${esc(it.sound ?? it.m[0])}">${it.kind === 'kana' ? `<div class="kana" lang="ja">${it.kana}</div><p class="gloss-big">${esc(it.sound)}</p>${HINT[it.kana] ? `<p class="prompt">${esc(HINT[it.kana])}</p>` : ''}`
         : `<div class="kana word" lang="ja">${ruby(it.w, it.r, true)}</div><p class="gloss-big">${esc(it.m[0])}</p>${it.m.length > 1 ? `<p class="prompt">${esc(it.m.slice(1, 3).join(' · '))}</p>` : ''}`}<p class="prompt">Tap to hear it</p></button>`;
-    el.innerHTML = `<div class="screen">${bars(s.i + 1, s.ids.length)}${face}
+    el.innerHTML = `<div class="screen">${head(s.i + 1, s.ids.length)}${face}
       <div class="grow"></div>
       <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
       <div class="grow" style="flex:.4"></div></div>`;
@@ -235,7 +235,7 @@ const views = {
       const id = storyLeft(s)[0];
       if (!id) { save(); postStats(); return go('today'); }
       const l = s.lines.find(l => l.segs.some(g => g[1] === id));
-      el.innerHTML = `<div class="screen">${bars(s.done.length, s.ids.length)}</div>`;
+      el.innerHTML = `<div class="screen">${head(s.done.length, s.ids.length)}</div>`;
       acts.meaning($('.screen', el), item(id), `<div class="plate card sentence"><p lang="ja">${storyLine(l, id)}</p><p class="prompt">What does the marked word mean?</p><p class="prompt en" hidden>${esc(l.en)}</p></div>`, r => {
         const rating = ratingFor({ ...r, rung: 'read' });
         db.cards[id] = review(db.cards[id], rating, new Date());
@@ -321,7 +321,7 @@ const views = {
     // Conversation leans on listening: a reading drill on a word or phrase becomes a listening one about half the time.
     if (!s.fresh.has(id) && (it.kind === 'word' || it.kind === 'phrase') && ['see', 'read', 'tiles'].includes(rung) && can('hear') && Math.random() < trk().listen) [rung, stretch] = ['hear', false];
     if (!rung) { s.skipped.add(id); s.i++; return show('review'); } // nothing this card can do on this device: skip, ungraded
-    el.innerHTML = `<div class="screen">${bars(i, s.queue.length)}</div>`;
+    el.innerHTML = `<div class="screen">${head(i, s.queue.length)}</div>`;
     const known = x => !!db.cards[x] && isKnown(db.cards[x]);
     (it.kind === 'kana' ? acts : acts.ACTS[it.kind])[rung]($('.screen', el), it, r => {
       if (sess !== s || s.i !== i) return; // left the session or already answered

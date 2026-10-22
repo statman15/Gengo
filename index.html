@@ -126,6 +126,9 @@ button.plate:not(.card) { align-self: center; padding: 12px 22px; font-weight: 6
 
 /* Review: the print recedes, one kana stands on paper */
 .progress { display: flex; gap: 4px; margin: 4px 0 0; padding: 10px 12px; }
+.sessionbar { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; }
+.sessionbar .progress { flex: 1; margin: 0; }
+.sessionbar button.plate.x { flex: none; align-self: auto; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; color: var(--ink); font-size: 1.1rem; font-weight: 600; }
 .progress i { flex: 1; height: 4px; border-radius: 1px; background: color-mix(in srgb, var(--ink) 18%, transparent); }
 .progress i.d { background: var(--seal); }
 .card { margin: auto 0 0; padding: 28px 20px 20px; text-align: center; }
