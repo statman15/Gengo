@@ -33,7 +33,7 @@ function card(c) {
   return { ...out, due, ...(last && { last_review: last }) };
 }
 
-const SETTINGS = { name: ['string', ''], deviceId: ['string', ''], groupCode: ['string', ''], lastBackup: ['number', null], newBatch: ['number', 5], lastStation: ['number', 0], voiceTipShown: ['boolean', false], track: ['string', ''] };
+const SETTINGS = { name: ['string', ''], deviceId: ['string', ''], groupCode: ['string', ''], lastBackup: ['number', null], newBatch: ['number', 5], lastStation: ['number', 0], voiceTipShown: ['boolean', false], aiNoteHidden: ['boolean', false], track: ['string', ''] };
 // revive is pure: raw (parsed JSON or anything) in, a clean db out.
 export function revive(raw) {
   const r = raw && typeof raw === 'object' ? raw : {}, ent = o => Object.entries(o && typeof o === 'object' ? o : {});

@@ -39,6 +39,7 @@ assert.deepEqual(revive(null).cards, {});
 assert.equal(revive(null).settings.voiceTipShown, false);
 assert.equal(revive({ settings: { voiceTipShown: true } }).settings.voiceTipShown, true);
 assert.equal(revive({ settings: { voiceTipShown: 'yes' } }).settings.voiceTipShown, false);
+assert.equal(revive({ settings: { aiNoteHidden: true } }).settings.aiNoteHidden, true);
 
 const before = exportJSON();
 assert.equal(importJSON('not json').ok, false);

@@ -124,6 +124,15 @@ function arrive(i) {
   sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
 }
 
+// Why there's no story or chat on Today yet: no AI connection (until hidden), or not enough words due for review.
+function aiNote() {
+  if (storyOffer() || chatOffer()) return '';
+  if (!aiReady()) return db.settings.aiNoteHidden ? ''
+    : '<p class="plate tip ainote">Daily stories and chats need an AI connection. <button data-go="settings" data-ai-setup>Set it up</button> · <button data-ai-hide>Hide</button></p>';
+  const n = storyWords(dueQueue(db.cards, new Date())).length;
+  return `<p class="plate tip">A chat comes when ${talk.MIN} words are due for review, a story at ${MIN}. ${n ? `${n} due today.` : 'No words due today.'}</p>`;
+}
+
 // A small paper note above the nav (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
 async function tips(el) {
   if (db.settings.voiceTipShown || globalThis.Capacitor?.isNativePlatform?.() || await canHear() || !el.isConnected) return;
@@ -148,9 +157,12 @@ const views = {
         : !due && ids.length ? `<div class="grow" style="flex:.25"></div><button class="plate" data-go="learn">Learn ${batchName(ids)}?</button>` : ''}
       ${full && db.settings.track ? '<div class="grow" style="flex:.25"></div><p class="plate tip">That’s everything new for today. Learning a little each day sticks better than a lot at once. Keep practising what you’ve learned, or come back tomorrow.</p><button class="plate" data-go="practice">Keep practising</button>' : ''}
       <div class="grow" style="flex:.5"></div>
-      <div class="tips"></div>
+      <div class="tips">${db.settings.track ? aiNote() : ''}</div>
       ${nav('today')}</div>`;
     el.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { db.settings.track = b.dataset.track; save(); show('today'); });
+    const hide = $('[data-ai-hide]', el);
+    if (hide) hide.onclick = () => { db.settings.aiNoteHidden = true; save(); hide.closest('.tip').remove(); };
+    if ($('[data-ai-setup]', el)) $('[data-ai-setup]', el).addEventListener('click', () => addEventListener('hashchange', () => setTimeout(() => $('.plate.ai')?.scrollIntoView({ block: 'center' }), 50), { once: true }));
     tips($('.tips', el));
     if (arriving) arrive(station); else if (ended) milestone();
     ended = false;
