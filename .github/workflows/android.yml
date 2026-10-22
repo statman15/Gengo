@@ -56,9 +56,16 @@ jobs:
       contents: write
     env:
       VERSION_CODE: ${{ github.run_number }}
-      VERSION_NAME: 1.0.${{ github.run_number }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The version is package.json's (bumped by hand for a named release, e.g. 1.1.0). Once that tag exists, later
+      # pushes release as major.minor.<run number> (1.1.42), so every release stays unique and newer than the last.
+      - name: Version
+        run: |
+          base=$(node -p "require('./package.json').version")
+          if git ls-remote --exit-code --tags origin "refs/tags/v$base" >/dev/null 2>&1; then v="${base%.*}.${{ github.run_number }}"; else v="$base"; fi
+          echo "VERSION_NAME=$v" >> "$GITHUB_ENV"
+          echo "Releasing $v"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
