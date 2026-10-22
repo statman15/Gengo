@@ -1,5 +1,5 @@
 // The Tōkaidō: Hiroshige's Hōeidō series, Nihonbashi to Kyoto. Mastered kana move you along it.
-const EARLY = 10, EARLY_STATIONS = 14, LATE = 25; // mastered items per station: first 14 stations, then the rest
+const EARLY = 10, EARLY_STATIONS = 14, LATE = 39; // mastered items per station: the first 14 stations, then the rest (Kyoto at 1,700: an average learner at month 12, the end of N4)
 
 // scene = what the print shows; focus = CSS object-position of the portrait crop; 50% 50% until tuned by eye.
 const S = (name, jp, scene, focus = '50% 50%') => ({ name, jp, scene, focus });
