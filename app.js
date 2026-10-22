@@ -103,8 +103,9 @@ async function stationSheet(i, here, mastered) {
     <form method="dialog"><button class="plate">Close</button></form></div>`);
   const p = (await loadPlan())?.[key]?.[i], box = body.querySelector('[data-plan]');
   if (!box) return;
-  box.innerHTML = !p ? '' : `<h3>${next ? `On the road to ${esc(next.name)}` : 'After Kyōto'}</h3>
-    <p class="muted">What a typical learner on the ${esc(t.name)} path learns ${next ? 'between here and the next station' : 'once the road is done'}${p.day != null && i ? `, ${when(p.day)}` : ''}:</p>
+  if (!next) return void (box.innerHTML = `<h3>The end of the road</h3><p>Kyōto is where an average learner on the ${esc(t.name)} path finishes N4, ${when(p?.day ?? 365)}. Learning doesn't stop here: new words keep coming (N3 and beyond), and your reviews keep everything you know.</p>`);
+  box.innerHTML = !p ? '' : `<h3>On the road to ${esc(next.name)}</h3>
+    <p class="muted">What a typical learner on the ${esc(t.name)} path learns between here and the next station${p.day != null && i ? `, ${when(p.day)}` : ''}:</p>
     <ul>${p.learn.map(l => `<li lang="ja">${esc(l)}</li>`).join('') || '<li>Reviews: nothing new is planned on this stretch.</li>'}</ul>`;
 }
 

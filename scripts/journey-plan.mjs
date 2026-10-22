@@ -29,7 +29,7 @@ function summary(ids) {
   for (const n of by('number')) lines.push(`Numbers: ${n.title}`);
   const ws = by('word');
   if (ws.length) lines.push(`${ws.length} word${ws.length > 1 ? 's' : ''}: ${ws.slice(0, 4).map(w => w.w || w.r).join('、')}${ws.length > 4 ? '…' : ''}`);
-  for (const g of by('grammar')) lines.push(`Grammar: ${g.title} (${g.en})`);
+  for (const g of by('grammar')) lines.push(`Grammar: ${g.title}${g.title.includes('(') ? '' : ` (${g.en})`}`);
   const kj = by('kanji');
   if (kj.length) lines.push(`${kj.length} kanji: ${kj.slice(0, 12).map(k => k.k).join('')}${kj.length > 12 ? '…' : ''}`);
   return lines;
