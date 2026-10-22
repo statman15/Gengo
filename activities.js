@@ -66,7 +66,7 @@ export const canWord = (item, caps) => rung => rung === 'hear' ? !!caps.canHear 
 // Reading -> tiles: small kana and ー join the tile before.
 export const splitReading = r => [...r].reduce((o, c) => (o.length && 'ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮー'.includes(c) ? o[o.length - 1] += c : o.push(c), o), []);
 
-// Tap tiles to fill slots, tap a placed one to take it back. Calls done({correct, ms}) once the slots are full (answer.length chars); the caller adds hints.
+// Tap tiles to fill slots, tap a placed one to take it back. Calls done({correct, ms}) once every slot is filled; the caller adds hints.
 export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = esc) {
   if (!el.querySelector('.tray')) el.insertAdjacentHTML('beforeend', '<div class="tray" lang="ja"></div>');
   el.insertAdjacentHTML('beforeend', `<div class="choices tiles" lang="ja">${pieces.map((p, i) =>
@@ -78,7 +78,7 @@ export function tileTray(el, pieces, answer, done, slots = answer.length, fmt = 
       '<i class="slot"></i>'.repeat(Math.max(0, slots - placed.length));
     box.querySelectorAll('.choice').forEach(b => b.classList.toggle('used', placed.includes(+b.dataset.i)));
     const said = placed.map(i => pieces[i]).join('');
-    if (said.length < answer.length) return;
+    if (placed.length < slots) return; // every slot filled: check it (a slot can hold two characters, りょ, so count slots, not characters)
     over = true;
     const correct = said === answer;
     tray.classList.add(correct ? 'right' : 'wrong');
