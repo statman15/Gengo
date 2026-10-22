@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import { GRAMMAR } from './grammar.js';
 
-assert.equal(GRAMMAR.length, 15);
-assert.equal(new Set(GRAMMAR.map(p => p.id)).size, 15);
+assert.equal(GRAMMAR.length, 89);
+assert.equal(new Set(GRAMMAR.map(p => p.id)).size, GRAMMAR.length);
+assert.deepEqual([5, 4].map(j => GRAMMAR.filter(p => p.jlpt === j).length), [51, 38], 'N5 then N4');
+GRAMMAR.forEach((p, i) => i && assert.ok(p.jlpt <= GRAMMAR[i - 1].jlpt, `${p.id}: N5 before N4`));
 GRAMMAR.forEach((p, i) => i && assert.ok(p.words > GRAMMAR[i - 1].words, `${p.id} words increase`));
 
 const KANA = /^[ぁ-ゖァ-ヺー \[\]？。、]+$/;

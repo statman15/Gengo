@@ -17,6 +17,15 @@ t('たかい', 'adj-i', 'adj', 'たかいです'); t('たかい', 'adj-i', 'adj-
 t('いい', 'adj-ix', 'adj', 'いいです'); t('良い', 'adj-ix', 'adj', '良いです'); t('いい', 'adj-ix', 'adj-past', 'よかったです');
 t('いい', 'adj-ix', 'adj-past-neg', 'よくなかったです'); t('たべる', 'v1', 'toString', null);
 t('たべる', 'v1', 'dict', 'たべる'); t('する', 'vs-i', 'nai', 'しない');
+// N4 forms
+t('たべる', 'v1', 'nakatta', 'たべなかった'); t('のむ', 'v5m', 'teimasu', 'のんでいます'); t('いく', 'v5k-s', 'mashou', 'いきましょう');
+t('たべる', 'v1', 'pot', 'たべられる'); t('のむ', 'v5m', 'pot', 'のめる'); t('いく', 'v5k-s', 'pot', 'いける'); t('する', 'vs-i', 'pot', 'できる');
+t('べんきょうする', 'vs-i', 'pot', 'べんきょうできる'); t('くる', 'vk', 'pot', 'こられる'); t('来る', 'vk', 'pot', '来られる'); t('ある', 'v5r-i', 'pot', null);
+t('たべる', 'v1', 'vol', 'たべよう'); t('いく', 'v5k-s', 'vol', 'いこう'); t('かう', 'v5u', 'vol', 'かおう'); t('する', 'vs-i', 'vol', 'しよう'); t('くる', 'vk', 'vol', 'こよう');
+t('いく', 'v5k-s', 'tara', 'いったら'); t('のむ', 'v5m', 'tara', 'のんだら'); t('たべる', 'v1', 'tara', 'たべたら');
+t('たべる', 'v1', 'ba', 'たべれば'); t('まつ', 'v5t', 'ba', 'まてば'); t('する', 'vs-i', 'ba', 'すれば'); t('くる', 'vk', 'ba', 'くれば');
+t('たべる', 'v1', 'pass', 'たべられる'); t('かう', 'v5u', 'pass', 'かわれる'); t('しかる', 'v5r', 'pass', 'しかられる'); t('する', 'vs-i', 'pass', 'される');
+t('たべる', 'v1', 'caus', 'たべさせる'); t('いく', 'v5k-s', 'caus', 'いかせる'); t('まつ', 'v5t', 'caus', 'またせる'); t('くる', 'vk', 'caus', 'こさせる');
 
 // every form id used by grammar.js exists
 for (const p of GRAMMAR) for (const f of p.forms || []) assert.ok(f in FORMS, f);

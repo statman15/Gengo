@@ -20,7 +20,7 @@ export const MILESTONES = [
   { id: 'kata', label: 'All katakana known', hit: c => c.kata >= 1 },
   ...pct('n5', 'N5 words', [25, 50, 75, 100]),
   ...pct('n4', 'N4 words', [25, 50, 75, 100]),
-  { id: 'grammar', label: 'All 15 grammar points known', hit: c => c.grammar >= 1 },
+  { id: 'grammar', label: `All ${GRAMMAR.length} grammar points known`, hit: c => c.grammar >= 1 },
   ...pct('library', '', [10, 25, 50, 75]),
 ];
 export const fresh = (cov, seen) => MILESTONES.filter(m => m.hit(cov) && !seen.includes(m.id));

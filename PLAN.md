@@ -177,3 +177,9 @@ Three paths, chosen on Today before the first lesson (and once by everyone from 
 - **Whole language**: the path from before, kanji with tracing.
 - Better travel glosses for 16 words on every path (急行 express (train), 会計 the bill, 高い expensive; high…).
 - Year-long simulation, average learner: Travel kana day 22, travel set ~day 50, N4 by month 12; Conversation and Whole kana ~day 22, N5 ~month 6, N4 ~month 12.
+
+## Grammar through N5 and N4 (2026-10-22)
+
+`grammar.js` now has **89 points**: all of N5 (51: the first 15, plus こそあど, question words, と/や/から・まで/だけ/より, な-adjectives, が for likes and wants, plain and casual forms, でした, ています, permission and prohibition, て-linking, ましょう, まえに/あとで, から/けど, なる, とき, describing nouns with verbs…) and core N4 (38: potential, と思う, volitional, つもり, てみる, たことがある, たり, ながら, たら/ば/と/なら, ので/のに, んです, ほうがいい, must / don't have to, でしょう/かもしれない, そう/よう/みたい, giving and receiving, てしまう/ておく, すぎる, やすい/にくい, ために/ように, passive, causative, keigo basics, し, はず, にする). Written for Gengo, same format: a lesson with 2–3 kana examples, and fill / form / build drills. The conjugator gained the forms they drill (なかった, ています, ましょう, potential, volitional, たら, ば, passive, causative), and the form drill never offers two identical answers (たべられる is potential and passive).
+- **Sentences:** Tatoeba can't be fetched from a cloud session, so `scripts/grammar-tags.mjs` tags the sentences already in `data/sentences.json` offline (60 shortest per new point; the English decides potential vs passive and にする). Points with few matches use their own examples. A full rebuild with `scripts/sentences.mjs` on a machine that can reach Tatoeba would give the newer points more sentences.
+- **Pace:** a year-long simulation (average learner) learns all of N5's grammar by about month 6 and all 89 points by month 12. Travel still teaches grammar only inside phrases.

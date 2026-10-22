@@ -33,7 +33,9 @@ export const ambiguous = (t, at, choices) => {
   return choices.some(q => q !== x && ((q === 'か' && QW.test(a)) || ('はがを'.includes(q) && 'はがを'.includes(x) && LIKE.test(b)) || (q === 'を' && x === 'に' && PASS.test(b))));
 };
 // Learned words whose pos starts with one of p.pos and that conjugate in all of p.forms.
-export const formWords = (p, cards, words) => words.filter(w => cards[w.id] && p.pos.some(x => w.f.startsWith(x)) && p.forms.every(f => conjugate(w.r, w.f, f)));
+// Each form must exist and differ (たべられる is both potential and passive), so the four choices are always distinct.
+export const formWords = (p, cards, words) => words.filter(w => { if (!cards[w.id] || !p.pos.some(x => w.f.startsWith(x))) return false;
+  const c = p.forms.map(f => conjugate(w.r, w.f, f)); return c.every(Boolean) && new Set(c).size === c.length; });
 export const canGrammar = (p, cards) => rung => rung === 'translate' ? aiReady() : rung !== 'form' || formWords(p, cards, loadedWords()).length > 0;
 
 // A tagged sentence for the point that passes keep, else one of its examples.
