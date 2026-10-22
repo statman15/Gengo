@@ -22,12 +22,14 @@ assert.equal(r('n-youbi', 1), 'げつようび');
 let seed = 11; const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 for (const L of NUMBERS) {
   assert.ok(L.title && L.explain && L.ex.length === 4, L.id);
-  for (let t = 0; t < 200; t++) {
+  for (let t = 0; t < 400; t++) {
     const v = L.gen(rand), rc = readingChoices(L, v, rand), sc = shownChoices(L, v, rand);
     assert.equal(rc.length, 4, `${L.id} ${L.show(v)}: ${rc}`); assert.equal(new Set(rc).size, 4); assert.ok(rc.includes(L.read(v)));
     assert.ok(!rc.some(x => (L.alt?.(v) ?? []).includes(x)), `${L.id}: alt reading offered as wrong`);
     assert.equal(sc.length, 4, `${L.id} shown`); assert.equal(new Set(sc).size, 4); assert.ok(sc.includes(L.show(v)));
     assert.match(L.read(v), /^[ぁ-ゖー]+$/, `${L.id} reading is hiragana`);
+    assert.ok(sc.every(x => !/undefined|NaN/.test(x)), `${L.id}: ${sc}`);
+    if (L.range) for (const x of sc) { const n = parseInt(x.replace(/,/g, '')); if (!isNaN(n)) assert.ok(n >= L.range[0] && n <= L.range[1], `${L.id}: ${x} out of range`); }
   }
 }
 const yen = NUMBERS.find(x => x.id === 'n-yen');
