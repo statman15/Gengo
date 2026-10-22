@@ -50,12 +50,15 @@ export const numberReady = cards => NUM_GATE.every(id => cards[id]) ? NUMBERS.fi
 // Words a phrase card already teaches (はい, ありがとう…): skipped so they aren't learned twice.
 const SAID = new Set(PHRASES.map(p => said(p.r)));
 
-// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), a numbers lesson, then three quarters kana
+// Up to n new ids (at least half of them words once kana are done): one grammar point first, then personal words, then up to a quarter kanji (at least one), a numbers lesson, then three quarters kana
 // (at most one spelling rule), a phrase or two (learned by ear, so they start on day one), then words, either side filling the other.
 // track: a TRACKS entry (tracks.js); words should already be in that track's order (wordOrder).
 export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = trackOf() } = {}) {
   const out = [], g = grammarReady(cards, mine, track.grammar), mw = (mine.words ?? []).filter(id => item(id));
   if (g && n) out.push(g.id);
+  // Someone who already has every basic kana (from before spelling rules existed) gets the missing rules first: they unlock words.
+  const rule = !BASIC.some(id => !cards[id]) && LEARN.find(id => id.startsWith('r-') && !cards[id]);
+  if (rule && n - out.length > 0) out.push(rule);
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
   const kn = track.kanji === 'light' ? 1 : Math.max(1, Math.floor(n / 4)); // a quarter, rounded down (one on Conversation): words stay the bulk
   out.push(...kanjiReady(cards, kanji, track.kanji).slice(0, Math.min(n - out.length, kn)));
@@ -64,7 +67,7 @@ export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = t
   const kanaLeft = LEARN.some(id => !cards[id]);
   const have = new Set(Object.keys(cards).map(item).filter(x => x?.kind === 'word').map(x => x.r)); // a word card already teaches it (learned before phrases existed)
   const phrases = PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, kanaLeft ? 1 : Math.max(1, Math.round(n * track.phrases / 5))).map(p => p.id); // one a batch while kana remain
-  const left = LEARN.filter(id => !cards[id]), second = left.findIndex((id, i) => id.startsWith('r-') && left.slice(0, i).some(x => x.startsWith('r-')));
+  const left = LEARN.filter(id => !cards[id] && !out.includes(id)), second = left.findIndex((id, i) => id.startsWith('r-') && left.slice(0, i).some(x => x.startsWith('r-')));
   const kana = second < 0 ? left : left.slice(0, second); // one rule lesson per batch, and nothing past the next rule until it is learned
   // Kana take three quarters of what's left, then the phrase(s), then words. While kana remain, words only fill gaps.
   const room = n - out.length, ph = phrases.slice(0, room), k0 = Math.min(kana.length, Math.ceil(room * 3 / 4), room - ph.length);
@@ -72,7 +75,18 @@ export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = t
   const ws = [];
   for (const w of words) { if (ws.length >= rest) break; if (!cards[w.id] && !mw.includes(w.id) && !SAID.has(w.r) && eligible(w, cards)) ws.push(w.id); } // stop at `rest`: no need to scan all words
   const k = Math.min(kana.length, Math.max(k0, rest - ws.length)); // kana first: both sets in about 3 weeks
-  return [...out, ...ph, ...kana.slice(0, k), ...ws.slice(0, rest - k)];
+  let res = [...out, ...ph, ...kana.slice(0, k), ...ws.slice(0, rest - k)];
+  // Once every kana is known, words are the bulk: at least half the batch is words when there are words to learn.
+  // Extras give way from the end (phrases, then the numbers lesson, then kanji); the grammar point and spelling rules stay.
+  const isWord = id => /^[wc]-/.test(id), kept = id => isWord(id) || id === g?.id || id.startsWith('r-'); // rules unlock words
+  const want = LEARN.some(id => !cards[id] && !id.startsWith('r-')) ? 0 : Math.floor(n / 2) - res.filter(isWord).length; // kana first, all of them
+  if (want > 0) {
+    const more = [];
+    for (const w of words) { if (more.length >= want) break; if (!cards[w.id] && !res.includes(w.id) && !SAID.has(w.r) && eligible(w, cards)) more.push(w.id); }
+    const drop = new Set(res.filter(id => !kept(id)).reverse().slice(0, Math.max(0, res.length + more.length - n)));
+    res = [...res.filter(id => !drop.has(id)), ...more].slice(0, n);
+  }
+  return res;
 }
 
 const shuffle = (a, rand) => {

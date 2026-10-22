@@ -122,4 +122,20 @@ console.log('phrase skip ok');
   assert.equal(nextNew({ ...hiraAll, ...said }, 5).filter(id => id.startsWith('n-')).length, 1);
   assert.equal(numberReady({ ...hiraAll, 'n-digits': card() }), 'n-tens');
 }
+{ // after kana, words keep at least half of every batch: extras give way, the grammar point stays
+  const known = Object.fromEntries([...KANA, ...RULES, ...PHRASES].map(k => [k.id, card()]));
+  const kj = [{ id: 'k-日', k: '日', j: 5 }, { id: 'k-本', k: '本', j: 5 }];
+  db.custom['c-9'] = { r: 'にほん', w: '日本', m: ['Japan'] };
+  const ws = ['w-1', 'w-2', 'w-3', 'w-4', 'w-5'].map(id => W(id, 'あ'));
+  const ten = Object.fromEntries(Array.from({ length: 20 }, (_, i) => ['w-' + (i + 100), card()]));
+  const b2 = nextNew({ ...known, ...ten, 'c-9': card() }, 2, { words: ws, kanji: kj });
+  assert.equal(b2.filter(id => id.startsWith('w-')).length, 1, `a batch of 2 keeps a word: ${b2}`);
+  assert.ok(b2.some(id => id.startsWith('g-')), 'and the grammar point');
+  const b5 = nextNew({ ...known, ...ten, 'c-9': card() }, 5, { words: ws, kanji: kj });
+  assert.ok(b5.filter(id => id.startsWith('w-')).length >= 2, `a batch of 5 has 2+ words: ${b5}`);
+  assert.equal(nextNew({}, 5, { words: ws }).filter(id => id.startsWith('w-')).length, 0, 'while kana remain, kana come first');
+  const old = Object.fromEntries([...KANA, ...PHRASES].map(k => [k.id, card()])); // from before rules existed: all kana, no rules
+  const b = nextNew({ ...old, ...ten, 'c-9': card() }, 2, { words: ws, kanji: kj });
+  assert.ok(b.some(id => id.startsWith('r-')) && b.some(id => id.startsWith('g-')), `rules and grammar keep their place: ${b}`);
+}
 console.log('load ok');
