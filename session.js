@@ -2,6 +2,7 @@ import { isDue } from './srs.js';
 import { KANA, LOOK } from './kana.js';
 import { LEARN, BASIC } from './rules.js';
 import { PHRASES, said } from './phrases.js';
+import { NUMBERS } from './numbers.js';
 import { trackOf } from './tracks.js';
 import { GRAMMAR } from './grammar.js';
 import { eligible } from './words.js';
@@ -42,10 +43,14 @@ export function kanjiReady(cards, kanji, mode = 'full') {
   return kanji.filter(k => !cards[k.id] && seen.has(k.k)).map(k => k.id);
 }
 
+// Numbers lessons start once every hiragana and its five spelling rules are known (readings like ひゃく, いっぽん need them).
+const NUM_GATE = [...KANA.filter(k => k.script === 'hira').map(k => k.id), 'r-particles', 'r-marks', 'r-sokuon', 'r-youon', 'r-long'];
+export const numberReady = cards => NUM_GATE.every(id => cards[id]) ? NUMBERS.find(x => !cards[x.id])?.id ?? null : null;
+
 // Words a phrase card already teaches (はい, ありがとう…): skipped so they aren't learned twice.
 const SAID = new Set(PHRASES.map(p => said(p.r)));
 
-// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), then three quarters kana
+// Up to n new ids: one grammar point first, then personal words, then up to a quarter kanji (at least one), a numbers lesson, then three quarters kana
 // (at most one spelling rule), a phrase or two (learned by ear, so they start on day one), then words, either side filling the other.
 // track: a TRACKS entry (tracks.js); words should already be in that track's order (wordOrder).
 export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = trackOf() } = {}) {
@@ -54,6 +59,8 @@ export function nextNew(cards, n, { words = [], mine = {}, kanji = [], track = t
   out.push(...mw.filter(id => !cards[id]).slice(0, n - out.length));
   const kn = track.kanji === 'light' ? 1 : Math.max(1, Math.floor(n / 4)); // a quarter, rounded down (one on Conversation): words stay the bulk
   out.push(...kanjiReady(cards, kanji, track.kanji).slice(0, Math.min(n - out.length, kn)));
+  const num = numberReady(cards);
+  if (num && n - out.length > 1) out.push(num); // one numbers lesson a batch
   const kanaLeft = LEARN.some(id => !cards[id]);
   const have = new Set(Object.keys(cards).map(item).filter(x => x?.kind === 'word').map(x => x.r)); // a word card already teaches it (learned before phrases existed)
   const phrases = PHRASES.filter(p => !cards[p.id] && !have.has(said(p.r))).slice(0, kanaLeft ? 1 : Math.max(1, Math.round(n * track.phrases / 5))).map(p => p.id); // one a batch while kana remain

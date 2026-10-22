@@ -7,7 +7,7 @@ import { dueQueue, nextNew, dueSoon, practiceQueue } from './session.js';
 import { budget, paceLine } from './pace.js';
 import { TRACKS, trackOf, wordOrder } from './tracks.js';
 import * as acts from './activities.js';
-import { lessonHtml, ruleHtml, wireHear, canGrammar } from './grammar-acts.js';
+import { lessonHtml, ruleHtml, numberHtml, wireHear, canGrammar } from './grammar-acts.js';
 import { ready, item, ladderFor, loadedWords, loadedKanji } from './items.js';
 import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
@@ -33,7 +33,7 @@ const newIds = (n = db.settings.newBatch) => nextNew(db.cards, n, { words: wordO
 const left = () => budget(db.cards, loadedWords(), db.days, new Date(), dayKey(new Date()), dueSoon(db.cards, new Date()), !!trk().travel);
 // "5 kana", "3 words, a phrase and a grammar point": names what is in a new batch.
 const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x.kind === k).length, s = k => n(k) > 1 ? 's' : '';
-  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('rule') && 'a spelling rule', n('phrase') && `${n('phrase') > 1 ? n('phrase') : 'a'} phrase${s('phrase')}`,
+  return new Intl.ListFormat('en', { type: 'conjunction' }).format([n('kana') && `${n('kana')} kana`, n('rule') && 'a spelling rule', n('number') && 'a numbers lesson', n('phrase') && `${n('phrase') > 1 ? n('phrase') : 'a'} phrase${s('phrase')}`,
     n('word') && `${n('word')} word${s('word')}`, n('kanji') && `${n('kanji')} kanji`, its.some(x => x.kind === 'grammar') && 'a grammar point'].filter(Boolean)); };
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 // One graded review: counts toward today's reviews and this week's accuracy (rating 1 = wrong).
@@ -160,6 +160,7 @@ const views = {
     const say = it.kana ?? it.r ?? uses[0]?.r ?? acts.kanjiReading(it); // a kanji speaks as your word that uses it
     const face = it.kind === 'grammar' ? `<div class="plate card">${lessonHtml(it)}</div>`
       : it.kind === 'rule' ? `<div class="plate card">${ruleHtml(it)}</div>`
+      : it.kind === 'number' ? `<div class="plate card">${numberHtml(it)}</div>`
       : it.kind === 'phrase' ? `<button class="plate card" data-hear aria-label="Hear ${esc(it.m[0])}">${acts.phraseFace(it, { has })}<p class="gloss-big">${esc(it.m[0])}</p><p class="prompt">Tap to hear it</p></button>`
       : it.kind === 'kanji' ? `<button class="plate card" data-hear aria-label="Hear ${esc(it.m[0])}"><div class="kana" lang="ja">${esc(it.k)}</div><p class="gloss-big">${esc(it.m.join(' · '))}</p>
         ${it.on.length ? `<p class="prompt">On <span lang="ja">${esc(rd(it.on))}</span></p>` : ''}${it.kun.length ? `<p class="prompt">Kun <span lang="ja">${esc(rd(it.kun))}</span></p>` : ''}
@@ -170,7 +171,7 @@ const views = {
       <div class="grow"></div>
       <button class="seal" data-next aria-label="${last ? 'Start review' : 'Next'}"><b>${s.i + 1}/${s.ids.length}</b><span>${last ? '始' : '次'}</span></button>
       <div class="grow" style="flex:.4"></div></div>`;
-    if (it.kind === 'grammar' || it.kind === 'rule') wireHear($('.card', el)); else $('[data-hear]', el).onclick = () => speak(say);
+    if (['grammar', 'rule', 'number'].includes(it.kind)) wireHear($('.card', el)); else $('[data-hear]', el).onclick = () => speak(say);
     $('[data-next]', el).onclick = () => {
       if (!last) { s.i++; return show('learn'); }
       const now = new Date();
@@ -179,7 +180,7 @@ const views = {
       save();
       begin(s.ids, new Set(s.ids));
     };
-    if (it.kind !== 'grammar' && it.kind !== 'rule') speak(say);
+    if (!['grammar', 'rule', 'number'].includes(it.kind)) speak(say);
   } },
   // Free practice of recent and weak cards while new items are paused (see budget in pace.js).
   practice: { render: () => { stage({ recede: true }); begin(practiceQueue(db.cards, new Date()), new Set(), true); } },

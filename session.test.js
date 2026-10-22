@@ -5,6 +5,7 @@ import { newCard, pickRung, TUNING } from './srs.js';
 import { dueQueue, nextNew, grammarReady, choices, kanjiReady } from './session.js';
 import { RULES, LEARN, BASIC } from './rules.js';
 import { PHRASES } from './phrases.js';
+import { NUMBERS } from './numbers.js';
 import { ready } from './items.js';
 import { eligible } from './words.js';
 import { db } from './store.js';
@@ -29,7 +30,7 @@ assert.equal(hiraIds.length, 71);
 const said = Object.fromEntries(PHRASES.map(p => [p.id, card()]));
 const hira = { ...said, ...Object.fromEntries(hiraIds.map(id => [id, card()])) };
 assert.deepEqual(nextNew(hira, 4, { words }), ['r-particles', 'w-1', 'w-3'], 'the hiragana rules follow hiragana, one per batch, nothing past the next rule');
-const allKana = { ...said, ...Object.fromEntries([...KANA, ...RULES].map(k => [k.id, card()])) };
+const allKana = { ...said, ...Object.fromEntries([...KANA, ...RULES, ...NUMBERS].map(k => [k.id, card()])) };
 const five = ['w-1', 'w-2', 'w-3', 'w-4', 'w-5'].map(id => W(id, 'あ'));
 assert.deepEqual(nextNew(allKana, 5, { words: five, mine: { words: ['c-1'], grammar: [] } }), ['c-1', 'w-1', 'w-2', 'w-3', 'w-4']);
 const withWords = n => ({ ...allKana, ...Object.fromEntries(Array.from({ length: n }, (_, i) => ['w-' + (i + 100), card()])) });
@@ -112,5 +113,13 @@ console.log('phrase skip ok');
   assert.equal(dueSoon(c, now), 50, 'due within a day');
   const p = { 'h-a': at(5, { stability: 9 }), 'h-i': at(5, { stability: 1 }), 'h-u': at(5, { stability: 20, last_review: new Date(+now - 3600e3) }), 'w-404': at(5, { stability: 0 }) };
   assert.deepEqual(practiceQueue(p, now), ['h-u', 'h-i', 'h-a'], 'reviewed today first, then weakest; unknown ids dropped');
+}
+{ // numbers lessons: none until every hiragana and its rules are known, then one a batch, in order
+  const { numberReady } = await import('./session.js');
+  const hiraAll = Object.fromEntries([...KANA.filter(k => k.script === 'hira'), ...RULES.slice(0, 5)].map(k => [k.id, card()]));
+  assert.equal(numberReady({ ...hiraAll, 'r-long': undefined }), null);
+  assert.equal(numberReady(hiraAll), 'n-digits');
+  assert.equal(nextNew({ ...hiraAll, ...said }, 5).filter(id => id.startsWith('n-')).length, 1);
+  assert.equal(numberReady({ ...hiraAll, 'n-digits': card() }), 'n-tens');
 }
 console.log('load ok');

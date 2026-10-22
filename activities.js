@@ -7,6 +7,7 @@ import { trace } from './trace.js';
 import { meaningChoices } from './words.js';
 import { forWord, best } from './sentences.js';
 import { PHRASES } from './phrases.js';
+import { readingChoices, shownChoices, heardNumber } from './numbers.js';
 import { kanaIds } from './words.js';
 import { rulesFor } from './rules.js';
 
@@ -256,4 +257,48 @@ const kanji = {
   },
   trace,
 };
-export const ACTS = { word, kanji, phrase, rule };
+// ---- Numbers, time and money: each review draws a fresh value from the lesson (a price, a time, a date).
+function pickOne(el, card, opts, right, done, ja, replay) {
+  el.insertAdjacentHTML('beforeend', `${card}<div class="choices${ja ? '' : ' gloss'}">${opts.map(o =>
+    `<button class="choice${ja ? ' kana-choice' : ''}"${o === right ? ' data-ok="1"' : ''}${ja ? ' lang="ja"' : ''}>${esc(o)}</button>`).join('')}</div>`);
+  const box = el.querySelector('.choices'), t0 = Date.now();
+  let over = false, hinted = false;
+  el.querySelector('[data-replay]')?.addEventListener('click', () => { hinted = true; replay(); });
+  box.onclick = e => {
+    const b = e.target.closest('.choice');
+    if (!b || over) return;
+    over = true;
+    box.querySelector('[data-ok]').classList.add('right');
+    if (!b.dataset.ok) b.classList.add('wrong');
+    done({ correct: !!b.dataset.ok, ms: Date.now() - t0, hinted });
+  };
+}
+const number = {
+  read(el, L, done, ctx) {
+    const rand = ctx?.rand ?? Math.random, v = L.gen(rand);
+    pickOne(el, `<div class="plate card"><div class="kana word phrase" lang="ja">${esc(L.show(v))}</div><p class="prompt">How do you say it?</p></div>`,
+      readingChoices(L, v, rand), L.read(v), done, true);
+  },
+  hear(el, L, done, ctx) {
+    const rand = ctx?.rand ?? Math.random, v = L.gen(rand), say = () => speak(L.read(v));
+    say();
+    pickOne(el, '<button class="plate card" data-replay aria-label="Play it again"><p class="prompt">Which did you hear?</p><p class="prompt">Tap to hear it again</p></button>',
+      shownChoices(L, v, rand), L.show(v), done, false, say);
+  },
+  say(el, L, done, ctx) {
+    const v = L.gen(ctx?.rand ?? Math.random);
+    el.insertAdjacentHTML('beforeend', `<div class="plate card"><div class="kana word phrase" lang="ja">${esc(L.show(v))}</div><p class="prompt">Say it in Japanese</p></div>`);
+    const prompt = el.querySelector('.prompt'), t0 = Date.now();
+    (async () => {
+      for (let miss = 0; miss < 2; miss++) {
+        if (heardNumber(await listen(), L, v)) return done({ correct: true, ms: Date.now() - t0, hinted: false });
+        if (!el.isConnected) return;
+        if (!miss) prompt.textContent = 'Try once more';
+      }
+      prompt.textContent = L.read(v);
+      speak(L.read(v));
+      done({ correct: true, ms: Date.now() - t0, hinted: true, speechFallback: true });
+    })();
+  },
+};
+export const ACTS = { word, kanji, phrase, rule, number };

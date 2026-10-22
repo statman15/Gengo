@@ -6,11 +6,12 @@ import { TUNING } from './srs.js';
 import { LEARN } from './rules.js';
 import { PHRASES } from './phrases.js';
 import { TRAVEL_IDS } from './travel.js';
+import { NUMBERS } from './numbers.js';
 
 const KANA = { id: 'kana', name: 'Kana', by: 21, perDay: 9, target: 'week 3' };
 export const STAGES = [KANA, { id: 'n5', name: 'N5 basics', by: 180, perDay: 6, target: 'month 6' }, { id: 'n4', name: 'N4', by: 365, perDay: 4, target: 'month 12' }];
 export const TRAVEL_STAGES = [KANA, { id: 'travel', name: 'Travel set', by: 60, perDay: 7, target: 'month 2' }, ...STAGES.slice(1)];
-const SET = [...PHRASES.map(p => p.id), ...TRAVEL_IDS];
+const SET = [...PHRASES.map(p => p.id), ...TRAVEL_IDS, ...NUMBERS.filter(n => n.travel).map(n => n.id)];
 
 const DAY = 864e5;
 const dayStart = key => new Date(key + 'T00:00:00');

@@ -32,7 +32,8 @@ const many = { ...kana, ...all(words.slice(0, 120).map(w => w.id)) };
 assert.deepEqual(kanjiReady(many, kanji, 'none'), []);
 const t = nextNew(many, 5, { words: order, kanji, track: travel });
 assert.ok(!t.some(id => /^k-\p{Script=Han}|^g-/u.test(id)), 'no kanji or grammar on Travel');
-assert.ok(t.every(id => TRAVEL_IDS.includes(id)), 'travel words come first');
+assert.ok(t.filter(id => id.startsWith('w-')).every(id => TRAVEL_IDS.includes(id)), 'travel words come first');
+assert.ok(t.includes('n-digits'), 'and the numbers lessons (prices, times) start');
 assert.ok(nextNew(many, 5, { words: order, kanji, track: travel, mine: { grammar: ['g-ka'] } }).includes('g-ka'), 'a pulled grammar point still comes');
 
 // Conversation: N5 kanji only, one a batch; Whole: a quarter.

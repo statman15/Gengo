@@ -19,6 +19,9 @@ export const lessonHtml = p => `<div class="lesson"><h2 lang="ja">${esc(p.title)
 // A spelling rule's lesson: the rule and its examples (the right spelling of each), tap to hear.
 export const ruleHtml = r => `<div class="lesson"><h2 lang="ja">${esc(r.title)}</h2><p class="en">${esc(r.en)}</p><p>${esc(r.explain)}</p>${r.ex.slice(0, 4).map(e =>
   `<div class="ex"><button class="hint" data-hear="${esc(e.k[0])}" aria-label="Hear it">▶</button><div><span lang="ja">${esc(e.k[0])}</span><br>${esc(e.r[0])}</div></div>`).join('')}</div>`;
+// A numbers lesson: the pattern and four examples (written form and reading), tap to hear.
+export const numberHtml = L => `<div class="lesson"><h2>${esc(L.title)}</h2><p class="en" lang="ja">${esc(L.en)}</p><p>${esc(L.explain)}</p>${L.ex.map(v =>
+  `<div class="ex"><button class="hint" data-hear="${esc(L.read(v))}" aria-label="Hear it">▶</button><div><span lang="ja">${esc(L.show(v))}</span><br><span lang="ja">${esc(L.read(v))}</span></div></div>`).join('')}</div>`;
 export const wireHear = body => body.onclick = e => { const b = e.target.closest('[data-hear]'); if (b) speak(b.dataset.hear); };
 
 // The first grammar-token segment whose surface is the blank (a particle in a tagged sentence), or -1.

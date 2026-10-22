@@ -4,7 +4,8 @@ import { db, addMine, addCustom, parseList } from './store.js';
 import { search } from './words.js';
 import { item, loadedWords } from './items.js';
 import { GRAMMAR } from './grammar.js';
-import { lessonHtml, ruleHtml, wireHear } from './grammar-acts.js';
+import { lessonHtml, ruleHtml, numberHtml, wireHear } from './grammar-acts.js';
+import { NUMBERS } from './numbers.js';
 import { RULES } from './rules.js';
 import { PHRASES } from './phrases.js';
 import { stageHere } from './board.js';
@@ -76,14 +77,16 @@ const chart = script => CHART.filter(k => k.script === script).map(k => '<i></i>
   `<button class="choice" data-say="${k.kana}"><span lang="ja">${k.kana}</span><small>${k.sound}</small></button>`).join('');
 export const kana = { render: el => {
   stageHere();
-  const rules = RULES.filter(r => db.cards[r.id]), phrases = PHRASES.filter(p => db.cards[p.id]);
+  const rules = RULES.filter(r => db.cards[r.id]), phrases = PHRASES.filter(p => db.cards[p.id]), nums = NUMBERS.filter(n => db.cards[n.id]);
   el.innerHTML = `<div class="screen setlist"><h1 class="plate">Kana chart</h1>
     <h2 class="plate set">Hiragana</h2><div class="kana-grid">${chart('hira')}</div>
     <h2 class="plate set">Katakana</h2><div class="kana-grid">${chart('kata')}</div>
     ${rules.length ? `<h2 class="plate set">Spelling rules</h2>${rules.map(r => `<button class="plate set" style="align-self:stretch;text-align:left" data-rule="${r.id}"><span><b lang="ja">${esc(r.title)}</b><br>${esc(r.en)}</span></button>`).join('')}` : ''}
+    ${nums.length ? `<h2 class="plate set">Numbers, time and money</h2>${nums.map(n => `<button class="plate set" style="align-self:stretch;text-align:left" data-num="${n.id}"><span><b>${esc(n.title)}</b><br><span lang="ja">${esc(n.en)}</span></span></button>`).join('')}` : ''}
     ${phrases.length ? `<h2 class="plate set">Phrases</h2>${phrases.map(p => `<button class="plate set" style="align-self:stretch;text-align:left" data-say="${esc(p.r)}"><span><span lang="ja">${esc(p.r)}</span><br><small>${esc(p.m[0])}</small></span></button>`).join('')}` : ''}
     <div class="grow"></div>${nav('')}</div>`;
-  el.onclick = e => { const b = e.target.closest('[data-say]'), r = e.target.closest('[data-rule]');
+  el.onclick = e => { const b = e.target.closest('[data-say]'), r = e.target.closest('[data-rule]'), m = e.target.closest('[data-num]');
+    if (m) wireHear(sheet(numberHtml(NUMBERS.find(x => x.id === m.dataset.num))));
     if (b) speak(b.dataset.say);
     if (r) wireHear(sheet(ruleHtml(RULES.find(x => x.id === r.dataset.rule)))); };
 } };

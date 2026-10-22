@@ -1,8 +1,9 @@
-// One lookup for every card id: kana, spelling rule, phrase, shipped word, custom word, grammar point, kanji. Plus each item's ladder.
+// One lookup for every card id: kana, spelling rule, phrase, numbers lesson, shipped word, custom word, grammar point, kanji. Plus each item's ladder.
 import { KANA } from './kana.js';
 import { GRAMMAR } from './grammar.js';
 import { RULES } from './rules.js';
 import { PHRASES } from './phrases.js';
+import { NUMBERS } from './numbers.js';
 import { loadWords } from './words.js';
 import { TUNING } from './srs.js';
 import { db } from './store.js';
@@ -10,7 +11,8 @@ import { trackOf } from './tracks.js';
 import { GLOSS } from './travel.js';
 
 const byId = new Map([...KANA.map(k => [k.id, { ...k, kind: 'kana' }]), ...GRAMMAR.map(g => [g.id, { ...g, kind: 'grammar' }]),
-  ...RULES.map(r => [r.id, { ...r, kind: 'rule' }]), ...PHRASES.map(p => [p.id, { ...p, kind: 'phrase' }])]);
+  ...RULES.map(r => [r.id, { ...r, kind: 'rule' }]), ...PHRASES.map(p => [p.id, { ...p, kind: 'phrase' }]),
+  ...NUMBERS.map(n => [n.id, { ...n, kind: 'number' }])]);
 let words = [], kanji = [], loading;
 const loadKanji = async (fetchFn = fetch) => { try { const r = await fetchFn('data/kanji.json'); return r.ok ? await r.json() : []; } catch { return []; } };
 

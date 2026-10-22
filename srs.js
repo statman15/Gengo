@@ -8,6 +8,7 @@ export const TUNING = {
   ladder: {
     kana: [['hear', 0], ['see', 3], ['say', 10]],
     rule: [['see', 0], ['hear', 3]],
+    number: [['read', 0], ['hear', 2], ['say', 6]],
     phrase: [['hear', 0], ['see', 2], ['say', 6]],
     word: [['hear', 0], ['see', 2], ['read', 4], ['tiles', 7], ['say', 12]],
     grammar: [['fill', 0], ['form', 0], ['build', 5], ['translate', 10]],
