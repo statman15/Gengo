@@ -16,3 +16,18 @@ const end = journey(1e6);
 assert.equal(end.station, 54);
 assert.equal(end.progress, 1);
 console.log('journey ok');
+{ // the per-path station plan (scripts/journey-plan.mjs): every path, every station, in order
+  const { readFileSync } = await import('node:fs');
+  const { READINGS } = await import('./journey.js');
+  const plan = JSON.parse(readFileSync('data/journey-plan.json', 'utf8'));
+  assert.deepEqual(Object.keys(plan).sort(), ['talk', 'travel', 'whole']);
+  assert.equal(READINGS.length, STATIONS.length);
+  for (const [t, p] of Object.entries(plan)) {
+    assert.equal(p.length, STATIONS.length, t);
+    p.forEach((s, i) => i && s.day != null && assert.ok(s.day >= p[i - 1].day, `${t} ${i}: days in order`));
+    assert.ok(p[0].learn.some(l => l.startsWith('Hiragana')), `${t}: kana on the first stretch`);
+  }
+  assert.ok(!plan.travel.some(s => s.learn.some(l => /kanji|^Grammar/.test(l))), 'Travel plans no kanji or grammar');
+  assert.ok(plan.whole.some(s => s.learn.some(l => /kanji/.test(l))), 'Whole language plans kanji');
+}
+console.log('journey plan ok');

@@ -13,7 +13,7 @@ import { loadSentences } from './sentences.js';
 import { friends, raceView, homeFriends, stageHere } from './board.js';
 import { postStats, joinFromHash, here } from './group.js';
 import { settings } from './settings.js';
-import { STATIONS, printSrc, stationCost } from './journey.js';
+import { STATIONS, READINGS, printSrc, stationCost } from './journey.js';
 import { HINT } from './kana.js';
 import { words, grammar, kana } from './lists.js';
 import { checkUpdate } from './update.js';
@@ -88,6 +88,26 @@ const coveragePlate = () => { const c = cov(), p = x => Math.round(x * 100) + '%
   return `<div class="plate cov"><span class="wide">${esc(pace.text)}${pace.accuracy ? `<br><small>${esc(pace.accuracy)}</small>` : ''}</span><span>Hiragana <b>${p(c.hira)}</b></span><span>Katakana <b>${p(c.kata)}</b></span><span>N5 words <b>${p(c.n5)}</b></span><span>N4 words <b>${p(c.n4)}</b></span><span>Grammar <b>${Math.round(c.grammar * GRAMMAR.length)}/${GRAMMAR.length}</b></span>
 <span class="wide">Sentences you can read <b>${p(c.library)}</b></span></div>`; };
 
+// The station sheet on the Journey: the print, the name and what it shows, where you stand, and what a typical learner
+// on your path learns on the road from here to the next station (data/journey-plan.json, from scripts/journey-plan.mjs).
+let plan;
+const loadPlan = () => plan ??= fetch('data/journey-plan.json').then(r => r.ok ? r.json() : null).catch(() => null);
+const when = d => d == null ? '' : d < 1 ? 'from day one' : d < 70 ? `around week ${Math.max(1, Math.round(d / 7))}` : `around month ${Math.round(d / 30.4)}`;
+async function stationSheet(i, here, mastered) {
+  const s = STATIONS[i], next = STATIONS[i + 1], t = trk(), key = Object.keys(TRACKS).find(k => TRACKS[k] === t);
+  const state = i < here ? 'Reached' : i === here ? 'You are here' : `${stationCost(i) - mastered} more mastered item${stationCost(i) - mastered === 1 ? '' : 's'} to reach it`;
+  const body = sheet(`<div class="station"><img src="${printSrc(i)}" alt="" style="object-position:${s.focus}">
+    <p class="st-name"><b lang="ja">${s.jp}</b> <span lang="ja">${READINGS[i]}</span></p>
+    <p class="muted">${esc(s.name)} · station ${i + 1} of ${STATIONS.length} · ${state}</p>
+    <p>${esc(s.scene)}.</p><div data-plan><p class="muted">…</p></div>
+    <form method="dialog"><button class="plate">Close</button></form></div>`);
+  const p = (await loadPlan())?.[key]?.[i], box = body.querySelector('[data-plan]');
+  if (!box) return;
+  box.innerHTML = !p ? '' : `<h3>${next ? `On the road to ${esc(next.name)}` : 'After Kyōto'}</h3>
+    <p class="muted">What a typical learner on the ${esc(t.name)} path learns ${next ? 'between here and the next station' : 'once the road is done'}${p.day != null && i ? `, ${when(p.day)}` : ''}:</p>
+    <ul>${p.learn.map(l => `<li lang="ja">${esc(l)}</li>`).join('') || '<li>Reviews: nothing new is planned on this stretch.</li>'}</ul>`;
+}
+
 const cartouche = i => `<div class="cartouche"><b>${STATIONS[i].jp}</b><small>${STATIONS[i].name} · ${i + 1} of 55</small></div>`;
 
 // One-time "You reached <name>": the new print fades in over the old one, and a paper sheet names it.
@@ -137,7 +157,7 @@ const views = {
   journey: { render: el => {
     const { station } = here(), mastered = Object.values(db.cards).filter(isMastered).length;
     stageHere();
-    const row = (s, i) => `<li${i === station ? ' class="here" aria-current="step"' : ''}><span class="no">${i + 1}</span>
+    const row = (s, i) => `<li${i === station ? ' class="here" aria-current="step"' : ''} data-station="${i}" role="button" tabindex="0" aria-label="${s.name}: details"><span class="no">${i + 1}</span>
       <div class="info"><b lang="ja">${s.jp}</b> <span class="name">${s.name}</span><p class="scene">${s.scene}</p></div>
       <span class="state">${i < station ? '<i class="stamp" role="img" aria-label="Reached">済</i>' : i === station ? 'You are here' : `${stationCost(i) - mastered} more`}</span></li>`;
     el.innerHTML = `<div class="screen journey">${cartouche(station)}<div class="grow"></div>
@@ -147,6 +167,9 @@ const views = {
       <div class="grow" style="flex:.25"></div>${nav('journey')}</div>`;
     const road = $('.road', el), cur = $('.here', el);
     road.scrollTop = cur.offsetTop - (road.clientHeight - cur.offsetHeight) / 2;
+    const open = li => li && stationSheet(+li.dataset.station, station, mastered);
+    road.onclick = e => open(e.target.closest('[data-station]'));
+    road.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e.target.closest('[data-station]')); } };
   } },
   friends, race: raceView, settings, words, grammar, kana,
   // Intro plate per new kana (tap to hear), then all of them go straight into a hear review.

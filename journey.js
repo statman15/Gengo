@@ -17,6 +17,12 @@ export const STATIONS = [
   S('Minakuchi', '水口', "Women peel and dry gourd strips for the local delicacy"), S('Ishibe', '石部', "Travellers drink and dance at a country teahouse"), S('Kusatsu', '草津', "Porters hurry past a teahouse known for rice cakes"), S('Ōtsu', '大津', "Ox carts haul rice past the Hashirii well teahouse"), S('Kyōto', '京都', "Travellers cross the Sanjō Bridge into the capital"),
 ];
 
+// The station names in kana, in order, for the station sheet on the Journey.
+export const READINGS = ['にほんばし', 'しながわ', 'かわさき', 'かながわ', 'ほどがや', 'とつか', 'ふじさわ', 'ひらつか', 'おおいそ', 'おだわら',
+  'はこね', 'みしま', 'ぬまづ', 'はら', 'よしわら', 'かんばら', 'ゆい', 'おきつ', 'えじり', 'ふちゅう', 'まりこ', 'おかべ', 'ふじえだ', 'しまだ', 'かなや',
+  'にっさか', 'かけがわ', 'ふくろい', 'みつけ', 'はままつ', 'まいさか', 'あらい', 'しらすか', 'ふたがわ', 'よしだ', 'ごゆ', 'あかさか', 'ふじかわ', 'おかざき', 'ちりゅう',
+  'なるみ', 'みや', 'くわな', 'よっかいち', 'いしやくし', 'しょうの', 'かめやま', 'せき', 'さかのした', 'つちやま', 'みなくち', 'いしべ', 'くさつ', 'おおつ', 'きょうと'];
+
 // Mastered items needed to reach station i.
 export const stationCost = i => i <= EARLY_STATIONS ? i * EARLY : EARLY_STATIONS * EARLY + (i - EARLY_STATIONS) * LATE;
 
