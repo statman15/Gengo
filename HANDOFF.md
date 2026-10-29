@@ -4,9 +4,9 @@ Read CLAUDE.md first, then PLAN.md (decisions and status), DESIGN.md (visual sys
 
 ## Where things stand
 
-- **Released:** Android **1.1.31** on GitHub Releases, and the web app on Pages from the same commit (`9f9596f`). The known-words list below is on the branch until Chris says merge.
+- **Released:** Android **1.1.31** on GitHub Releases, and the web app on Pages from the same commit (`9f9596f`). 1.2.0 (the known-words list) follows.
 - **Branch:** work happens on `claude/keen-ptolemy-j1g925`; Chris says when to merge, usually after seeing screenshots. Merging means a fast-forward of `main` and a push.
-- **Versioning:** `package.json` "version" is 1.1.0. CI names the release `v1.1.0` the first time, then `1.1.<run_number>` once that tag exists. Bump to 1.2.0 in package.json when Chris wants a new minor version.
+- **Versioning:** `package.json` "version" is 1.2.0 (bumped 2026-10-29 at Chris's request; 1.1.x ended at 1.1.31). CI names the release `v1.2.0` the first time, then `1.2.<run_number>` once that tag exists (so the next is about 1.2.34, not 1.2.1). Bump the minor version in package.json when Chris asks for one.
 
 ## Built in this session (2026-10-22)
 

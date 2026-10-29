@@ -1,7 +1,7 @@
 {
   "name": "gengo",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "npm is only for the Capacitor Android shell; the web app itself has no build step.",
   "scripts": {
