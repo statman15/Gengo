@@ -29,7 +29,7 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
   - They show once 5 (story) or 3 (chat) words are learned and an AI is connected.
   - Only due words are graded; the rest is ungraded practice.
   - **Phrases count too**, once you know every kana in them (`usable()` in app.js, which uses `eligible` from words.js). Chris saw "You know 0 so far" with plenty of phrases learned: words only start once you know all the kana in them, and phrases are learned by ear before that.
-- **The Today note** now reads "A daily chat starts once you can read 3 words or phrases, a story at 5. You can read N so far". Without an AI connection it is the set-up/hide note.
+- **The Today note** now reads "A daily chat starts once you can read 3 words or phrases, a story at 5. You can read N so far". When phrases are known but unreadable, it adds "You know M and can read N so far. Still to learn: は for はい · り が と う for ありがとう…" (Chris couldn't tell why nothing showed with 12 known). Without an AI connection it is the set-up/hide note.
 - **My words lists everything you know**: words and phrases, newest first (cards are stored in learn order). Tapping one opens the learn card's face in a sheet and plays it (`wordCard()` in lists.js).
 - **Reviews come in chunks of 50** (`CHUNK` in app.js), with a "50 reviews done, N more are due" screen and *Keep going* / *Take a break* buttons.
   - Cards this device can't drill are remembered across chunks (the module-level `skipped` set) and cleared when the review finishes.

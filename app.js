@@ -23,7 +23,8 @@ import { MIN, storyWords, saved, keep, write } from './story.js';
 import { ready as aiReady } from './ai.js';
 import * as talk from './chat.js';
 import { keypad } from './keypad.js';
-import { eligible } from './words.js';
+import { eligible, kanaIds } from './words.js';
+import { rulesFor } from './rules.js';
 
 document.documentElement.classList.add(os);
 
@@ -142,7 +143,13 @@ function aiNote() {
   if (!aiReady()) return db.settings.aiNoteHidden ? ''
     : '<p class="plate tip ainote">Daily stories and chats need an AI connection. <button data-go="settings" data-ai-setup>Set it up</button> · <button data-ai-hide>Hide</button></p>';
   const n = learnedWords().length;
-  return n >= MIN ? '' : `<p class="plate tip">A daily chat starts once you can read ${talk.MIN} words or phrases, a story at ${MIN}. You can read ${n} so far.</p>`;
+  if (n >= MIN) return '';
+  // Phrases you know by ear but can't read yet, with the kana (or spelling rule) each still needs.
+  const ph = Object.keys(db.cards).map(item).filter(x => x?.kind === 'phrase' && !eligible(x, db.cards));
+  const needs = x => [...kanaIds(x.r), ...rulesFor(x.r)].filter(id => !db.cards[id]).map(id => item(id)?.kana ?? item(id)?.title).filter(Boolean).join(' ');
+  const sofar = ph.length ? `You know ${n + ph.length} and can read ${n} so far. Still to learn: ${ph.slice(0, 3).map(x =>
+    `<span lang="ja">${esc(needs(x))}</span> for <span lang="ja">${esc(x.r)}</span>`).join(' · ')}${ph.length > 3 ? ' and more' : ''}. They come in your next kana lessons.` : `You can read ${n} so far.`;
+  return `<p class="plate tip">A daily chat starts once you can read ${talk.MIN} words or phrases, a story at ${MIN}. ${sofar}</p>`;
 }
 
 // A small paper note above the nav (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
