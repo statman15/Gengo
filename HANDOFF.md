@@ -4,7 +4,7 @@ Read CLAUDE.md first, then PLAN.md (decisions and status), DESIGN.md (visual sys
 
 ## Where things stand
 
-- **Released:** Android **1.1.30** on GitHub Releases, and the web app on Pages from the same commit (`5e7b7eb`). Everything Chris asked for is built, merged and live.
+- **Released:** Android **1.1.31** on GitHub Releases, and the web app on Pages from the same commit (`9f9596f`). The known-words list below is on the branch until Chris says merge.
 - **Branch:** work happens on `claude/keen-ptolemy-j1g925`; Chris says when to merge, usually after seeing screenshots. Merging means a fast-forward of `main` and a push.
 - **Versioning:** `package.json` "version" is 1.1.0. CI names the release `v1.1.0` the first time, then `1.1.<run_number>` once that tag exists. Bump to 1.2.0 in package.json when Chris wants a new minor version.
 
@@ -30,6 +30,7 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
   - Only due words are graded; the rest is ungraded practice.
   - **Phrases count too**, once you know every kana in them (`usable()` in app.js, which uses `eligible` from words.js). Chris saw "You know 0 so far" with plenty of phrases learned: words only start once you know all the kana in them, and phrases are learned by ear before that.
 - **The Today note** now reads "A daily chat starts once you can read 3 words or phrases, a story at 5. You can read N so far". Without an AI connection it is the set-up/hide note.
+- **My words lists everything you know**: words and phrases, newest first (cards are stored in learn order). Tapping one opens the learn card's face in a sheet and plays it (`wordCard()` in lists.js).
 - **Reviews come in chunks of 50** (`CHUNK` in app.js), with a "50 reviews done, N more are due" screen and *Keep going* / *Take a break* buttons.
   - Cards this device can't drill are remembered across chunks (the module-level `skipped` set) and cleared when the review finishes.
 - **Missed days (answered for Chris, no change):** the new-item allowance is per day and never builds up. Reviews do pile up, but 50+ due within a day slows new items to 2 a day, and 100+ pauses them. Low accuracy over the week also slows new items.

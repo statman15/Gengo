@@ -126,7 +126,7 @@ M1 "Kana together" is built and released: https://statman15.github.io/Gengo/ (iP
 
 ## Status (M2, 2026-10-18)
 
-M2 "First words and sentences" is built and reviewed on branch `m2` (subagent-driven from `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`, a review after every task plus a final whole-branch review): 19,892 JMdict words in JLPT order (usually-kana words show as kana), 10,658 Tatoeba sentences, 15 grammar points with lessons and fill/form/build drills, word drills (hear, see, read in a sentence, tiles, say), fading furigana, My words (search, paste a chapter list, custom words), the Grammar list, and coverage milestones on the Journey. Still to check on real phones: the say rung for words and a Japanese voice for TTS.
+M2 "First words and sentences" is built and reviewed on branch `m2` (subagent-driven from `docs/superpowers/plans/2026-10-18-m2-words-and-sentences.md`, a review after every task plus a final whole-branch review): 19,892 JMdict words in JLPT order (usually-kana words show as kana), 10,658 Tatoeba sentences, 15 grammar points with lessons and fill/form/build drills, word drills (hear, see, read in a sentence, tiles, say), fading furigana, My words (search, paste a chapter list, custom words; since 2026-10-29 also every word and phrase you know, newest first, each opening its card: tap to hear it, with its meanings), the Grammar list, and coverage milestones on the Journey. Still to check on real phones: the say rung for words and a Japanese voice for TTS.
 
 ## Status (M3, 2026-10-19)
 

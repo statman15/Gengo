@@ -1,4 +1,4 @@
-// "My words" (search, paste a list, custom words), the Grammar list and the kana chart.
+// "My words" (search, paste a list, custom words, every word and phrase you know), the Grammar list and the kana chart.
 import { $, esc, sheet, nav, ruby } from './ui.js';
 import { db, addMine, addCustom, parseList } from './store.js';
 import { search } from './words.js';
@@ -11,31 +11,45 @@ import { PHRASES } from './phrases.js';
 import { stageHere } from './board.js';
 import { KANA as CHART } from './kana.js';
 import { speak } from './speech.js';
+import { phraseFace } from './activities.js';
 
 const KANA = /^[ぁ-ゖァ-ヺー]+$/;
-const mark = id => db.cards[id] ? 'Learning' : db.mine.words.includes(id) ? 'Added' : '';
-const wrow = (x, label = true) => `<div class="plate set"><span lang="ja">${ruby(x.w, x.r, true)}<br><small>${esc(x.m[0])}</small></span>${
-  mark(x.id) ? (label ? `<span class="muted">${mark(x.id)}</span>` : '') : `<span class="acts"><button data-add="${esc(x.id)}">Add</button></span>`}</div>`;
-const mine = f => db.mine.words.map(item).filter(x => x && f(x.id)).map(x => wrow(x, false)).join('');
+const mark = id => db.mine.words.includes(id) ? 'Added' : '';
+// A word you know opens its card (tap to hear it); others can be added to your queue.
+const known = (x, face = ruby(x.w, x.r, true)) => `<button class="plate set" style="width:100%;text-align:left" data-card="${esc(x.id)}"><span><span lang="ja">${face}</span><br><small>${esc(x.m[0])}</small></span></button>`;
+const wrow = x => db.cards[x.id] ? known(x) : `<div class="plate set"><span lang="ja">${ruby(x.w, x.r, true)}<br><small>${esc(x.m[0])}</small></span>${
+  mark(x.id) ? `<span class="muted">${mark(x.id)}</span>` : `<span class="acts"><button data-add="${esc(x.id)}">Add</button></span>`}</div>`;
+// Newest first: cards are stored in the order they were learned.
+const knownOf = kind => Object.keys(db.cards).map(item).filter(x => x?.kind === kind).reverse();
+// The learn card's face in a sheet: the word (reading over any kanji) or phrase, its meanings, and its sound, played on open.
+function wordCard(it) {
+  const face = it.kind === 'phrase' ? phraseFace(it, { has: id => !!db.cards[id] }) : `<div class="kana word${[...it.r].length > 4 ? ' phrase' : ''}" lang="ja">${ruby(it.w, it.r, true)}</div>`;
+  const b = sheet(`<button class="plate card" style="width:100%" data-hear aria-label="Hear ${esc(it.m[0])}">${face}<p class="gloss-big">${esc(it.m[0])}</p>${
+    it.m.length > 1 ? `<p class="prompt">${esc(it.m.slice(1, 4).join(' · '))}</p>` : ''}<p class="prompt">Tap to hear it</p></button><form method="dialog"><button class="plate">Close</button></form>`);
+  $('[data-hear]', b).onclick = () => speak(it.r);
+  speak(it.r);
+}
 let q = '';
 
 const customForm = line => `<form class="plate set" data-line><span>${esc(line)}<input name="r" aria-label="Reading in kana" placeholder="Reading (kana)" value="${KANA.test(line) ? esc(line) : ''}"><input name="m" aria-label="Meaning" placeholder="Meaning"><input name="w" aria-label="Written form" placeholder="Written form (optional)" value="${KANA.test(line) ? '' : esc(line)}"><small class="muted" data-err hidden></small></span><button class="acts">Add your own</button></form>`;
 
 export const words = { render: el => {
   stageHere();
-  const again = () => words.render(el);
+  const again = () => words.render(el), ws = knownOf('word'), ps = knownOf('phrase');
   const list = () => { const hits = search(loadedWords(), q).map(wrow).join(''); $('.hits', el).innerHTML = hits || (q.trim() ? '<p class="plate set muted">No match</p>' : ''); };
   el.innerHTML = `<div class="screen setlist"><h1 class="plate">My words</h1>
     <input class="plate set" type="search" aria-label="Search words" placeholder="Search Japanese or English" autocomplete="off" value="${esc(q)}">
     <div class="hits"></div><button class="plate" data-paste>Paste a list</button>
-    <div class="lists"><h2 class="plate set">Next up</h2>${mine(id => !db.cards[id]) || '<p class="plate set muted">Nothing queued</p>'}
-      <h2 class="plate set">Learning</h2>${mine(id => db.cards[id]) || '<p class="plate set muted">Nothing yet</p>'}</div>
+    <div class="lists"><h2 class="plate set">Next up</h2>${db.mine.words.map(item).filter(x => x && !db.cards[x.id]).map(wrow).join('') || '<p class="plate set muted">Nothing queued</p>'}
+      <h2 class="plate set">Words you know (${ws.length})</h2>${ws.map(x => known(x)).join('') || '<p class="plate set muted">None yet: words start once you know the kana in them</p>'}
+      <h2 class="plate set">Phrases you know (${ps.length})</h2>${ps.map(x => known(x, esc(x.r))).join('') || '<p class="plate set muted">None yet</p>'}</div>
     <div class="grow"></div>${nav('')}</div>`;
   list();
   $('[type=search]', el).oninput = e => { q = e.target.value; list(); };
   el.onclick = e => {
-    const b = e.target.closest('[data-add]');
+    const b = e.target.closest('[data-add]'), c = e.target.closest('[data-card]');
     if (b) { addMine('words', b.dataset.add); again(); }
+    if (c) wordCard(item(c.dataset.card));
     if (!e.target.closest('[data-paste]')) return;
     const s = sheet('<form><p>One word per line</p><textarea name="t" rows="8" aria-label="Words to add"></textarea><button class="plate">Add words</button></form>');
     $('#sheet').addEventListener('close', again, { once: true });
