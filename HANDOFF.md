@@ -4,7 +4,7 @@ Read CLAUDE.md first, then PLAN.md (decisions and status), DESIGN.md (visual sys
 
 ## Where things stand
 
-- **Released:** Android **1.1.31** on GitHub Releases, and the web app on Pages from the same commit (`9f9596f`). Then **1.2.0** (the known-words list).
+- **Released:** Android **1.2.1** on GitHub Releases, and the web app on Pages from the same commit (`c3f1857`). Today's releases: 1.1.30 (learned words, review chunks), 1.1.31 (phrases count), 1.2.0 (My words list), 1.2.1 (the fuller Today note and the new release numbering).
 - **Branch:** work happens on `claude/keen-ptolemy-j1g925`; Chris says when to merge, usually after seeing screenshots. Merging means a fast-forward of `main` and a push.
 - **Versioning:** `package.json` "version" is 1.2.0 (bumped 2026-10-29 at Chris's request; 1.1.x ended at 1.1.31). CI names the release `v1.2.0` the first time, then counts up from the highest `v1.2.N` tag: 1.2.1, 1.2.2… (the Version step in `.github/workflows/android.yml`; since 2026-10-29, before that it used the run number). The Android versionCode is still the run number, so it always increases. Bump the minor version in package.json when Chris asks for one.
 
@@ -33,7 +33,12 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
 - **My words lists everything you know**: words and phrases, newest first (cards are stored in learn order). Tapping one opens the learn card's face in a sheet and plays it (`wordCard()` in lists.js).
 - **Reviews come in chunks of 50** (`CHUNK` in app.js), with a "50 reviews done, N more are due" screen and *Keep going* / *Take a break* buttons.
   - Cards this device can't drill are remembered across chunks (the module-level `skipped` set) and cleared when the review finishes.
+- **Release numbering** counts up (1.2.1, 1.2.2…) instead of using the run number; see Versioning above.
 - **Missed days (answered for Chris, no change):** the new-item allowance is per day and never builds up. Reviews do pile up, but 50+ due within a day slows new items to 2 a day, and 100+ pauses them. Low accuracy over the week also slows new items.
+
+## Open
+
+- **Chris still had no story or chat on 1.2.0**, with the AI connected and 12 words and phrases known. Most likely most of them are phrases with kana he hasn't learned yet. 1.2.1's note now says which. If the note shows nothing and there's still no chat or story button, it's a bug: ask for a backup (Settings → Back up), load it locally and check `learnedWords()`, `storyOffer()` and `chatOffer()`.
 
 ## Gotchas
 
@@ -45,9 +50,13 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
 - **The Pages deploy job sometimes sits queued** for 5–10 minutes. It goes queued, then waiting, then done; just recheck.
 - **Don't run `pkill -f`**: it matches its own shell. Kill by PID.
 - **A docs-only push to main may not start a release** (the 2026-10-22 handoff merge didn't). Don't promise one; check the Actions runs.
+- **Seeding test data:** each card needs every field in `NUM` in store.js, including `learning_steps`, or `revive` drops it silently. After seeding localStorage, `reload()` the page: `goto` to a new hash on the same page doesn't reload, so the old db stays in memory. The AI setting is the `gengo-ai` key, e.g. `{preset:'gemini', gemini:{key:'x', model:'m'}}`.
 - **Driving drills in headless Chrome:** clicking the first `.choices .choice`, else the first `button.plate` that isn't the close button or a nav link, gets through a review at about 7 clicks a card. Allow about 400 clicks for 50 cards.
 
 ## Ideas not started (see PARKING_LOT.md)
+
+- My words: the search box searches the whole dictionary. Filtering your known words would help once the list is long (offered to Chris, not asked for yet).
+- Hiding the no-AI note leaves Today with no hint at all. Consider keeping a short line, or explaining it on My words.
 
 - Personal FSRS parameters. These need a review log first, and would help learners who forget more than the default model predicts.
 - Tune the print focus for each station.
