@@ -23,6 +23,7 @@ import { MIN, storyWords, saved, keep, write } from './story.js';
 import { ready as aiReady } from './ai.js';
 import * as talk from './chat.js';
 import { keypad } from './keypad.js';
+import { eligible } from './words.js';
 
 document.documentElement.classList.add(os);
 
@@ -41,8 +42,11 @@ const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: fals
 // One graded review: counts toward today's reviews and this week's accuracy (rating 1 = wrong).
 const tally = rating => { const d = today(); d.reviews++; d.graded = (d.graded ?? 0) + 1; if (rating > 1) d.right = (d.right ?? 0) + 1; };
 // Learned words, the ones closest to due first: they fill today's story and chat when too few words are due.
-const learnedWords = () => Object.keys(db.cards).filter(id => item(id)?.kind === 'word').sort((a, b) => new Date(db.cards[a].due) - new Date(db.cards[b].due));
-const todaysWords = () => storyWords(dueQueue(db.cards, new Date()), learnedWords());
+// Stories and chats use words, and phrases once you know their kana (phrases are learned by ear before that).
+const usable = id => { const it = item(id); return it?.kind === 'word' || it?.kind === 'phrase' && eligible(it, db.cards); };
+const learnedWords = () => Object.keys(db.cards).filter(usable).sort((a, b) => new Date(db.cards[a].due) - new Date(db.cards[b].due));
+const dueWords = () => dueQueue(db.cards, new Date()).filter(usable);
+const todaysWords = () => storyWords(dueWords(), learnedWords());
 // Today's story: the ids still to question, and whether Today offers it.
 const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id]);
 const storyOffer = () => { const s = saved(dayKey(new Date()));
@@ -50,7 +54,7 @@ const storyOffer = () => { const s = saved(dayKey(new Date()));
 const storyLine = (l, markId) => l.segs.map(([t, id]) => id && (!markId || id === markId) ? `<mark>${esc(t)}</mark>` : esc(t)).join('');
 // Today's chat: offered once MIN due words are free of today's story; stays on Today until it is graded.
 const chatOffer = () => { const day = dayKey(new Date()), c = talk.saved(day);
-  return c ? !c.applied : aiReady() && talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids, learnedWords()).length >= talk.MIN; };
+  return c ? !c.applied : aiReady() && talk.chatWords(dueWords(), saved(day)?.ids, learnedWords()).length >= talk.MIN; };
 // Today's one-time question (new learners, and anyone from before tracks): which path. Settings can change it later.
 const trackPicker = () => `<div class="plate tracks"><p>Choose your path. You can switch any time in Settings and keep everything.</p>${
   Object.entries(TRACKS).map(([k, t]) => `<button class="choice" data-track="${k}"><b>${t.name}</b><small>${t.short}</small></button>`).join('')}</div>`;
@@ -138,7 +142,7 @@ function aiNote() {
   if (!aiReady()) return db.settings.aiNoteHidden ? ''
     : '<p class="plate tip ainote">Daily stories and chats need an AI connection. <button data-go="settings" data-ai-setup>Set it up</button> · <button data-ai-hide>Hide</button></p>';
   const n = learnedWords().length;
-  return n >= MIN ? '' : `<p class="plate tip">A daily chat starts once you’ve learned ${talk.MIN} words, a story at ${MIN}. You know ${n} so far.</p>`;
+  return n >= MIN ? '' : `<p class="plate tip">A daily chat starts once you can read ${talk.MIN} words or phrases, a story at ${MIN}. You can read ${n} so far.</p>`;
 }
 
 // A small paper note above the nav (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
@@ -271,7 +275,7 @@ const views = {
     const day = dayKey(new Date());
     let c = talk.saved(day);
     if (!c) {
-      const ids = talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids, learnedWords()), { jp, name, scene } = STATIONS[here().station];
+      const ids = talk.chatWords(dueWords(), saved(day)?.ids, learnedWords()), { jp, name, scene } = STATIONS[here().station];
       if (ids.length < talk.MIN) return go('today');
       talk.keep(c = { day, ids, station: { jp, name, scene }, log: [] });
     }

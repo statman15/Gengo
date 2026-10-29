@@ -16,10 +16,10 @@ ${kana.length < KANA.length ? `- Use ONLY these kana: ${kana.join('')}.
 }
 
 export const MIN = 5, MAX = 8;
-// Word ids the story will use: due words (most overdue first), then other learned words (`learned`, in the order given) to fill
+// Word and phrase ids the story will use: due ones (most overdue first), then other learned words (`learned`, in the order given) to fill
 // it up, so a learner who keeps up with reviews still gets a story. The story card shows once there are MIN.
 export const storyWords = (due, learned = []) => {
-  const word = id => item(id)?.kind === 'word', ws = due.filter(word);
+  const word = id => ['word', 'phrase'].includes(item(id)?.kind), ws = due.filter(word);
   return [...ws, ...learned.filter(id => word(id) && !ws.includes(id))].slice(0, MAX);
 };
 

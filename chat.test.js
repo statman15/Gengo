@@ -38,5 +38,7 @@ assert.deepEqual(chatWords([], [], ['w-3', 'w-4']), ['w-3', 'w-4'], 'nothing due
   const { storyWords } = await import('./story.js');
   assert.deepEqual(storyWords(['w-2'], ['w-1', 'w-2', 'w-3']), ['w-2', 'w-1', 'w-3']);
   assert.deepEqual(storyWords([], ['w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6']).length, 6);
+  assert.deepEqual(storyWords(['p-hai'], ['w-1', 'p-arigatou', 'k-a']), ['p-hai', 'w-1', 'p-arigatou'], 'phrases count, kana don’t');
+  assert.deepEqual(chatWords(['p-hai'], [], ['p-iie']), ['p-hai', 'p-iie'], 'a chat can use phrases');
 }
 console.log('chat words ok');

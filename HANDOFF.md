@@ -28,7 +28,8 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
   - They now take due words first, then other learned words, closest to due first (`learnedWords()` in app.js; `storyWords(due, learned)` and `chatWords(due, story, learned)`).
   - They show once 5 (story) or 3 (chat) words are learned and an AI is connected.
   - Only due words are graded; the rest is ungraded practice.
-- **The Today note** now reads "A daily chat starts once you've learned 3 words, a story at 5. You know N so far". Without an AI connection it is the set-up/hide note.
+  - **Phrases count too**, once you know every kana in them (`usable()` in app.js, which uses `eligible` from words.js). Chris saw "You know 0 so far" with plenty of phrases learned: words only start once you know all the kana in them, and phrases are learned by ear before that.
+- **The Today note** now reads "A daily chat starts once you can read 3 words or phrases, a story at 5. You can read N so far". Without an AI connection it is the set-up/hide note.
 - **Reviews come in chunks of 50** (`CHUNK` in app.js), with a "50 reviews done, N more are due" screen and *Keep going* / *Take a break* buttons.
   - Cards this device can't drill are remembered across chunks (the module-level `skipped` set) and cleared when the review finishes.
 - **Missed days (answered for Chris, no change):** the new-item allowance is per day and never builds up. Reviews do pile up, but 50+ due within a day slows new items to 2 a day, and 100+ pauses them. Low accuracy over the week also slows new items.
