@@ -32,4 +32,11 @@ assert.deepEqual(chatWords(['w-1', 'w-2', 'w-3', 'w-4'], []), ['w-1', 'w-2', 'w-
 assert.deepEqual(chatWords(['w-1', 'w-2', 'w-3', 'w-4'], ['w-1', 'w-2']), ['w-3', 'w-4', 'w-1', 'w-2'], 'too few fresh words: story words join in');
 assert.deepEqual(chatWords([], ['w-5', 'w-6', 'w-1']), ['w-5', 'w-6', 'w-1'], 'story already reviewed them: still a chat to practise');
 assert.deepEqual(chatWords(['w-1', 'w-2', 'w-3', 'w-4'], ['w-5']), ['w-1', 'w-2', 'w-3', 'w-4'], 'enough fresh words: story words stay out');
+assert.deepEqual(chatWords(['w-1'], ['w-2'], ['w-1', 'w-3', 'w-2', 'w-4']), ['w-1', 'w-3', 'w-4'], 'few due: learned words fill in, story words stay out');
+assert.deepEqual(chatWords([], [], ['w-3', 'w-4']), ['w-3', 'w-4'], 'nothing due: still learned words to practise');
+{ // the story fills up with learned words too, due ones first
+  const { storyWords } = await import('./story.js');
+  assert.deepEqual(storyWords(['w-2'], ['w-1', 'w-2', 'w-3']), ['w-2', 'w-1', 'w-3']);
+  assert.deepEqual(storyWords([], ['w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6']).length, 6);
+}
 console.log('chat words ok');

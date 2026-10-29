@@ -5,10 +5,11 @@ import { chat, json } from './ai.js';
 import { limits } from './story.js';
 
 export const MIN = 3, MAX = 5, TURNS = 5;
-// Due words for the chat, leaving out today's story words; if fewer than MIN are left, today's story words join in for practice
-// (the story may already have reviewed them; the chat only reviews words that are still due).
-export const chatWords = (due, story = []) => {
+// Words for the chat: due words, then other learned words (`learned`, in the order given), leaving out today's story words; if
+// fewer than MIN are left, today's story words join in for practice. The chat only reviews words that are still due.
+export const chatWords = (due, story = [], learned = []) => {
   const word = id => item(id)?.kind === 'word', ws = due.filter(id => word(id) && !story.includes(id));
+  ws.push(...learned.filter(id => word(id) && !story.includes(id) && !ws.includes(id)));
   return [...ws, ...(ws.length < MIN ? story.filter(word) : [])].slice(0, MAX);
 };
 

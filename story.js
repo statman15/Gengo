@@ -1,4 +1,5 @@
-// Today's story: the AI writes a short kana scene at your Tōkaidō station using your due words; one question per word reviews it.
+// Today's story: the AI writes a short kana scene at your Tōkaidō station using your words, due ones first; one question per word
+// reviews it (a due word) or practises it (any other, ungraded).
 import { GRAMMAR } from './grammar.js';
 import { item } from './items.js';
 import { chat, json } from './ai.js';
@@ -15,8 +16,12 @@ ${kana.length < KANA.length ? `- Use ONLY these kana: ${kana.join('')}.
 }
 
 export const MIN = 5, MAX = 8;
-// Due word ids (most overdue first) the story will use; the story card shows once there are MIN.
-export const storyWords = due => due.filter(id => item(id)?.kind === 'word').slice(0, MAX);
+// Word ids the story will use: due words (most overdue first), then other learned words (`learned`, in the order given) to fill
+// it up, so a learner who keeps up with reviews still gets a story. The story card shows once there are MIN.
+export const storyWords = (due, learned = []) => {
+  const word = id => item(id)?.kind === 'word', ws = due.filter(word);
+  return [...ws, ...learned.filter(id => word(id) && !ws.includes(id))].slice(0, MAX);
+};
 
 export function prompt(words, cards, station) {
   return [

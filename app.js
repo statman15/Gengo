@@ -40,14 +40,17 @@ const batchName = ids => { const its = ids.map(item), n = k => its.filter(x => x
 const today = () => (db.days[dayKey(new Date())] ??= { reviews: 0, cleared: false });
 // One graded review: counts toward today's reviews and this week's accuracy (rating 1 = wrong).
 const tally = rating => { const d = today(); d.reviews++; d.graded = (d.graded ?? 0) + 1; if (rating > 1) d.right = (d.right ?? 0) + 1; };
-// Today's story: the ids still to question (asked words that are still due), and whether Today offers it.
-const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id] && isDue(db.cards[id], new Date()));
+// Learned words, the ones closest to due first: they fill today's story and chat when too few words are due.
+const learnedWords = () => Object.keys(db.cards).filter(id => item(id)?.kind === 'word').sort((a, b) => new Date(db.cards[a].due) - new Date(db.cards[b].due));
+const todaysWords = () => storyWords(dueQueue(db.cards, new Date()), learnedWords());
+// Today's story: the ids still to question, and whether Today offers it.
+const storyLeft = s => s.ids.filter(id => !s.done.includes(id) && item(id) && db.cards[id]);
 const storyOffer = () => { const s = saved(dayKey(new Date()));
-  return s ? storyLeft(s).length > 0 : aiReady() && storyWords(dueQueue(db.cards, new Date())).length >= MIN; };
+  return s ? storyLeft(s).length > 0 : aiReady() && todaysWords().length >= MIN; };
 const storyLine = (l, markId) => l.segs.map(([t, id]) => id && (!markId || id === markId) ? `<mark>${esc(t)}</mark>` : esc(t)).join('');
 // Today's chat: offered once MIN due words are free of today's story; stays on Today until it is graded.
 const chatOffer = () => { const day = dayKey(new Date()), c = talk.saved(day);
-  return c ? !c.applied : aiReady() && talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids).length >= talk.MIN; };
+  return c ? !c.applied : aiReady() && talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids, learnedWords()).length >= talk.MIN; };
 // Today's one-time question (new learners, and anyone from before tracks): which path. Settings can change it later.
 const trackPicker = () => `<div class="plate tracks"><p>Choose your path. You can switch any time in Settings and keep everything.</p>${
   Object.entries(TRACKS).map(([k, t]) => `<button class="choice" data-track="${k}"><b>${t.name}</b><small>${t.short}</small></button>`).join('')}</div>`;
@@ -55,6 +58,9 @@ const go = v => location.hash === '#' + v ? show(v) : (location.hash = v);
 
 // The live session ({view:'learn'|'review', ...}); show() drops it whenever the user leaves for another view.
 let sess = null;
+// Reviews come in chunks of CHUNK, with a break offered between them, so a backlog after missed days isn't one endless stack.
+// skipped: cards this device can't drill (no rung fits), kept so the next chunk doesn't offer them again.
+const CHUNK = 50, skipped = new Set();
 
 // Resolve what this device can do, then run the queue. learned = ids just learned: always the first rung, never stretched.
 // practice: free practice while new items are paused; nothing is graded, so the schedule stays as FSRS set it.
@@ -80,7 +86,9 @@ function milestone() {
 
 function finish(s) {
   ended = true;
-  if (s.queue.length && !dueQueue(db.cards, new Date()).some(id => !s.skipped.has(id))) today().cleared = true;
+  s.skipped.forEach(id => skipped.add(id));
+  if (s.queue.length && !dueQueue(db.cards, new Date()).some(id => !skipped.has(id))) today().cleared = true;
+  skipped.clear();
   save();
   postStats();
   go('today');
@@ -124,13 +132,13 @@ function arrive(i) {
   sheet(`<p lang="ja" style="font-family:var(--mincho);font-weight:800;font-size:1.9rem">${st.jp}</p><p>You reached ${st.name}</p><form method="dialog"><button class="plate">Continue</button></form>`);
 }
 
-// Why there's no story or chat on Today yet: no AI connection (until hidden), or not enough words due for review.
+// Why there's no story or chat on Today yet: no AI connection (until hidden), or too few words learned.
 function aiNote() {
   if (storyOffer() || chatOffer()) return '';
   if (!aiReady()) return db.settings.aiNoteHidden ? ''
     : '<p class="plate tip ainote">Daily stories and chats need an AI connection. <button data-go="settings" data-ai-setup>Set it up</button> · <button data-ai-hide>Hide</button></p>';
-  const n = storyWords(dueQueue(db.cards, new Date())).length;
-  return `<p class="plate tip">A chat comes when ${talk.MIN} words are due for review, a story at ${MIN}. ${n ? `${n} due today.` : 'No words due today.'}</p>`;
+  const n = learnedWords().length;
+  return n >= MIN ? '' : `<p class="plate tip">A daily chat starts once you’ve learned ${talk.MIN} words, a story at ${MIN}. You know ${n} so far.</p>`;
 }
 
 // A small paper note above the nav (web only, once): how to add a Japanese voice on iPhone. The backup reminder lives in Settings.
@@ -220,12 +228,12 @@ const views = {
   } },
   // Free practice of recent and weak cards while new items are paused (see budget in pace.js).
   practice: { render: () => { stage({ recede: true }); begin(practiceQueue(db.cards, new Date()), new Set(), true); } },
-  // The story, then one meaning question per marked word that is still due; each answer is that word's review.
+  // The story, then one meaning question per marked word: the review of a due word, practice (ungraded) for any other.
   story: { render: el => {
     stage({ recede: true });
     const day = dayKey(new Date()), s = saved(day), back = '<button class="plate" data-go="today">Back</button>';
     if (!s) {
-      const ids = storyWords(dueQueue(db.cards, new Date()));
+      const ids = todaysWords();
       if (ids.length < MIN) return go('today');
       el.innerHTML = `<div class="screen"><div class="plate card"><p class="prompt">Writing today’s story…</p><p class="prompt">This can take up to a minute on a free AI key.</p></div></div>`;
       write(day, ids, db.cards, STATIONS[here().station]).then(() => location.hash === '#story' && show('story'), e => {
@@ -249,9 +257,8 @@ const views = {
       const l = s.lines.find(l => l.segs.some(g => g[1] === id));
       el.innerHTML = `<div class="screen">${head(s.done.length, s.ids.length)}</div>`;
       acts.meaning($('.screen', el), item(id), `<div class="plate card sentence"><p lang="ja">${storyLine(l, id)}</p><p class="prompt">What does the marked word mean?</p><p class="prompt en" hidden>${esc(l.en)}</p></div>`, r => {
-        const rating = ratingFor({ ...r, rung: 'read' });
-        db.cards[id] = review(db.cards[id], rating, new Date());
-        tally(rating); s.done.push(id); keep(s); save();
+        if (isDue(db.cards[id], new Date())) { const rating = ratingFor({ ...r, rung: 'read' }); db.cards[id] = review(db.cards[id], rating, new Date()); tally(rating); }
+        s.done.push(id); keep(s); save();
         setTimeout(() => { if (location.hash === '#story') ask(); }, r.correct ? 600 : 1200);
       }, { known }, () => el.querySelector('.en').hidden = false);
     };
@@ -264,7 +271,7 @@ const views = {
     const day = dayKey(new Date());
     let c = talk.saved(day);
     if (!c) {
-      const ids = talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids), { jp, name, scene } = STATIONS[here().station];
+      const ids = talk.chatWords(dueQueue(db.cards, new Date()), saved(day)?.ids, learnedWords()), { jp, name, scene } = STATIONS[here().station];
       if (ids.length < talk.MIN) return go('today');
       talk.keep(c = { day, ids, station: { jp, name, scene }, log: [] });
     }
@@ -324,8 +331,19 @@ const views = {
   } },
   review: { render: el => {
     stage({ recede: true });
-    if (!sess) return void begin(dueQueue(db.cards, new Date()));
+    if (!sess) return void begin(dueQueue(db.cards, new Date()).filter(id => !skipped.has(id)).slice(0, CHUNK));
     const s = sess;
+    s.skipped.forEach(id => skipped.add(id));
+    const more = s.i >= s.queue.length && !s.practice && s.queue.length === CHUNK ? dueQueue(db.cards, new Date()).filter(id => !skipped.has(id)).length : 0;
+    if (more) {
+      el.innerHTML = `<div class="screen">${head(s.queue.length, s.queue.length)}<div class="grow"></div>
+        <div class="plate card"><p class="gloss-big">${CHUNK} reviews done</p><p class="prompt">${more} more ${more === 1 ? 'is' : 'are'} due. Keep going, or take a break: they’ll wait for you.</p></div>
+        <div class="grow" style="flex:.25"></div><button class="plate" data-more>Keep going</button>
+        <div class="grow" style="flex:.15"></div><button class="plate" data-break>Take a break</button><div class="grow" style="flex:.4"></div></div>`;
+      $('[data-more]', el).onclick = () => { sess = null; save(); postStats(); show('review'); };
+      $('[data-break]', el).onclick = () => finish(s);
+      return;
+    }
     if (s.i >= s.queue.length) return finish(s);
     const i = s.i, id = s.queue[i], card = db.cards[id], it = item(id);
     const can = it.kind === 'word' ? acts.canWord(it, s.caps) : it.kind === 'grammar' ? canGrammar(it, db.cards) : r => r === 'hear' ? s.caps.canHear : r === 'say' ? s.caps.canSay : true;
