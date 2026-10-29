@@ -1,11 +1,11 @@
-# Handoff (2026-10-22)
+# Handoff (updated 2026-10-29)
 
 Read CLAUDE.md first, then PLAN.md (decisions and status), DESIGN.md (visual system) and PARKING_LOT.md (deferred ideas). This file is what a new session needs on top of those.
 
 ## Where things stand
 
-- **Released:** Android **1.1.29** on GitHub Releases, and the web app on Pages from the same commit (`01e1b90`). Everything Chris asked for is built, merged and live.
-- **Branch:** work happens on `claude/keen-ptolemy-j1g925`; Chris says when to merge. Merging means a fast-forward of `main` and a push. The branch is one docs-only commit ahead of main (DESIGN.md and the learning-path review). It isn't worth a release of its own, so let it ride with the next change.
+- **Released:** Android **1.1.30** on GitHub Releases, and the web app on Pages from the same commit (`5e7b7eb`). Everything Chris asked for is built, merged and live.
+- **Branch:** work happens on `claude/keen-ptolemy-j1g925`; Chris says when to merge, usually after seeing screenshots. Merging means a fast-forward of `main` and a push.
 - **Versioning:** `package.json` "version" is 1.1.0. CI names the release `v1.1.0` the first time, then `1.1.<run_number>` once that tag exists. Bump to 1.2.0 in package.json when Chris wants a new minor version.
 
 ## Built in this session (2026-10-22)
@@ -22,6 +22,17 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
 - The friends row is gone from Today; it stays on the Friends tab.
 - A Today note explaining when stories and chats appear: they need an AI connection, and 3 due words for a chat or 5 for a story. The no-AI note can be hidden; the setting is `aiNoteHidden`.
 
+## Built on 2026-10-29
+
+- **Stories and chats use learned words.** Before this, they used only words *due* that day (5 for a story, 3 for a chat). At the slower pace a learner almost never had that many words due: a simulation found 0 story days in the first month and 1–2 a month up to month 3. Doing reviews first also used up the due words.
+  - They now take due words first, then other learned words, closest to due first (`learnedWords()` in app.js; `storyWords(due, learned)` and `chatWords(due, story, learned)`).
+  - They show once 5 (story) or 3 (chat) words are learned and an AI is connected.
+  - Only due words are graded; the rest is ungraded practice.
+- **The Today note** now reads "A daily chat starts once you've learned 3 words, a story at 5. You know N so far". Without an AI connection it is the set-up/hide note.
+- **Reviews come in chunks of 50** (`CHUNK` in app.js), with a "50 reviews done, N more are due" screen and *Keep going* / *Take a break* buttons.
+  - Cards this device can't drill are remembered across chunks (the module-level `skipped` set) and cleared when the review finishes.
+- **Missed days (answered for Chris, no change):** the new-item allowance is per day and never builds up. Reviews do pile up, but 50+ due within a day slows new items to 2 a day, and 100+ pauses them. Low accuracy over the week also slows new items.
+
 ## Gotchas
 
 - **Settings are whitelisted** in `store.js` (`SETTINGS`). A new `db.settings` key that isn't added there is silently dropped on reload.
@@ -31,6 +42,8 @@ The learning-path review is `docs/superpowers/plans/2026-10-22-learning-path.md`
 - **The sandbox can't reach** `statman15.github.io`, `api.github.com` or Tatoeba. `raw.githubusercontent.com` works. Check CI, Pages and releases through the GitHub MCP tools.
 - **The Pages deploy job sometimes sits queued** for 5–10 minutes. It goes queued, then waiting, then done; just recheck.
 - **Don't run `pkill -f`**: it matches its own shell. Kill by PID.
+- **A docs-only push to main may not start a release** (the 2026-10-22 handoff merge didn't). Don't promise one; check the Actions runs.
+- **Driving drills in headless Chrome:** clicking the first `.choices .choice`, else the first `button.plate` that isn't the close button or a nav link, gets through a review at about 7 clicks a card. Allow about 400 clicks for 50 cards.
 
 ## Ideas not started (see PARKING_LOT.md)
 
